@@ -1,3 +1,8 @@
+# raw art assets (Not to be pushed)
+/Diagonal-content/
+/content/
+/Diagonal-content-backup/
+
 # dependencies
 /node_modules
 /.pnp

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { archiveData, labData } from "@/lib/data";
 import { ArchiveCard } from "@/components/ArchiveCard";
 import { LabPost } from "@/components/LabPost";
@@ -14,7 +15,7 @@ export default function Home() {
           initial={{ opacity: 0, scaleY: 0 }}
           animate={{ opacity: 0.05, scaleY: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute inset-0 bg-gradient-to-tr from-transparent via-black to-transparent transform -skew-y-12"
+          className="absolute inset-0 bg-gradient-to-br from-transparent via-black to-transparent transform skew-y-12"
         />
       </div>
 
@@ -82,27 +83,27 @@ export default function Home() {
             <div>LAST_UPDATE: 2026.03.21</div>
           </div>
         </div>
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
+  {archiveData.slice(0, 4).map((item, index) => (
+    <motion.div
+      key={item.id}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      className={index % 2 !== 0 ? "lg:mt-24" : ""}
+    >
+      <ArchiveCard item={item} />
+    </motion.div>
+  ))}
+</div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
-          {archiveData.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className={index % 2 !== 0 ? "lg:mt-24" : ""}
-            >
-              <ArchiveCard item={item} />
-            </motion.div>
-          ))}
-        </div>
-        
-        <div className="mt-40 pt-12 border-t border-black flex justify-center">
-          <button className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all">
-            LOAD FULL ARCHIVE+
-          </button>
-        </div>
+<div className="mt-40 pt-12 border-t border-black flex justify-center">
+  <Link href="/archive" className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all">
+    LOAD FULL ARCHIVE+
+  </Link>
+</div>
+
       </section>
 
       {/* Research Lab Section - DARK THEME */}

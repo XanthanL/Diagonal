@@ -17,6 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className={`${inter.variable} ${mono.variable}`}>
+      <head>
+        <meta name="referrer" content="no-referrer" />
+      </head>
       <body className="antialiased min-h-screen bg-white text-black selection:bg-black selection:text-white">
         <header className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference">
           <nav className="flex justify-between items-center max-w-7xl mx-auto">
@@ -32,7 +35,6 @@ export default function RootLayout({
         <main>{children}</main>
         <footer className="p-12 border-t border-black/10 flex justify-between items-end archive-text text-xs opacity-50">
           <div>© 2026 DIAGONAL PROJECT</div>
-          <div>POWERED BY UP-ON PERFORMANCE ART ARCHIVE</div>
         </footer>
       </body>
     </html>
