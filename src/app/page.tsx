@@ -128,7 +128,7 @@ export default function Home() {
               </p>
               <div className="w-full h-px bg-white/20 relative overflow-hidden">
                 <motion.div 
-                  animate={{ x: ["-100%", "100%"] }}
+                  animate={{ x: ["-100%", "400%"] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                   className="absolute inset-0 bg-diagonal-red w-1/4"
                 />
