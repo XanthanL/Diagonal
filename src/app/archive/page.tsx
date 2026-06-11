@@ -38,10 +38,10 @@ export default function ArchiveIndexPage() {
             transition={{ delay: 0.1 }}
             className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-none"
           >
-            THE<br />BOX
+            THE<br />DOCUMENTS
           </motion.h1>
           <p className="max-w-xl text-lg opacity-60 leading-relaxed italic">
-            这里记录了对角线计划（Diagonal）自启动以来的所有行为艺术现场、跨学科研究文献及社会参与实践。
+            这里记录了对角线计划（Diagonal）自启动以来的所有行为艺术现场回顾、跨学科研究文献及社会参与实践报告。
           </p>
         </header>
 

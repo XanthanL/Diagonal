@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { archiveData, labData } from "@/lib/data";
+import { archiveData, atlasData } from "@/lib/data";
 import { ArchiveCard } from "@/components/ArchiveCard";
-import { LabPost } from "@/components/LabPost";
+import { AtlasCover } from "@/components/AtlasCover";
 
 export default function Home() {
   return (
@@ -21,7 +21,6 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
-        {/* ... (Hero content remains same) ... */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-end">
           <div className="space-y-12">
             <motion.h1
@@ -65,7 +64,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Archive Grid Section */}
+      {/* Documents Section (Formerly Archive Box) */}
       <section id="archive" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-24 gap-8">
           <motion.div 
@@ -74,83 +73,81 @@ export default function Home() {
             viewport={{ once: true }}
             className="space-y-4"
           >
-            <h2 className="text-6xl font-black tracking-tighter uppercase italic">The Archive Box</h2>
-            <p className="archive-text text-sm opacity-50 tracking-[0.2em]">文献展示系统 V1.0</p>
+            <h2 className="text-6xl font-black tracking-tighter uppercase italic">The Documents</h2>
+            <p className="archive-text text-sm opacity-50 tracking-[0.2em]">文献展示系统 V1.2 // FIELD_RECORDS</p>
           </motion.div>
           
           <div className="archive-text text-[10px] space-y-1 opacity-60">
             <div>TOTAL_RECORDS: {archiveData.length}</div>
-            <div>LAST_UPDATE: 2026.03.21</div>
+            <div>AXIS: SW_TO_NE</div>
           </div>
         </div>
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
-  {archiveData.slice(0, 4).map((item, index) => (
-    <motion.div
-      key={item.id}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
-      className={index % 2 !== 0 ? "lg:mt-24" : ""}
-    >
-      <ArchiveCard item={item} />
-    </motion.div>
-  ))}
-</div>
 
-<div className="mt-40 pt-12 border-t border-black flex justify-center">
-  <Link href="/archive" className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all">
-    LOAD FULL ARCHIVE+
-  </Link>
-</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
+          {archiveData.slice(0, 4).map((item, index) => (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className={index % 2 !== 0 ? "lg:mt-24" : ""}
+            >
+              <ArchiveCard item={item} />
+            </motion.div>
+          ))}
+        </div>
 
+        <div className="mt-40 pt-12 border-t border-black flex justify-center">
+          <Link href="/archive" className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all">
+            LOAD FULL INDEX+
+          </Link>
+        </div>
       </section>
 
-      {/* Research Lab Section - DARK THEME */}
-      <section id="lab" className="relative z-10 bg-black text-white py-40">
+      {/* Atlas Section - DARK THEME */}
+      <section id="atlas" className="relative z-10 bg-black text-white py-40">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-24 items-start">
-            <div className="md:col-span-4 sticky top-32">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="space-y-8"
-              >
-                <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
-                  ACTIVATE_ARCHIVE / RESEARCH_LAB
-                </div>
-                <h2 className="text-7xl font-black tracking-tighter uppercase leading-none">
-                  RESEARCH<br />LAB
-                </h2>
-                <p className="text-sm opacity-50 leading-relaxed max-w-xs italic">
-                  研究室通过激活文献材料，将其转化为批判性视角下的现场研究、学术访谈与理论写作。
-                </p>
-                <div className="w-full h-px bg-white/20 relative overflow-hidden">
-                  <motion.div 
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 bg-diagonal-red w-1/4"
-                  />
-                </div>
-              </motion.div>
-            </div>
-
-            <div className="md:col-span-8">
-              <div className="border-t border-white/10">
-                {labData.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <LabPost item={item} variant="dark" />
-                  </motion.div>
-                ))}
+          <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-8"
+            >
+              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
+                VISUAL_MAPPING / THE_ATLAS
+              </div>
+              <h2 className="text-6xl font-black tracking-tighter uppercase italic leading-none">
+                THE ATLAS
+              </h2>
+            </motion.div>
+            <div className="max-w-xs space-y-6">
+              <p className="text-sm opacity-50 leading-relaxed italic">
+                “地图集”通过视觉碎片记录现场考察、物质遗存与空间叙事，构建起从西南到东北的艺术地理图谱。
+              </p>
+              <div className="w-full h-px bg-white/20 relative overflow-hidden">
+                <motion.div 
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 bg-diagonal-red w-1/4"
+                />
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-24">
+            {atlasData.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <AtlasCover item={item} />
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>

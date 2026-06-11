@@ -1,3 +1,9 @@
+export interface Location {
+  city: string;
+  code: string;
+  coordinates: string;
+}
+
 export interface ArchiveItem {
   id: string;
   title: string;
@@ -6,18 +12,50 @@ export interface ArchiveItem {
   type: "Performance" | "Video" | "Document" | "Installation";
   thumbnail?: string;
   tags: string[];
+  location: Location;
+  region: "Southwest" | "Northeast" | "Transition";
 }
 
-export interface LabItem {
+export interface AtlasItem {
   id: string;
   title: string;
   author: string;
   date: string;
   excerpt: string;
-  category: "Interview" | "Essay" | "Report";
+  category: "Visual Record" | "Field Report" | "Atlas";
+  cover?: string;
+  location: Location;
+  region: "Southwest" | "Northeast" | "Transition";
+  gallery?: {
+    url: string;
+    caption: string;
+    width?: number;
+    height?: number;
+  }[];
 }
 
+// 对应 "THE DOCUMENTS" (原 Archive Box)
 export const archiveData: ArchiveItem[] = [
+  {
+    id: "DIAGONAL-2026-ZG01",
+    title: "生命之盐 1.0：自贡火井沱驻留成果展",
+    artist: "对角线计划 / 12位创作者",
+    year: "2026",
+    type: "Document",
+    tags: ["自贡", "工业遗产", "社会参与", "文献"],
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+  },
+  {
+    id: "DIAGONAL-2026-ZG02",
+    title: "土地回声：iSTART 儿童艺术节项目",
+    artist: "对角线计划 / 儿童艺术家",
+    year: "2026",
+    type: "Installation",
+    tags: ["儿童美育", "自贡", "成都", "土地回声"],
+    location: { city: "自贡/成都", code: "ZG/CD", coordinates: "30.6N, 104.1E" },
+    region: "Southwest",
+  },
   {
     id: "DIAGONAL-2024-HG01",
     title: "Roamers：鹤岗煤之痕·荒野Ⅰ",
@@ -25,22 +63,18 @@ export const archiveData: ArchiveItem[] = [
     year: "2024",
     type: "Performance",
     tags: ["行为艺术", "在地创作", "鹤岗", "现场回顾"],
+    location: { city: "鹤岗", code: "HG", coordinates: "47.3N, 130.3E" },
+    region: "Northeast",
   },
   {
     id: "DIAGONAL-2024-BW01",
-    title: "黑白之痕：彭玮雯的工业家庭叙事（一）",
+    title: "黑白之痕：彭玮雯的工业家庭叙事",
     artist: "彭玮雯 (Peng Weiwen)",
     year: "2024",
     type: "Performance",
     tags: ["工业叙事", "家庭史", "行为创作"],
-  },
-  {
-    id: "DIAGONAL-2024-BW02",
-    title: "黑白之痕：彭玮雯的工业家庭叙事（二）",
-    artist: "彭玮雯 (Peng Weiwen)",
-    year: "2024",
-    type: "Performance",
-    tags: ["行为艺术", "档案活化"],
+    location: { city: "沈阳", code: "SY", coordinates: "41.8N, 123.4E" },
+    region: "Northeast",
   },
   {
     id: "DIAGONAL-2024-AMR",
@@ -49,6 +83,8 @@ export const archiveData: ArchiveItem[] = [
     year: "2024",
     type: "Document",
     tags: ["艺术节", "圆桌对谈", "西北考察"],
+    location: { city: "鄂尔多斯", code: "ORD", coordinates: "39.6N, 109.8E" },
+    region: "Transition",
   },
   {
     id: "DIAGONAL-2024-CH",
@@ -57,48 +93,58 @@ export const archiveData: ArchiveItem[] = [
     year: "2023",
     type: "Installation",
     tags: ["驻地计划", "贵州草海", "拾物"],
-  },
-  {
-    id: "DIAGONAL-2024-ZG",
-    title: "生命之盐 1.0：自贡盐文化考察",
-    artist: "驻留计划成员",
-    year: "2023",
-    type: "Document",
-    tags: ["盐文化", "社会参与", "自贡"],
-  },
-  {
-    id: "DIAGONAL-2024-XYR",
-    title: "小盐人直播卖盐：行为艺术现场",
-    artist: "线存项目组",
-    year: "2023",
-    type: "Performance",
-    tags: ["直播艺术", "行为现场", "带货实验"],
+    location: { city: "威宁", code: "WN", coordinates: "26.9N, 104.3E" },
+    region: "Southwest",
   },
 ];
 
-export const labData: LabItem[] = [
+// 对应 "THE ATLAS" (视觉图册)
+export const atlasData: AtlasItem[] = [
   {
-    id: "LAB-001",
-    title: "对角线作为一种方法论：从文献到现场的跳跃",
-    author: "陈进 (Chen Jin)",
-    date: "2024.01.15",
-    excerpt: "本文探讨了在行为艺术档案化过程中，如何通过非线性的“对角线”路径，将静止的文献重新激活为具有当下性的现场行动...",
-    category: "Essay",
+    id: "ATLAS-ZG-2.0",
+    title: "生命之盐 2.0：自贡火井沱驻留与共创",
+    author: "对角线计划 (Diagonal)",
+    date: "2026.04 - 06",
+    excerpt: "对角线计划·自贡火井沱驻留与共创项目是一个以工业遗产、物质记忆与社会参与式艺术为核心的长期跨学科实践。自贡因井盐生产而形成独特的城市景观与社区结构...",
+    category: "Atlas",
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    cover: "",
+    gallery: [
+      {
+        url: "https://mmbiz.qpic.cn/sz_mmbiz_jpg/IiaUvUibIiaLp7p300P29Aicy99ibicmP6D0ibRiaicN1vYyic19YF9V5icic7W59Ym56Y9z9E5W/640?wx_fmt=jpeg",
+        caption: "自贡井盐生产遗址现场考察",
+        width: 1200,
+        height: 800
+      },
+      {
+        url: "https://mmbiz.qpic.cn/sz_mmbiz_jpg/IiaUvUibIiaLp7p300P29Aicy99ibicmP6D0ibRiaicN1vYyic19YF9V5icic7W59Ym56Y9z9E5W/640?wx_fmt=jpeg",
+        caption: "社区工作坊与本地居民的对话",
+        width: 800,
+        height: 1200
+      }
+    ]
   },
   {
-    id: "LAB-002",
-    title: "Chat into a Book: 与郭孟浩关于‘蛙王’身份的对谈",
-    author: "UP-ON Research Group",
-    date: "2023.11.20",
-    excerpt: "在这场跨越三小时的深度对话中，我们试图解构‘蛙王’这一艺术符号背后的社会隐喻及其在当代档案系统中的定位...",
-    category: "Interview",
+    id: "ATLAS-ZG-1.0",
+    title: "生命之盐 1.0：火井沱的记忆重构",
+    author: "对角线计划 (Diagonal)",
+    date: "2026.02",
+    excerpt: "作为项目的启动阶段，1.0 聚焦于火井沱社区的口述史采集与工业遗存初步调研。12位创作者在20天的时间里，通过考察与调研在自贡留下了深刻印记。",
+    category: "Atlas",
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    cover: "",
   },
   {
-    id: "LAB-003",
-    title: "行为艺术档案的数字化生存：技术与真实性的博弈",
-    author: "李勇 (Li Yong)",
-    date: "2023.09.05",
-    excerpt: "随着数字孪生技术的普及，行为艺术的‘临场感’正面临前所未有的挑战。本报告分析了多媒体数据库在保留艺术张力方面的潜力...",
-    category: "Report",
-  },
+    id: "ATLAS-HG-WIND",
+    title: "鹤岗：寒带面孔与工业余温",
+    author: "Roamers 项目组",
+    date: "2024.12",
+    excerpt: "在零下三十度的极端气候中，我们试图捕捉那些正在消逝的工业纹理与人的面孔...",
+    category: "Visual Record",
+    location: { city: "鹤岗", code: "HG", coordinates: "47.3N, 130.3E" },
+    region: "Northeast",
+    cover: "",
+  }
 ];

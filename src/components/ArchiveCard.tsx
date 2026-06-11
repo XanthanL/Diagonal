@@ -10,19 +10,28 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
         className="group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full"
       >
         <div className="archive-text text-[10px] mb-4 flex justify-between opacity-50">
-          <span>{item.id}</span>
+          <span>{item.id} // {item.location.code}</span>
           <span>{item.year}</span>
         </div>
 
-        <div className="aspect-[3/4] bg-diagonal-gray mb-6 relative overflow-hidden flex items-center justify-center p-8 group-hover:bg-black/5 transition-colors">
-          <div className="absolute inset-0 opacity-10 diagonal-line"></div>
-          <div className="archive-text text-[8px] text-center opacity-30 leading-tight">
-            ARCHIVE DATA<br />[IMAGE PENDING]
-          </div>
+        <div className="aspect-[3/4] bg-diagonal-gray mb-6 relative overflow-hidden flex items-center justify-center group-hover:bg-black/5 transition-colors border border-black/5">
+          <div className="absolute inset-0 opacity-10 diagonal-line z-10 pointer-events-none"></div>
+
+          {item.thumbnail ? (
+            <img 
+              src={item.thumbnail} 
+              alt={item.title}
+              className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+            />
+          ) : (
+            <div className="archive-text text-[8px] text-center opacity-30 leading-tight">
+              ARCHIVE DATA<br />[IMAGE PENDING]
+            </div>
+          )}
 
           {/* 悬浮时的对角线强调 */}
           <motion.div
-            className="absolute bottom-0 right-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-500"
+            className="absolute bottom-0 right-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-500 z-20"
           />
         </div>
 
@@ -30,7 +39,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
           <div className="archive-text text-[10px] bg-black text-white px-2 py-0.5 inline-block mb-1">
             {item.type}
           </div>
-          <h3 className="text-2xl font-bold tracking-tight leading-[1.3] uppercase group-hover:underline underline-offset-8 decoration-1">
+          <h3 className="text-2xl font-bold tracking-tight leading-[1.3] uppercase group-hover:underline underline-offset-8 decoration-2">
             {item.title}
           </h3>
           <p className="text-sm font-medium opacity-60 italic">{item.artist}</p>
