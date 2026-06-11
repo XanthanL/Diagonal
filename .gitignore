@@ -5,7 +5,6 @@
 
 # explicitly track the cleaned markdown content in src/
 !/src/content/
-/src/content/archive/*.md
 
 # dependencies
 /node_modules
