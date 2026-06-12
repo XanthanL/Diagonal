@@ -34,7 +34,6 @@ export interface AtlasItem {
   }[];
 }
 
-// 对应 "THE DOCUMENTS" (原 Archive Box)
 export const archiveData: ArchiveItem[] = [
   {
     id: "DIAGONAL-2026-FORUM-01",
@@ -48,6 +47,17 @@ export const archiveData: ArchiveItem[] = [
     thumbnail: "/images/archive/DIAGONAL-2026-FORUM-01/cover.jpg",
   },
   {
+    id: "DIAGONAL-2026-YD",
+    title: "重走盐道 2026：在贡井老街用盐重新走一遍历史",
+    artist: "生命之盐 1.0 参与创作者",
+    year: "2026.03.26 20:42",
+    type: "Performance",
+    tags: ["生命之盐", "重走盐道", "现场考察"],
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    thumbnail: "/images/archive/DIAGONAL-2026-YD/cover.jpg",
+  },
+  {
     id: "DIAGONAL-2026-OC1",
     title: "Open Call 招募丨“生命之盐 1.0”自贡盐文化考察创作驻留计划",
     artist: "对角线计划 (Diagonal)",
@@ -57,77 +67,6 @@ export const archiveData: ArchiveItem[] = [
     location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-OC1/cover.jpg",
-  },
-  {
-    id: "DIAGONAL-2026-YD",
-    title: "重走盐道 2026：在贡井老街用盐重新走一遍历史",
-    artist: "生命之盐 1.0 参与创作者",
-    year: "2026",
-    type: "Performance",
-    tags: ["生命之盐", "重走盐道", "现场考察"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
-    region: "Southwest",
-    thumbnail: "", // 待您上传封面后在此填写路径
-  },
-  {
-    id: "DIAGONAL-2026-ZG01",
-    title: "生命之盐 1.0：自贡火井沱驻留成果展",
-    artist: "对角线计划 / 12位创作者",
-    year: "2026",
-    type: "Document",
-    tags: ["自贡", "工业遗产", "社会参与", "文献"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
-    region: "Southwest",
-  },
-  {
-    id: "DIAGONAL-2026-ZG02",
-    title: "土地回声：iSTART 儿童艺术节项目",
-    artist: "对角线计划 / 儿童艺术家",
-    year: "2026",
-    type: "Installation",
-    tags: ["儿童美育", "自贡", "成都", "土地回声"],
-    location: { city: "自贡/成都", code: "ZG/CD", coordinates: "30.6N, 104.1E" },
-    region: "Southwest",
-  },
-  {
-    id: "DIAGONAL-2024-HG01",
-    title: "Roamers：鹤岗煤之痕·荒野Ⅰ",
-    artist: "对角线计划 / 多个艺术家",
-    year: "2024",
-    type: "Performance",
-    tags: ["行为艺术", "在地创作", "鹤岗", "现场回顾"],
-    location: { city: "鹤岗", code: "HG", coordinates: "47.3N, 130.3E" },
-    region: "Northeast",
-  },
-  {
-    id: "DIAGONAL-2024-BW01",
-    title: "黑白之痕：彭玮雯的工业家庭叙事",
-    artist: "彭玮雯 (Peng Weiwen)",
-    year: "2024",
-    type: "Performance",
-    tags: ["工业叙事", "家庭史", "行为创作"],
-    location: { city: "沈阳", code: "SY", coordinates: "41.8N, 123.4E" },
-    region: "Northeast",
-  },
-  {
-    id: "DIAGONAL-2024-AMR",
-    title: "阿木热艺术节：鄂尔多斯圆桌分享",
-    artist: "对角线计划 / 阿木热艺术节",
-    year: "2024",
-    type: "Document",
-    tags: ["艺术节", "圆桌对谈", "西北考察"],
-    location: { city: "鄂尔多斯", code: "ORD", coordinates: "39.6N, 109.8E" },
-    region: "Transition",
-  },
-  {
-    id: "DIAGONAL-2024-CH",
-    title: "草海“拾物”艺术驻地计划回顾",
-    artist: "互联合作项目",
-    year: "2023",
-    type: "Installation",
-    tags: ["驻地计划", "贵州草海", "拾物"],
-    location: { city: "威宁", code: "WN", coordinates: "26.9N, 104.3E" },
-    region: "Southwest",
   },
 ];
 
