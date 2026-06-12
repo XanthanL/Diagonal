@@ -1,6 +1,7 @@
 import { ArchiveItem } from "@/lib/data";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { getAssetPath } from "@/lib/path";
 
 export function ArchiveCard({ item }: { item: ArchiveItem }) {
   return (
@@ -19,7 +20,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
 
           {item.thumbnail ? (
             <img 
-              src={item.thumbnail} 
+              src={getAssetPath(item.thumbnail)} 
               alt={item.title}
               className="absolute inset-0 w-full h-full object-cover"
             />

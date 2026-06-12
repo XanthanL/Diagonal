@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getAssetPath } from "@/lib/path";
 
 export const dynamic = "force-static";
 
@@ -35,6 +36,9 @@ export default async function ArchiveDetailPage({ params }: { params: { id: stri
     return notFound();
   }
 
+  // 修复 GitHub Pages 下图片路径问题
+  const processedContent = content.replace(/src="\/images\//g, `src="${getAssetPath('/images/')}`);
+
   return (
     <article className="min-h-screen bg-white text-black pt-32 pb-40 selection:bg-black selection:text-white">
       {/* 顶部导航 */}
@@ -52,7 +56,7 @@ export default async function ArchiveDetailPage({ params }: { params: { id: stri
           /* HTML 渲染容器：应用特定的档案样式 */
           <div 
             className="archive-html-content"
-            dangerouslySetInnerHTML={{ __html: content }} 
+            dangerouslySetInnerHTML={{ __html: processedContent }} 
           />
         ) : (
           /* 兼容旧内容的简单渲染 */
