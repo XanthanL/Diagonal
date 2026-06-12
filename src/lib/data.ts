@@ -36,6 +36,17 @@ export interface AtlasItem {
 
 export const archiveData: ArchiveItem[] = [
   {
+    id: "DIAGONAL-2026-ZG02",
+    title: "共居与共情：生命之盐 1.0 驻留成果展览现场交互行动招募",
+    artist: "对角线计划",
+    year: "2026.03.31 23:53",
+    type: "Installation",
+    tags: ["驻留", "交互行动", "展览"],
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    thumbnail: "/images/archive/DIAGONAL-2026-ZG02/cover.jpg",
+  },
+  {
     id: "DIAGONAL-2026-FORUM-01",
     title: "开幕论坛回顾丨“生命之盐 1.0”自贡盐文化考察创作驻留计划",
     artist: "对角线计划 / 论坛嘉宾",
