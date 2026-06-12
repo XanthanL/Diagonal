@@ -8,7 +8,7 @@ export async function generateStaticParams() {
   }));
 }
 
-export default function AtlasDetailPage({ params }: { params: { id: string } }) {
+export default function AtlasDetailPage({ params }: { params: { id: string; subId?: string } }) {
   const item = atlasData.find((p) => p.id === params.id);
   
   if (!item) {
@@ -16,10 +16,6 @@ export default function AtlasDetailPage({ params }: { params: { id: string } }) 
   }
 
   // 如果有子集，且未进入特定子集ID，显示子集概览；如果进入子集，渲染对应子集画廊
-  // 这里暂时做一个简化处理：如果是项目层级（没有子项URL），列出子集；否则显示画廊
-  const isSubCollection = params.subId; // 假设URL结构为 /atlas/[id]/[subId]
-  
-  // 暂时先按原逻辑合并展示
   const subCollections = item.subCollections || [];
 
   return (
