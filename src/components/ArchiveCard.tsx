@@ -14,14 +14,14 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
           <span>{item.year}</span>
         </div>
 
-        <div className="aspect-[3/4] bg-diagonal-gray mb-6 relative overflow-hidden flex items-center justify-center group-hover:bg-black/5 transition-colors border border-black/5">
+        <div className="aspect-[4/5] bg-neutral-100 mb-6 relative overflow-hidden group-hover:bg-neutral-200 transition-colors border border-black/5">
           <div className="absolute inset-0 opacity-10 diagonal-line z-10 pointer-events-none"></div>
 
           {item.thumbnail ? (
             <img 
               src={item.thumbnail} 
               alt={item.title}
-              className="absolute inset-0 w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
             <div className="archive-text text-[8px] text-center opacity-30 leading-tight">

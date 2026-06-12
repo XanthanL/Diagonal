@@ -37,6 +37,17 @@ export interface AtlasItem {
 // 对应 "THE DOCUMENTS" (原 Archive Box)
 export const archiveData: ArchiveItem[] = [
   {
+    id: "DIAGONAL-2026-OC1",
+    title: "Open Call 招募丨“生命之盐 1.0”自贡盐文化考察创作驻留计划",
+    artist: "对角线计划 (Diagonal)",
+    year: "2026.02.16 08:45",
+    type: "Document",
+    tags: ["生命之盐", "招募", "自贡", "驻留计划"],
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    thumbnail: "/images/archive/DIAGONAL-2026-OC1/cover.jpg",
+  },
+  {
     id: "DIAGONAL-2026-YD",
     title: "重走盐道 2026：在贡井老街用盐重新走一遍历史",
     artist: "生命之盐 1.0 参与创作者",

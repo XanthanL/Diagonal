@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .archive-text {
+    @apply uppercase tracking-widest font-mono;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #000000;
@@ -32,20 +38,24 @@ body {
   opacity: 0.1;
 }
 
-/* 档案详情页 Markdown 排版样式 */
-.archive-markdown h1 { font-size: 2.25rem; font-weight: 900; margin-top: 4rem; margin-bottom: 2rem; text-transform: uppercase; letter-spacing: -0.025em; }
-.archive-markdown h2 { font-size: 1.5rem; font-weight: 700; margin-top: 3rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 0.5rem; }
-.archive-markdown p { font-size: 1.125rem; line-height: 1.75; margin-bottom: 2rem; opacity: 0.8; }
-.archive-markdown img { width: 100%; height: auto; margin-top: 3rem; margin-bottom: 3rem; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); filter: grayscale(100%); transition: all 0.7s; }
-.archive-markdown img:hover { filter: grayscale(0%); }
-.archive-markdown blockquote { border-left: 4px solid black; padding-left: 1.5rem; font-style: italic; opacity: 0.7; margin-top: 3rem; margin-bottom: 3rem; }
-.archive-markdown strong { font-weight: 700; color: black; }
-.archive-markdown em { font-style: italic; }
+/* 档案详情页 HTML 内容样式重塑 */
+.archive-html-content {
+  @apply space-y-12 text-lg leading-relaxed;
+}
+.archive-html-content h1 { @apply text-6xl font-black tracking-tighter mb-16 uppercase italic leading-none; }
+.archive-html-content h2 { @apply text-3xl font-bold mt-24 mb-8 border-b-2 border-black pb-4 uppercase; }
+.archive-html-content p { @apply opacity-80 mb-8 text-justify; }
+.archive-html-content img { @apply w-full h-auto my-16 shadow-2xl border border-black/5; }
+.archive-html-content blockquote { @apply border-l-8 border-black pl-8 py-4 my-16 italic opacity-70 bg-neutral-50 text-2xl font-light; }
+.archive-html-content figure { @apply my-20 space-y-4; }
+.archive-html-content figcaption { @apply archive-text text-[10px] opacity-40 text-center uppercase tracking-widest; }
+.archive-html-content strong { @apply font-black underline decoration-2 underline-offset-4; }
 
 @keyframes scan {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
 }
+
 .animate-scan {
   animation: scan 3s linear infinite;
 }
