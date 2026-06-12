@@ -1,7 +1,7 @@
 import { AtlasItem } from "@/lib/data";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image";
+import { getAssetPath } from "@/lib/path";
 
 export function AtlasCover({ item }: { item: AtlasItem }) {
   return (
@@ -15,13 +15,13 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
           {/* 背景对角线 */}
           <div className="absolute inset-0 opacity-10 diagonal-line mix-blend-overlay" />
           
-          {/* 封面图片 - 默认灰度 */}
+          {/* 封面图片 - 原色呈现 */}
           {item.cover ? (
-            <div className="absolute inset-0 w-full h-full grayscale group-hover:grayscale-0 transition-all duration-700 ease-in-out scale-105 group-hover:scale-100">
+            <div className="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out scale-105 group-hover:scale-100">
               <img 
-                src={item.cover} 
+                src={getAssetPath(item.cover)} 
                 alt={item.title} 
-                className="w-full h-full object-cover opacity-60 group-hover:opacity-100"
+                className="w-full h-full object-cover opacity-80 group-hover:opacity-100"
               />
             </div>
           ) : (
