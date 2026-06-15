@@ -89,15 +89,15 @@ export function SaltSimulation() {
           }
         }
 
-        // 3. 回位逻辑
+        // 3. 极其微弱的回位逻辑 (消除果冻感，模拟缓慢落定)
         const homeDx = p.originX - p.x;
         const homeDy = p.originY - p.y;
-        p.vx += homeDx * 0.025; // 稍微提高回位灵敏度
-        p.vy += homeDy * 0.025;
+        p.vx += homeDx * 0.0008; // 极小拉力
+        p.vy += homeDy * 0.0008;
 
-        // 4. 物理模拟
-        p.vx *= 0.88; // 降低阻尼，让爆发力更强
-        p.vy *= 0.88;
+        // 4. 物理模拟 - 调高系数以增加惯性漂移感
+        p.vx *= 0.96; 
+        p.vy *= 0.96;
         
         p.x += p.vx + driftX;
         p.y += p.vy + driftY;

@@ -48,7 +48,7 @@ export default function Home() {
             </motion.div>
           </div>
 
-          <div className="space-y-12 hidden md:block">
+          <div className="space-y-12 block">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
