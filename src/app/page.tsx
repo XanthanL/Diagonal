@@ -5,6 +5,7 @@ import Link from "next/link";
 import { archiveData, atlasData } from "@/lib/data";
 import { ArchiveCard } from "@/components/ArchiveCard";
 import { AtlasCover } from "@/components/AtlasCover";
+import { SaltSimulation } from "@/components/SaltSimulation";
 
 export default function Home() {
   return (
@@ -52,13 +53,9 @@ export default function Home() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="aspect-[4/5] bg-diagonal-gray relative overflow-hidden group border border-black/5"
+              className="aspect-[4/5] relative"
             >
-              <div className="absolute inset-0 flex items-center justify-center p-12 text-center">
-                <div className="archive-text text-[8px] opacity-30 transform -rotate-45 scale-150 whitespace-nowrap">
-                  DIAGONAL VISUAL ASSET / 001
-                </div>
-              </div>
+              <SaltSimulation />
             </motion.div>
           </div>
         </div>
