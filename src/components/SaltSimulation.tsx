@@ -205,10 +205,10 @@ export function SaltSimulation() {
         const y = touch.clientY - rect.top;
         
         // 获取触摸点的半径（代表触碰面积），部分浏览器与设备支持该属性
-        // 赋予基础的 15 像素半径，如果有真实的 radiusX/Y，可以乘系数叠加使面积响应更大
-        const rX = touch.radiusX || 15;
-        const rY = touch.radiusY || 15;
-        const radius = 30 + Math.max(rX, rY) * 1.5; 
+        // 基础半径 16px，再叠加实际触点尺寸的 0.6 倍，总计约 22-35px，更接近自然手指触点大小
+        const rX = touch.radiusX || 10;
+        const rY = touch.radiusY || 10;
+        const radius = 16 + Math.max(rX, rY) * 0.6; 
         
         points.push({ x, y, radius });
       }
