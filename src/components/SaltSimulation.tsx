@@ -37,22 +37,30 @@ export function SaltSimulation() {
     let particles: Particle[] = [];
     const particleCount = 8000;
     const interactionRadius = 35;
+    let logicalWidth = 0;
+    let logicalHeight = 0;
 
     const resize = () => {
       const container = canvas.parentElement;
       if (container) {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        logicalWidth = container.clientWidth;
+        logicalHeight = container.clientHeight;
+        
+        canvas.width = logicalWidth * dpr;
+        canvas.height = logicalHeight * dpr;
+        
+        ctx.scale(dpr, dpr);
       }
       initParticles();
     };
 
     const initParticles = () => {
       particles = [];
-      const goldenYellow = '#FFD700'; 
+      const crystalWhite = '#FFFFFF'; 
       for (let i = 0; i < particleCount; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
+        const x = Math.random() * logicalWidth;
+        const y = Math.random() * logicalHeight;
         particles.push({
           x: x,
           y: y,
@@ -64,31 +72,31 @@ export function SaltSimulation() {
           opacity: Math.random() * 0.4 + 0.15,
           noiseOffset: Math.random() * 1000,
           flashIntensity: 0,
-          flashColor: goldenYellow,
+          flashColor: crystalWhite,
           pulseSpeed: 0.005 + Math.random() * 0.01, // 降低基础呼吸频率
         });
       }
     };
 
     const drawBackground = () => {
-      ctx.fillStyle = '#1e1a16'; 
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0c0c0e'; 
+      ctx.fillRect(0, 0, logicalWidth, logicalHeight);
 
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
-      ctx.lineWidth = 1;
+      // 精致的微弱白色水平/垂直扫描线织纹
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
+      ctx.lineWidth = 0.5;
       
       ctx.beginPath();
-      for (let y = 0; y < canvas.height; y += 3) {
+      for (let y = 0; y < logicalHeight; y += 3) {
         ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.lineTo(logicalWidth, y);
       }
       ctx.stroke();
 
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
       ctx.beginPath();
-      for (let x = 0; x < canvas.width; x += 3) {
+      for (let x = 0; x < logicalWidth; x += 3) {
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.lineTo(x, logicalHeight);
       }
       ctx.stroke();
     };
@@ -250,18 +258,15 @@ export function SaltSimulation() {
 
   return (
     <div 
-      className="w-full h-full bg-[#1e1a16] relative overflow-hidden group shadow-[0_30px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-700 touch-none"
+      className="w-full h-full bg-[#0c0c0e] relative overflow-hidden group shadow-[0_30px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-700 touch-none border border-white/5"
       style={{
-        clipPath: 'polygon(0% 15%, 100% 0%, 100% 85%, 0% 100%)'
+        clipPath: 'polygon(20% 0%, 100% 0%, 100% 80%, 80% 100%, 0% 100%, 0% 20%)'
       }}
     >
       <canvas 
         ref={canvasRef} 
         className="w-full h-full block cursor-auto touch-none"
       />
-      <div className="absolute bottom-10 right-10 archive-text text-[9px] text-white/10 pointer-events-none tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity uppercase italic">
-        KINETIC_SALT // BITTERN_VESSEL
-      </div>
     </div>
   );
 }

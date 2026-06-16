@@ -53,7 +53,7 @@ export default function Home() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="aspect-[4/5] relative"
+              className="aspect-[2/3] sm:aspect-[3/4] md:aspect-[4/5] relative w-full"
             >
               <SaltSimulation />
             </motion.div>
