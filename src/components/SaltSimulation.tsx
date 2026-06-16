@@ -35,7 +35,7 @@ export function SaltSimulation() {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    const particleCount = 8000;
+    const particleCount = 18000;
     const interactionRadius = 35;
     let logicalWidth = 0;
     let logicalHeight = 0;
