@@ -22,7 +22,8 @@ export function SaltSimulation() {
   const stateRef = useRef({
     mouseX: -1000,
     mouseY: -1000,
-    isPressed: false
+    isMousePressed: false,
+    touchPoints: [] as { x: number; y: number; radius: number }[]
   });
 
   useEffect(() => {
@@ -96,7 +97,16 @@ export function SaltSimulation() {
       drawBackground();
       
       const t = time * 0.0005;
-      const { mouseX, mouseY, isPressed } = stateRef.current;
+      const { mouseX, mouseY, isMousePressed, touchPoints } = stateRef.current;
+
+      // 汇总所有的交互点（鼠标 + 手机多指/大面积触控）
+      const activePoints: { x: number; y: number; radius: number }[] = [];
+      if (isMousePressed && mouseX >= 0 && mouseY >= 0) {
+        activePoints.push({ x: mouseX, y: mouseY, radius: interactionRadius });
+      }
+      if (touchPoints.length > 0) {
+        activePoints.push(...touchPoints);
+      }
 
       particles.forEach(p => {
         // 1. 基础漂浮律动
@@ -111,19 +121,21 @@ export function SaltSimulation() {
         }
 
         // 3. 交互逻辑
-        if (isPressed) {
-          const dx = p.x - mouseX;
-          const dy = p.y - mouseY;
+        activePoints.forEach(pt => {
+          const dx = p.x - pt.x;
+          const dy = p.y - pt.y;
           const distanceSq = dx * dx + dy * dy;
-          const radiusSq = interactionRadius * interactionRadius;
+          const radiusSq = pt.radius * pt.radius;
 
           if (distanceSq < radiusSq) {
             const distance = Math.sqrt(distanceSq);
-            const force = (interactionRadius - distance) / interactionRadius;
-            p.vx += (dx / distance) * force * 1.5;
-            p.vy += (dy / distance) * force * 1.5;
+            if (distance > 0) {
+              const force = (pt.radius - distance) / pt.radius;
+              p.vx += (dx / distance) * force * 1.5;
+              p.vy += (dy / distance) * force * 1.5;
+            }
           }
-        }
+        });
 
         // 4. 回位逻辑
         const homeDx = p.originX - p.x;
@@ -162,29 +174,51 @@ export function SaltSimulation() {
       stateRef.current.mouseY = e.clientY - rect.top;
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 0) {
-        const rect = canvas.getBoundingClientRect();
-        stateRef.current.mouseX = e.touches[0].clientX - rect.left;
-        stateRef.current.mouseY = e.touches[0].clientY - rect.top;
-        stateRef.current.isPressed = true;
-      }
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) stateRef.current.isMousePressed = true;
     };
 
-    const handleMouseDown = (e: MouseEvent) => { if (e.button === 0) stateRef.current.isPressed = true; };
-    const handleMouseUp = () => { stateRef.current.isPressed = false; };
-    const handleTouchStart = (e: TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      stateRef.current.mouseX = e.touches[0].clientX - rect.left;
-      stateRef.current.mouseY = e.touches[0].clientY - rect.top;
-      stateRef.current.isPressed = true;
+    const handleMouseUp = () => {
+      stateRef.current.isMousePressed = false;
     };
-    const handleTouchEnd = () => { stateRef.current.isPressed = false; };
 
     const handleMouseLeave = () => {
       stateRef.current.mouseX = -1000;
       stateRef.current.mouseY = -1000;
-      stateRef.current.isPressed = false;
+      stateRef.current.isMousePressed = false;
+    };
+
+    const updateTouchPoints = (e: TouchEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const points = [];
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        
+        // 获取触摸点的半径（代表触碰面积），部分浏览器与设备支持该属性
+        // 赋予基础的 15 像素半径，如果有真实的 radiusX/Y，可以乘系数叠加使面积响应更大
+        const rX = touch.radiusX || 15;
+        const rY = touch.radiusY || 15;
+        const radius = 30 + Math.max(rX, rY) * 1.5; 
+        
+        points.push({ x, y, radius });
+      }
+      stateRef.current.touchPoints = points;
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault(); // 阻止滚动和缩放行为
+      updateTouchPoints(e);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault(); // 阻止页面跟随滑动滚动
+      updateTouchPoints(e);
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      updateTouchPoints(e);
     };
 
     window.addEventListener('resize', resize);
@@ -194,7 +228,8 @@ export function SaltSimulation() {
     canvas.addEventListener('mouseleave', handleMouseLeave);
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
     resize();
     requestAnimationFrame(animate);
@@ -208,20 +243,21 @@ export function SaltSimulation() {
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('touchcancel', handleTouchEnd);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
   return (
     <div 
-      className="w-full h-full bg-[#1e1a16] relative overflow-hidden group shadow-[0_30px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-700"
+      className="w-full h-full bg-[#1e1a16] relative overflow-hidden group shadow-[0_30px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-700 touch-none"
       style={{
         clipPath: 'polygon(0% 15%, 100% 0%, 100% 85%, 0% 100%)'
       }}
     >
       <canvas 
         ref={canvasRef} 
-        className="w-full h-full block cursor-auto"
+        className="w-full h-full block cursor-auto touch-none"
       />
       <div className="absolute bottom-10 right-10 archive-text text-[9px] text-white/10 pointer-events-none tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity uppercase italic">
         KINETIC_SALT // BITTERN_VESSEL
