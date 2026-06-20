@@ -46,6 +46,17 @@ export interface AtlasItem {
 
 export const archiveData: ArchiveItem[] = [
   {
+    id: "DIAGONAL-2026-ZG03",
+    title: "展览预告｜“生命之盐”自贡盐文化当代艺术展",
+    artist: "对角线计划 / 孙晓鸣 Kerribin",
+    year: "2026.06.20 18:01",
+    type: "Document",
+    tags: ["展览预告", "当代艺术展", "自贡", "生命之盐", "自流井老街"],
+    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    thumbnail: "/images/archive/DIAGONAL-2026-ZG03/cover.jpg",
+  },
+  {
     id: "DIAGONAL-2026-LIST2",
     title: "名单公布丨“生命之盐 2.0”自贡盐文化考察创作驻留计划",
     artist: "对角线计划",
