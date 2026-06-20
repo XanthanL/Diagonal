@@ -4,14 +4,37 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { archiveData } from "@/lib/data";
-import { getAssetPath } from "@/lib/path";
+import { getAssetPath, getAbsoluteUrl } from "@/lib/path";
 
 export const dynamic = "force-static";
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const item = archiveData.find((p) => p.id === params.id);
+  if (!item) {
+    return { title: "Document | DIAGONAL" };
+  }
+
   return {
-    title: item ? `${item.title} | DIAGONAL` : "Document | DIAGONAL",
+    title: `${item.title} | DIAGONAL`,
+    description: `${item.title} - ${item.artist} / ${item.location.city}`,
+    openGraph: {
+      title: `${item.title} | DIAGONAL`,
+      description: `${item.title} - ${item.artist} / ${item.location.city}`,
+      url: getAbsoluteUrl(`/archive/${item.id}`),
+      siteName: "DIAGONAL",
+      locale: "zh_CN",
+      type: "article",
+      images: item.thumbnail
+        ? [
+            {
+              url: getAbsoluteUrl(item.thumbnail),
+              width: 1200,
+              height: 630,
+              alt: item.title,
+            },
+          ]
+        : undefined,
+    },
   };
 }
 
