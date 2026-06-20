@@ -1,10 +1,19 @@
 import fs from "fs";
 import path from "path";
 import Link from "next/link";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { archiveData } from "@/lib/data";
 import { getAssetPath } from "@/lib/path";
 
 export const dynamic = "force-static";
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const item = archiveData.find((p) => p.id === params.id);
+  return {
+    title: item ? `${item.title} | DIAGONAL` : "Document | DIAGONAL",
+  };
+}
 
 export async function generateStaticParams() {
   const contentDir = path.join(process.cwd(), "src/content/archive");
