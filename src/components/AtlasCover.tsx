@@ -1,9 +1,14 @@
-import { AtlasItem } from "@/lib/data";
+import { AtlasItem, getLocalizedAtlasItem } from "@/lib/data";
+import { useI18n } from "@/lib/i18n";
+import { t } from "@/lib/translations";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { getAssetPath } from "@/lib/path";
 
 export function AtlasCover({ item }: { item: AtlasItem }) {
+  const { lang } = useI18n();
+  const localized = getLocalizedAtlasItem(item, lang);
+
   return (
     <Link href={`/atlas/${item.id}`}>
       <motion.div
@@ -14,19 +19,19 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
         <div className="aspect-[4/5] bg-neutral-900 relative overflow-hidden border border-white/10 group-hover:border-white/30 transition-colors shadow-2xl">
           {/* 背景对角线 */}
           <div className="absolute inset-0 opacity-10 diagonal-line mix-blend-overlay" />
-          
+
           {/* 封面图片 - 原色呈现 */}
           {item.cover ? (
             <div className="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out scale-105 group-hover:scale-100">
-              <img 
-                src={getAssetPath(item.cover)} 
-                alt={item.title} 
+              <img
+                src={getAssetPath(item.cover)}
+                alt={localized.title}
                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100"
               />
             </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center opacity-20">
-              <span className="archive-text text-[10px]">NO_VISUAL_RECORD</span>
+              <span className="archive-text text-[10px]">{t(lang, "noVisualRecord")}</span>
             </div>
           )}
 
@@ -43,7 +48,7 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
           {/* 底部交互提示 */}
           <div className="absolute bottom-0 left-0 w-full p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 bg-gradient-to-t from-black/80 to-transparent">
             <span className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest">
-              OPEN_ATLAS+
+              {t(lang, "openAtlas")}
             </span>
           </div>
         </div>
@@ -52,14 +57,14 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
         <div className="mt-6 space-y-2">
           <div className="flex justify-between items-center">
             <span className="archive-text text-[9px] text-white/30 tracking-widest uppercase italic">
-              {item.category}
+              {localized.category}
             </span>
             <span className="archive-text text-[9px] text-white/30">
-              {item.location.city}
+              {localized.location.city}
             </span>
           </div>
           <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-diagonal-red transition-colors leading-snug">
-            {item.title}
+            {localized.title}
           </h3>
         </div>
       </motion.div>

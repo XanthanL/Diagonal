@@ -6,25 +6,77 @@ export interface Location {
 export interface ArchiveItem {
   id: string;
   title: string;
+  titleEn: string;
   artist: string;
+  artistEn: string;
   year: string;
   type: "Performance" | "Video" | "Document" | "Installation";
+  typeEn: string;
   thumbnail?: string;
   tags: string[];
-  location: { city: string; code: string; coordinates: string };
+  tagsEn: string[];
+  location: { city: string; cityEn: string; code: string; coordinates: string };
   region: "Southwest" | "Northeast" | "Transition";
 }
 
 export interface AtlasItem {
   id: string;
   title: string;
+  titleEn: string;
   author: string;
+  authorEn: string;
   date: string;
   excerpt: string;
+  excerptEn: string;
   category: "Visual Record" | "Field Report" | "Atlas";
+  categoryEn: string;
   cover?: string;
   location: Location;
   region: "Southwest" | "Northeast" | "Transition";
+  subCollections?: {
+    id: string;
+    title: string;
+    titleEn: string;
+    cover: string;
+    gallery: {
+      url: string;
+      caption: string;
+      captionEn?: string;
+      width?: number;
+      height?: number;
+    }[];
+  }[];
+  gallery?: {
+    url: string;
+    caption: string;
+    captionEn?: string;
+    width?: number;
+    height?: number;
+  }[];
+}
+
+export interface LocalizedArchiveItem {
+  id: string;
+  title: string;
+  artist: string;
+  year: string;
+  type: ArchiveItem["type"];
+  thumbnail?: string;
+  tags: string[];
+  location: { city: string; code: string; coordinates: string };
+  region: ArchiveItem["region"];
+}
+
+export interface LocalizedAtlasItem {
+  id: string;
+  title: string;
+  author: string;
+  date: string;
+  excerpt: string;
+  category: AtlasItem["category"];
+  cover?: string;
+  location: Location;
+  region: AtlasItem["region"];
   subCollections?: {
     id: string;
     title: string;
@@ -44,114 +96,226 @@ export interface AtlasItem {
   }[];
 }
 
+function localizeCaption(caption: string): string {
+  return caption.replace(/摄影师[：:]/g, "Photo: ");
+}
+
+export function getLocalizedArchiveItem(item: ArchiveItem, lang: "zh" | "en"): LocalizedArchiveItem {
+  if (lang === "zh") {
+    return {
+      id: item.id,
+      title: item.title,
+      artist: item.artist,
+      year: item.year,
+      type: item.type,
+      thumbnail: item.thumbnail,
+      tags: item.tags,
+      location: { city: item.location.city, code: item.location.code, coordinates: item.location.coordinates },
+      region: item.region,
+    };
+  }
+  return {
+    id: item.id,
+    title: item.titleEn,
+    artist: item.artistEn,
+    year: item.year,
+    type: item.typeEn as ArchiveItem["type"],
+    thumbnail: item.thumbnail,
+    tags: item.tagsEn,
+    location: { city: item.location.cityEn, code: item.location.code, coordinates: item.location.coordinates },
+    region: item.region,
+  };
+}
+
+export function getLocalizedAtlasItem(item: AtlasItem, lang: "zh" | "en"): LocalizedAtlasItem {
+  if (lang === "zh") {
+    return {
+      id: item.id,
+      title: item.title,
+      author: item.author,
+      date: item.date,
+      excerpt: item.excerpt,
+      category: item.category,
+      cover: item.cover,
+      location: item.location,
+      region: item.region,
+      subCollections: item.subCollections?.map((s) => ({
+        id: s.id,
+        title: s.title,
+        cover: s.cover,
+        gallery: s.gallery.map((g) => ({ url: g.url, caption: g.caption, width: g.width, height: g.height })),
+      })),
+      gallery: item.gallery?.map((g) => ({ url: g.url, caption: g.caption, width: g.width, height: g.height })),
+    };
+  }
+  return {
+    id: item.id,
+    title: item.titleEn,
+    author: item.authorEn,
+    date: item.date,
+    excerpt: item.excerptEn,
+    category: item.categoryEn as AtlasItem["category"],
+    cover: item.cover,
+    location: item.location,
+    region: item.region,
+    subCollections: item.subCollections?.map((s) => ({
+      id: s.id,
+      title: s.titleEn,
+      cover: s.cover,
+      gallery: s.gallery.map((g) => ({ url: g.url, caption: g.captionEn || localizeCaption(g.caption), width: g.width, height: g.height })),
+    })),
+    gallery: item.gallery?.map((g) => ({ url: g.url, caption: g.captionEn || localizeCaption(g.caption), width: g.width, height: g.height })),
+  };
+}
+
 export const archiveData: ArchiveItem[] = [
   {
     id: "DIAGONAL-2026-ZG03",
     title: "展览预告｜“生命之盐”自贡盐文化当代艺术展",
+    titleEn: "Exhibition Preview | The Salt of Life: Contemporary Art Exhibition on Zigong Salt Culture",
     artist: "对角线计划 / 孙晓鸣 Kerribin",
+    artistEn: "Diagonal / Kerribin",
     year: "2026.06.20 18:01",
     type: "Document",
+    typeEn: "Document",
     tags: ["展览预告", "当代艺术展", "自贡", "生命之盐", "自流井老街"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["Exhibition Preview", "Contemporary Art", "Zigong", "The Salt of Life", "Ziliujing Old Street"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-ZG03/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-LIST2",
     title: "名单公布丨“生命之盐 2.0”自贡盐文化考察创作驻留计划",
+    titleEn: "List Announcement | The Salt of Life 2.0: Zigong Salt Culture Research & Creation Residency",
     artist: "对角线计划",
+    artistEn: "Diagonal",
     year: "2026.06.07 19:07",
     type: "Document",
+    typeEn: "Document",
     tags: ["名单公布", "驻留", "自贡"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["List Announcement", "Residency", "Zigong"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-LIST2/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-SH",
     title: "回顾：对角线计划参加上海社区枢纽站讲座",
+    titleEn: "Review: Diagonal at the Shanghai Community Hub Station Lecture",
     artist: "对角线计划",
+    artistEn: "Diagonal",
     year: "2026.06.03 19:38",
     type: "Document",
+    typeEn: "Document",
     tags: ["讲座", "艺术社区", "学科创新", "回顾"],
-    location: { city: "上海", code: "SH", coordinates: "31.2N, 121.5E" },
+    tagsEn: ["Lecture", "Art Community", "Disciplinary Innovation", "Review"],
+    location: { city: "上海", cityEn: "Shanghai", code: "SH", coordinates: "31.2N, 121.5E" },
     region: "Transition",
     thumbnail: "/images/archive/DIAGONAL-2026-SH/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-A4",
     title: "盐记忆之场：A4国际驻留艺术中心成都艺术周分享会",
+    titleEn: "Field of Salt Memory: A4 International Residency Art Center Chengdu Art Week Sharing Session",
     artist: "对角线计划",
+    artistEn: "Diagonal",
     year: "2026.04.08 13:07",
     type: "Document",
+    typeEn: "Document",
     tags: ["分享会", "成都", "A4驻留", "在地实践"],
-    location: { city: "成都", code: "CD", coordinates: "30.6N, 104.1E" },
+    tagsEn: ["Sharing Session", "Chengdu", "A4 Residency", "Site-specific Practice"],
+    location: { city: "成都", cityEn: "Chengdu", code: "CD", coordinates: "30.6N, 104.1E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-A4/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-ZG01",
     title: "展览回顾：生命之盐 1.0 自贡盐文化考察创作驻留成果展",
+    titleEn: "Exhibition Review: The Salt of Life 1.0 — Zigong Salt Culture Research & Creation Residency Outcomes",
     artist: "对角线计划 / 驻留创作者",
+    artistEn: "Diagonal / Resident Artists",
     year: "2026.04.02 07:16",
     type: "Document",
+    typeEn: "Document",
     tags: ["展览回顾", "自贡", "工业遗产", "驻留成果"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["Exhibition Review", "Zigong", "Industrial Heritage", "Residency Outcomes"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-ZG01/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-ZG02",
     title: "共居与共情：生命之盐 1.0 驻留成果展览现场交互行动招募",
+    titleEn: "Co-living & Co-empathy: The Salt of Life 1.0 — Live Interaction Action Call at the Residency Outcomes Exhibition",
     artist: "对角线计划",
+    artistEn: "Diagonal",
     year: "2026.03.31 23:53",
     type: "Installation",
+    typeEn: "Installation",
     tags: ["驻留", "交互行动", "展览"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["Residency", "Interaction", "Exhibition"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-ZG02/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-YD",
     title: "重走盐道 2026：在贡井老街用盐重新走一遍历史",
+    titleEn: "Retracing the Salt Road 2026: Walking Through History with Salt in Gongjing Old Street",
     artist: "生命之盐 1.0 参与创作者",
+    artistEn: "The Salt of Life 1.0 Participants",
     year: "2026.03.26 20:42",
     type: "Performance",
+    typeEn: "Performance",
     tags: ["生命之盐", "重走盐道", "现场考察"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["The Salt of Life", "Salt Road", "Field Investigation"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-YD/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-FORUM-01",
     title: "开幕论坛回顾丨“生命之盐 1.0”自贡盐文化考察创作驻留计划",
+    titleEn: "Opening Forum Review | The Salt of Life 1.0: Zigong Salt Culture Research & Creation Residency",
     artist: "对角线计划 / 论坛嘉宾",
+    artistEn: "Diagonal / Forum Guests",
     year: "2026.03.19 21:52",
     type: "Document",
+    typeEn: "Document",
     tags: ["论坛", "自贡", "工业遗产", "当代艺术"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["Forum", "Zigong", "Industrial Heritage", "Contemporary Art"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-FORUM-01/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-LIST1",
     title: "日程名单公布：“生命之盐 1.0”自贡驻留计划",
+    titleEn: "Schedule & List Announcement: The Salt of Life 1.0 — Zigong Residency",
     artist: "对角线计划",
+    artistEn: "Diagonal",
     year: "2026.02.23 16:53",
     type: "Document",
+    typeEn: "Document",
     tags: ["名单公布", "日程", "驻留", "自贡"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["List Announcement", "Schedule", "Residency", "Zigong"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-LIST1/cover.jpg",
   },
   {
     id: "DIAGONAL-2026-OC1",
     title: "Open Call 招募丨“生命之盐 1.0”自贡盐文化考察创作驻留计划",
+    titleEn: "Open Call | The Salt of Life 1.0: Zigong Salt Culture Research & Creation Residency",
     artist: "对角线计划 (Diagonal)",
+    artistEn: "Diagonal",
     year: "2026.02.16 08:45",
     type: "Document",
+    typeEn: "Document",
     tags: ["生命之盐", "招募", "自贡", "驻留计划"],
-    location: { city: "自贡", code: "ZG", coordinates: "29.3N, 104.7E" },
+    tagsEn: ["The Salt of Life", "Open Call", "Zigong", "Residency"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
     thumbnail: "/images/archive/DIAGONAL-2026-OC1/cover.jpg",
   },
@@ -161,10 +325,14 @@ export const atlasData: AtlasItem[] = [
   {
     id: "ATLAS-ZG-2.0",
     title: "生命之盐 2.0",
+    titleEn: "The Salt of Life 2.0",
     author: "对角线计划 (Diagonal)",
+    authorEn: "Diagonal",
     date: "2026.04 - 06",
     excerpt: "对角线计划·自贡火井沱驻留与共创项目是一个以工业遗产、物质记忆与社会参与式艺术为核心的长期跨学科实践...",
+    excerptEn: "The Diagonal · Zigong Huojingtuo Residency & Co-creation Project is a long-term interdisciplinary practice centred on industrial heritage, material memory, and socially engaged art...",
     category: "Atlas",
+    categoryEn: "Atlas",
     location: { city: "自贡", code: "ZG" },
     region: "Southwest",
     cover: "/images/archive/DIAGONAL-2026-LIST2/cover.jpg",
@@ -172,6 +340,7 @@ export const atlasData: AtlasItem[] = [
       {
         id: "P1",
         title: "防空洞与废弃盐厂考察",
+        titleEn: "Investigation of Air-Raid Shelters & Abandoned Salt Works",
         cover: "https://res.cloudinary.com/de0wfewt8/image/upload/v1781255858/防空洞与废弃盐厂_1_t8a7d7.jpg",
         gallery: [
           { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1781255858/防空洞与废弃盐厂_1_t8a7d7.jpg", caption: "防空洞与废弃盐厂_001 摄影师：彭思崴" },
@@ -247,10 +416,14 @@ export const atlasData: AtlasItem[] = [
   {
     id: "ATLAS-ZG-1.0",
     title: "生命之盐 1.0",
+    titleEn: "The Salt of Life 1.0",
     author: "对角线计划 (Diagonal)",
+    authorEn: "Diagonal",
     date: "2026.02",
     excerpt: "作为项目的启动阶段，1.0 聚焦于火井沱社区的口述史采集与工业遗存初步调研。12位创作者在20天的时间里，通过考察与调研在自贡留下了深刻印记。",
+    excerptEn: "As the project’s inaugural phase, 1.0 focused on oral history collection in Huojingtuo community and preliminary research into industrial remnants. Twelve creators left a profound mark on Zigong through 20 days of fieldwork and investigation.",
     category: "Atlas",
+    categoryEn: "Atlas",
     location: { city: "自贡", code: "ZG" },
     region: "Southwest",
     cover: "",
@@ -258,10 +431,14 @@ export const atlasData: AtlasItem[] = [
   {
     id: "ATLAS-HG",
     title: "鹤岗",
+    titleEn: "Hegang",
     author: "占位符",
+    authorEn: "TBC",
     date: "2024.12",
     excerpt: "在零下三十度的极端气候中，我们试图捕捉那些正在消逝的工业纹理与人的面孔...",
+    excerptEn: "In the extreme climate of minus 30 degrees, we attempt to capture the fading industrial textures and human faces...",
     category: "Visual Record",
+    categoryEn: "Visual Record",
     location: { city: "鹤岗", code: "HG" },
     region: "Northeast",
     cover: "",

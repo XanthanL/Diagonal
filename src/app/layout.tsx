@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { getAbsoluteUrl } from "@/lib/path";
+import { I18nProvider } from "@/lib/i18n";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -38,10 +39,12 @@ export default function RootLayout({
         <meta name="referrer" content="no-referrer" />
       </head>
       <body className="antialiased min-h-screen bg-white text-black selection:bg-black selection:text-white">
-        <main>{children}</main>
-        <footer className="p-12 border-t border-black/10 flex justify-between items-end archive-text text-xs opacity-50">
-          <div>© 2026 DIAGONAL PROJECT</div>
-        </footer>
+        <I18nProvider>
+          <main>{children}</main>
+          <footer className="p-12 border-t border-black/10 flex justify-between items-end archive-text text-xs opacity-50">
+            <div>© 2026 DIAGONAL PROJECT</div>
+          </footer>
+        </I18nProvider>
       </body>
     </html>
   );
