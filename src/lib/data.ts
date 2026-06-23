@@ -170,6 +170,21 @@ export function getLocalizedAtlasItem(item: AtlasItem, lang: "zh" | "en"): Local
 
 export const archiveData: ArchiveItem[] = [
   {
+    id: "DIAGONAL-2026-ARTISTS",
+    title: "参展艺术家介绍｜“生命之盐”自贡盐文化当代艺术展",
+    titleEn: "Artists Introduction | The Salt of Life: Contemporary Art Exhibition on Zigong Salt Culture",
+    artist: "对角线计划",
+    artistEn: "Diagonal",
+    year: "2026.06.21 23:59",
+    type: "Document",
+    typeEn: "Document",
+    tags: ["参展艺术家", "当代艺术展", "自贡", "生命之盐", "自流井老街"],
+    tagsEn: ["Artists Introduction", "Contemporary Art", "Zigong", "The Salt of Life", "Ziliujing Old Street"],
+    location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
+    region: "Southwest",
+    thumbnail: "/images/archive/DIAGONAL-2026-ARTISTS/cover.jpg",
+  },
+  {
     id: "DIAGONAL-2026-ZG03",
     title: "展览预告｜“生命之盐”自贡盐文化当代艺术展",
     titleEn: "Exhibition Preview | The Salt of Life: Contemporary Art Exhibition on Zigong Salt Culture",
