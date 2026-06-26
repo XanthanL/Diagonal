@@ -1,5 +1,5 @@
-const basePath = process.env.NODE_ENV === 'production' ? '/Diagonal' : '';
-export const siteUrl = 'https://xanthanl.github.io';
+const basePath = '';
+export const siteUrl = 'https://www.diagonal-art.com';
 
 export const getAssetPath = (path: string) => {
   if (path.startsWith('http')) return path;

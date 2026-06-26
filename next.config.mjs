@@ -1,14 +1,12 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === 'production';
-
 const nextConfig = {
   output: 'export',
   images: {
     unoptimized: true,
   },
-  // 只有在生产环境（GitHub Pages）部署时才使用二级目录
-  basePath: isProd ? '/Diagonal' : '',
-  assetPrefix: isProd ? '/Diagonal' : '',
+  // 使用自定义域名 www.diagonal-art.com 根目录部署，无需 basePath
+  basePath: '',
+  assetPrefix: '',
 };
 
 export default nextConfig;
