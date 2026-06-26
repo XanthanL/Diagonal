@@ -14,6 +14,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return { title: "Document | DIAGONAL" };
   }
 
+  const ogImage = item.thumbnail ? getAbsoluteUrl(item.thumbnail) : undefined;
+
   return {
     title: `${item.title} | DIAGONAL`,
     description: `${item.title} - ${item.artist} / ${item.location.city}`,
@@ -24,10 +26,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       siteName: "DIAGONAL",
       locale: "zh_CN",
       type: "article",
-      images: item.thumbnail
+      images: ogImage
         ? [
             {
-              url: getAbsoluteUrl(item.thumbnail),
+              url: ogImage,
               width: 1200,
               height: 630,
               alt: item.title,
@@ -35,6 +37,25 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
           ]
         : undefined,
     },
+    twitter: ogImage
+      ? {
+          card: "summary_large_image",
+          title: `${item.title} | DIAGONAL`,
+          description: `${item.title} - ${item.artist} / ${item.location.city}`,
+          images: [ogImage],
+        }
+      : undefined,
+    other: ogImage
+      ? {
+          "itemprop:name": `${item.title} | DIAGONAL`,
+          "itemprop:description": `${item.title} - ${item.artist} / ${item.location.city}`,
+          "itemprop:image": ogImage,
+          "og:image:secure_url": ogImage,
+        }
+      : {
+          "itemprop:name": `${item.title} | DIAGONAL`,
+          "itemprop:description": `${item.title} - ${item.artist} / ${item.location.city}`,
+        },
   };
 }
 
