@@ -9,7 +9,7 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 const siteTitle = "DIAGONAL | 对角线计划";
 const siteDescription = "对角线计划 (Diagonal) 是一个从东北到西南、以行为艺术档案与跨学科研究为核心的长期艺术项目。";
-const ogImage = getAbsoluteUrl("/images/archive/DIAGONAL-2026-ZG03/cover.jpg");
+const ogImage = getAbsoluteUrl("/images/og-cover.jpg");
 
 export const metadata: Metadata = {
   title: siteTitle,
