@@ -35,10 +35,14 @@ export function SaltSimulation() {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    const particleCount = 18000;
+    // 移动端降低粒子数以减少 GPU/CPU 占用
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const particleCount = isMobile ? 6000 : 18000;
     const interactionRadius = 35;
     let logicalWidth = 0;
     let logicalHeight = 0;
+    let isCanvasVisible = true;
+    let intersectionObserver: IntersectionObserver | null = null;
 
     const resize = () => {
       const container = canvas.parentElement;
@@ -102,6 +106,8 @@ export function SaltSimulation() {
     };
 
     const animate = (time: number) => {
+      // 当 canvas 不可见时停止动画循环以节省 CPU/GPU
+      if (!isCanvasVisible) return;
       drawBackground();
       
       const t = time * 0.0005;
@@ -242,6 +248,25 @@ export function SaltSimulation() {
     resize();
     requestAnimationFrame(animate);
 
+    // 通过 IntersectionObserver 监听 canvas 可见性，离开视口时暂停动画
+    intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isCanvasVisible = entry.isIntersecting;
+          if (isCanvasVisible) {
+            // 重新进入视口时恢复动画
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(animate);
+          } else {
+            // 离开视口时取消动画帧
+            cancelAnimationFrame(animationFrameId);
+          }
+        });
+      },
+      { threshold: 0 }
+    );
+    intersectionObserver.observe(canvas);
+
     return () => {
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', handleMouseMove);
@@ -252,6 +277,9 @@ export function SaltSimulation() {
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
       canvas.removeEventListener('touchcancel', handleTouchEnd);
+      if (intersectionObserver) {
+        intersectionObserver.disconnect();
+      }
       cancelAnimationFrame(animationFrameId);
     };
   }, []);

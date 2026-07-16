@@ -182,7 +182,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Salon", "The Art of Travel", "Diagonal Talk", "Zigong"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-TA1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-TA1/旅行的艺术沙龙分享会旅行生活与艺术系列活动第一期_0.jpg",
   },
   {
     id: "DIAGONAL-2026-FH1",
@@ -197,7 +197,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Sharing Session Review", "Zigong Library", "Residency", "Academic Observation", "Local Culture"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-FH1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-FH1/分享会回顾生命之盐自贡盐文化当代艺术展分享会在自贡市图书馆举行_0.jpg",
   },
   {
     id: "DIAGONAL-2026-OD1",
@@ -212,7 +212,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Opening Review", "Contemporary Art", "Zigong", "The Salt of Life", "Ziliujing Old Street"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-OD1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-OD1/开幕日回顾生命之盐自贡盐文化当代艺术展在自流井老街开幕_0.jpg",
   },
   {
     id: "DIAGONAL-2026-ZH1",
@@ -227,7 +227,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Event Preview", "Traces in Zigong", "Socially Engaged Art", "Ni Weihua", "Ziliujing Old Street"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-ZH1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-ZH1/活动预告追痕在自贡生命之盐自贡盐文化当代艺术展系列活动_0.jpg",
   },
   {
     id: "DIAGONAL-2026-OP1",
@@ -242,7 +242,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Opening Ceremony", "Sharing Session", "Exhibition Introduction", "Zigong", "The Salt of Life"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-OP1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-OP1/开幕式分享会介绍生命之盐自贡盐文化当代艺术展TheSaltofLifeContemporaryArt_0.jpg",
   },
   {
     id: "DIAGONAL-2026-CT1",
@@ -257,7 +257,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Curatorial Team", "Exhibition Introduction", "Zigong", "The Salt of Life"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-CT1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-CT1/策展团队介绍生命之盐自贡盐文化当代艺术展TheSaltofLifeContemporaryArtEx_0.jpg",
   },
   {
     id: "DIAGONAL-2026-AC1",
@@ -272,7 +272,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["Academic Observers", "Partners", "Exhibition Introduction", "Zigong", "The Salt of Life"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-AC1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-AC1/学术观察员合作方等介绍生命之盐自贡盐文化当代艺术展TheSaltofLifeContemporary_0.jpg",
   },
   {
     id: "DIAGONAL-2026-VT1",
@@ -452,7 +452,7 @@ export const archiveData: ArchiveItem[] = [
     tagsEn: ["The Salt of Life", "Open Call", "Zigong", "Residency"],
     location: { city: "自贡", cityEn: "Zigong", code: "ZG", coordinates: "29.3N, 104.7E" },
     region: "Southwest",
-    thumbnail: "/images/archive/DIAGONAL-2026-OC1/cover.jpg",
+    thumbnail: "/images/archive/DIAGONAL-2026-OC1/OpenCall招募丨生命之盐10自贡盐文化考察创作驻留计划_0.jpg",
   },
 ];
 

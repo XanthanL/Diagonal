@@ -90,7 +90,12 @@ function processContent(content: string, isHtml: boolean): string {
   if (!isHtml) {
     return content;
   }
-  return content.replace(/src="\/images\//g, `src="${getAssetPath('/images/')}`);
+  // 改写图片路径以适配 basePath
+  let processed = content.replace(/src="\/images\//g, `src="${getAssetPath('/images/')}`);
+  // 为 <img> 注入 loading="lazy" 与 decoding="async"（保留已有属性不变）
+  processed = processed.replace(/<img(?![^>]*\sloading=)([^>]*)>/g, '<img$1 loading="lazy">');
+  processed = processed.replace(/<img(?![^>]*\sdecoding=)([^>]*)>/g, '<img$1 decoding="async">');
+  return processed;
 }
 
 export default async function ArchiveDetailPage({ params }: { params: { id: string } }) {

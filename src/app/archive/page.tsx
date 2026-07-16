@@ -6,7 +6,6 @@ import { archiveData } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { ArchiveCard } from "@/components/ArchiveCard";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function ArchiveIndexPage() {
   const { lang } = useI18n();
@@ -17,19 +16,6 @@ export default function ArchiveIndexPage() {
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
         <div className="diagonal-line opacity-5" />
       </div>
-
-      {/* 导航 */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference text-white">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="archive-text text-sm font-bold flex items-center gap-2 group text-white">
-            <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToHome")}
-          </Link>
-          <div className="flex items-center gap-6">
-            <div className="archive-text text-xs opacity-50 uppercase tracking-widest text-white">{t(lang, "fullArchiveIndex")}</div>
-            <LanguageSwitcher />
-          </div>
-        </div>
-      </nav>
 
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <header className="mb-32 space-y-6">
@@ -44,7 +30,7 @@ export default function ArchiveIndexPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic leading-none"
+            className="font-serif text-7xl md:text-9xl font-black tracking-tighter leading-none"
             dangerouslySetInnerHTML={{ __html: t(lang, "archiveTitle") }}
           />
           <p className="max-w-xl text-lg opacity-60 leading-relaxed italic">

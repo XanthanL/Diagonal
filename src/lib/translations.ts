@@ -7,7 +7,6 @@ export const translations = {
     // Layout / Navigation
     siteTitle: "DIAGONAL | 对角线计划",
     siteDescription: "对角线计划 (Diagonal) - 行为艺术档案与跨学科研究项目",
-    footer: "© 2026 DIAGONAL PROJECT",
 
     // Home
     projectStatus: "PROJECT STATUS: ACTIVE",
@@ -57,7 +56,6 @@ export const translations = {
     siteTitle: "DIAGONAL",
     siteDescription:
       "Diagonal - An independent project dedicated to interdisciplinary performance art research, archival cataloging, and field practice.",
-    footer: "© 2026 DIAGONAL PROJECT",
 
     // Home
     projectStatus: "PROJECT STATUS: ACTIVE",

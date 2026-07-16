@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ArchiveContent } from "@/components/ArchiveContent";
+import { ArchiveTableOfContents } from "@/components/ArchiveTableOfContents";
 
 interface ArchiveDetailClientProps {
   id: string;
@@ -31,16 +32,22 @@ export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: Archiv
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6">
-        {isHtml ? (
-          <ArchiveContent zhContent={zhContent} enContent={enContent} />
-        ) : (
-          <pre className="whitespace-pre-wrap font-sans opacity-80">{zhContent}</pre>
-        )}
-      </main>
+      {/* 12 列布局：8 列正文 + 4 列 sticky 章节目录 */}
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <main className="lg:col-span-8 lg:col-start-1 xl:col-span-8 xl:col-start-1 max-w-3xl">
+          {isHtml ? (
+            <ArchiveContent zhContent={zhContent} enContent={enContent} />
+          ) : (
+            <pre className="whitespace-pre-wrap font-sans opacity-80">{zhContent}</pre>
+          )}
+        </main>
+        <aside className="lg:col-span-4 lg:col-start-9 xl:col-span-4 xl:col-start-9">
+          <ArchiveTableOfContents />
+        </aside>
+      </div>
 
       {/* 底部验证标注 */}
-      <div className="mt-60 max-w-4xl mx-auto px-6 border-t border-black/10 pt-12 flex justify-between items-end">
+      <div className="mt-60 max-w-3xl mx-auto px-6 border-t border-black/10 pt-12 flex justify-between items-end">
         <div className="archive-text text-[10px] opacity-30 tracking-[0.2em] uppercase">
           {t(lang, "endOfRecord")} / {id}
         </div>

@@ -8,18 +8,12 @@ import { t } from "@/lib/translations";
 import { ArchiveCard } from "@/components/ArchiveCard";
 import { AtlasCover } from "@/components/AtlasCover";
 import { SaltSimulation } from "@/components/SaltSimulation";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function Home() {
   const { lang } = useI18n();
 
   return (
     <div className="relative overflow-hidden pt-24 min-h-screen">
-      {/* 语言切换按钮 - 右上角 */}
-      <div className="fixed top-6 right-6 z-[60] mix-blend-difference text-white">
-        <LanguageSwitcher />
-      </div>
-
       {/* 视觉核心：巨大的对角斜线装饰 */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
         <motion.div
@@ -38,9 +32,30 @@ export default function Home() {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-8xl md:text-[10rem] font-black leading-[0.8] tracking-tighter"
+              className="font-serif font-black leading-[0.8] tracking-tighter"
             >
-              DIA<br />GONAL
+              {/* 对角线母题：DIA 与 GONAL 沿 45° 对角错位咬合，而非水平堆叠 */}
+              <span className="block text-8xl md:text-[10rem]">DIA</span>
+              <span
+                className="block text-8xl md:text-[10rem] -mt-2 md:-mt-4"
+                style={{ transform: "translateX(0.6em)" }}
+              >
+                GONAL
+              </span>
+              {/* 贯穿 DIA/GONAL 的对角斜线 */}
+              <span
+                aria-hidden="true"
+                className="block absolute pointer-events-none"
+                style={{
+                  top: "0.05em",
+                  left: "-0.1em",
+                  width: "calc(100% + 0.2em)",
+                  height: "100%",
+                  background:
+                    "linear-gradient(135deg, transparent 49.4%, currentColor 49.4%, currentColor 50.6%, transparent 50.6%)",
+                  opacity: 0.18,
+                }}
+              />
             </motion.h1>
 
             <motion.div
@@ -49,7 +64,7 @@ export default function Home() {
               transition={{ delay: 0.5 }}
               className="max-w-md space-y-6"
             >
-              <div className="archive-text text-sm font-bold border-l-2 border-black pl-4">
+              <div className="archive-text text-sm font-bold border-l-2 border-diagonal-red pl-4">
                 {t(lang, "projectStatus")}
               </div>
               <p className="text-xl leading-relaxed">
