@@ -32,9 +32,9 @@ export default function Home() {
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="font-serif font-black leading-[0.8] tracking-tighter"
+              className="font-serif font-black leading-[0.8] tracking-tighter relative"
             >
-              {/* 对角线母题：DIA 与 GONAL 沿 45° 对角错位咬合，而非水平堆叠 */}
+              {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠 */}
               <span className="block text-8xl md:text-[9rem]">DIA</span>
               <span
                 className="block text-8xl md:text-[9rem] -mt-2 md:-mt-4"
@@ -42,18 +42,31 @@ export default function Home() {
               >
                 GONAL
               </span>
-              {/* 贯穿 DIA/GONAL 的对角斜线 */}
+              {/* 贯穿 DIA/GONAL 的对角斜线 —— 项目核心视觉母题
+                  浅灰、细线、略缓于 45° 的对角线，淡淡存在于字形之间 */}
               <span
                 aria-hidden="true"
                 className="block absolute pointer-events-none"
                 style={{
-                  top: "0.05em",
-                  left: "-0.1em",
-                  width: "calc(100% + 0.2em)",
-                  height: "100%",
+                  top: "12%",
+                  left: "-8%",
+                  width: "116%",
+                  height: "76%",
                   background:
-                    "linear-gradient(135deg, transparent 49.4%, currentColor 49.4%, currentColor 50.6%, transparent 50.6%)",
-                  opacity: 0.18,
+                    "linear-gradient(159deg, transparent 49.5%, rgba(0,0,0,0.28) 49.5%, rgba(0,0,0,0.28) 50.5%, transparent 50.5%)",
+                }}
+              />
+              {/* 一条更细的伴随线，营造层叠设计感 */}
+              <span
+                aria-hidden="true"
+                className="block absolute pointer-events-none"
+                style={{
+                  top: "22%",
+                  left: "-4%",
+                  width: "108%",
+                  height: "56%",
+                  background:
+                    "linear-gradient(159deg, transparent 49.7%, rgba(0,0,0,0.12) 49.7%, rgba(0,0,0,0.12) 50.3%, transparent 50.3%)",
                 }}
               />
             </motion.h1>

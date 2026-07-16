@@ -49,32 +49,64 @@ const timeline = [
   },
 ];
 
-// 核心团队（4 人，中英双语）
-const team = [
+// 对角线计划核心成员（2 位发起人）
+const coreTeam = [
   {
     name: "孙晓鸣",
     nameEn: "Kerribin",
     role: "策展人 / 发起人",
     roleEn: "CURATOR / FOUNDER",
-    bio: "跨媒介创作者、研究者与艺术管理者。",
-    bioEn: "Intermedia creator, researcher, and art manager.",
+    bio: "跨媒介创作者、研究者与艺术管理者。发起中国东北与西南地区艺术实践项目“对角线计划 Diagonal”、“鹤岗城市实验”，GL 小组成员，《碴粥实录》创作者。长期实践与研究地方与艺术的关系、网络社会艺术形态、艺术与教育、媒介、商业、心灵等议题。",
+    bioEn:
+      "Intermedia creator, researcher, and art manager. Founder of the cross-regional art project Diagonal and Hegang City Experiment, member of GL Group, creator of Cha Zhou Record. Long-term practice and research on the relationship between place and art, network society art forms, art and education, media, commerce, and spirituality.",
   },
   {
     name: "彭玮雯",
     nameEn: "Vivienne Peng",
-    role: "联合发起人 / 展览执行",
-    roleEn: "CO-FOUNDER / EXHIBITION EXECUTIVE",
-    bio: "普利茅斯大学博士候选人。跨媒介艺术家、社会参与式艺术研究者。",
+    role: "联合发起人",
+    roleEn: "CO-FOUNDER",
+    bio: "英国普利茅斯大学博士候选人（Practice-based Art Research），苏州大学联合培养博士生，四川美术学院实验艺术硕士。跨媒介艺术家、社会参与性艺术研究者。博士课题研究《共建物质记忆：基于中国“后单位”社区工业遗产的社会参与式艺术方法论》在自贡自流井盐厂社区与鹤岗峻德煤矿社区开展跨区域艺术实践。",
     bioEn:
-      "PhD candidate at University of Plymouth. Intermedia artist and socially engaged art researcher.",
+      "PhD candidate at University of Plymouth (Practice-based Art Research), joint PhD candidate at Soochow University, MA in Experimental Art from Sichuan Fine Arts Institute. Intermedia artist and socially engaged art researcher. Her doctoral research Co-constructing Material Memory: Socially Engaged Art Methodology Based on Post-Danwei Industrial Heritage in China unfolds cross-regional art practices in Zigong Ziliujing Salt Factory community and Hegang Junde Coal Mine community.",
+  },
+];
+
+// 生命之盐项目团队（本次展览团队）
+const projectTeam = [
+  {
+    name: "杨茜",
+    nameEn: "Yang Qian",
+    role: "展览顾问",
+    roleEn: "EXHIBITION CONSULTANT",
+    bio: "美学博士，前通讯记者。影像作品曾获中国广播电视协会、中国纪录片协会奖项。",
+    bioEn:
+      "PhD in Aesthetics, former journalist. Video works awarded by China Radio and Television Association and China Documentary Association.",
   },
   {
     name: "兰雅杰",
     nameEn: "Lannie",
     role: "空间设计",
     roleEn: "SPATIAL DESIGN",
-    bio: "毕业于雪城大学建筑学院。",
-    bioEn: "Graduated from Syracuse University School of Architecture.",
+    bio: "毕业于雪城大学建筑学院，「故盐」主理人，「kid a」建筑设计事务所联合主理人。",
+    bioEn:
+      "Graduated from Syracuse University School of Architecture. Founder of Gu Yan, co-founder of kid a architectural studio.",
+  },
+  {
+    name: "刘洛甫",
+    nameEn: "Tofu",
+    role: "视觉设计",
+    roleEn: "VISUAL DESIGN",
+    bio: "抓梦角 DreamJIO 旅行商店主理人，蜀光中学摄影社团指导老师。",
+    bioEn:
+      "Founder of DreamJIO Travel Store, instructor of Shuguang Middle School Photography Club.",
+  },
+  {
+    name: "彭思崴",
+    nameEn: "Peng Siwei",
+    role: "网页设计",
+    roleEn: "WEB DESIGN",
+    bio: "本网站网页设计师。",
+    bioEn: "Web designer of this website.",
   },
   {
     name: "Christian",
@@ -83,6 +115,16 @@ const team = [
     roleEn: "CURATORIAL ASSISTANT",
     bio: "四川大学艺术学研究生。",
     bioEn: "Graduate student in Art, Sichuan University.",
+  },
+  {
+    name: "富贵电器",
+    nameEn: "Fugui Electrical Shop",
+    role: "布展团队",
+    roleEn: "EXHIBITION SET-UP",
+    bio:
+      "（杨川威、杨柳川、杨宏）现经营长虹·美菱专卖店、立诚家电维修服务中心、京云电器。深耕家电行业 30 余年，一条龙涵盖电气设备销售、回收、维修、安装、拆除。",
+    bioEn:
+      "(Yang Chuanwei, Yang Liuchuan, Yang Hong) Operating Changhong·Meiling store, Licheng Repair Center, and Jingyun Electrical. Over 30 years in the appliance industry, offering one-stop services including sales, recycling, repair, installation, and dismantling.",
   },
 ];
 
@@ -173,13 +215,13 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* 核心团队 */}
+        {/* 对角线计划核心成员 */}
         <div className="mb-32">
           <h2 className="archive-text text-sm font-bold tracking-[0.2em] opacity-70 mb-12 border-t border-black/10 pt-8">
-            {lang === "zh" ? "核心团队" : "CORE_TEAM"}
+            {lang === "zh" ? "核心成员" : "CORE MEMBERS"}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
-            {team.map((member, i) => (
+            {coreTeam.map((member, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -192,6 +234,45 @@ export default function AboutPage() {
                   {lang === "zh" ? member.name : member.nameEn || member.name}
                   {member.nameEn && lang === "zh" && (
                     <span className="text-base opacity-50 italic ml-3">
+                      {member.nameEn}
+                    </span>
+                  )}
+                </div>
+                <div className="archive-text text-[10px] tracking-[0.2em] opacity-60">
+                  {lang === "zh" ? member.role : member.roleEn}
+                </div>
+                <p className="text-sm opacity-70 leading-relaxed mt-2">
+                  {lang === "zh" ? member.bio : member.bioEn}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* 生命之盐项目团队 */}
+        <div className="mb-32">
+          <h2 className="archive-text text-sm font-bold tracking-[0.2em] opacity-70 mb-4 border-t border-black/10 pt-8">
+            {lang === "zh" ? "生命之盐项目团队" : "THE SALT OF LIFE PROJECT TEAM"}
+          </h2>
+          <p className="archive-text text-[10px] opacity-40 italic mb-12">
+            {lang === "zh"
+              ? "以下为本次展览团队成员，后续活动或有调整"
+              : "Team members for the current exhibition; subject to change in future projects"}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
+            {projectTeam.map((member, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="space-y-2"
+              >
+                <div className="text-xl font-bold tracking-tight">
+                  {lang === "zh" ? member.name : member.nameEn || member.name}
+                  {member.nameEn && lang === "zh" && (
+                    <span className="text-sm opacity-50 italic ml-3">
                       {member.nameEn}
                     </span>
                   )}
