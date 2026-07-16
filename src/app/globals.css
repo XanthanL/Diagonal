@@ -45,7 +45,7 @@ body {
 .archive-html-content h1 { @apply text-6xl font-black tracking-tighter mb-16 uppercase italic leading-none; }
 .archive-html-content h2 { @apply text-3xl font-bold mt-24 mb-8 border-b-2 border-black pb-4 uppercase; }
 .archive-html-content p { @apply opacity-80 mb-8 text-justify; }
-.archive-html-content img { @apply w-full h-auto my-16 shadow-2xl border border-black/5; }
+.archive-html-content img { @apply w-full h-auto my-16 shadow-2xl border border-black/5; max-height: 75vh; object-fit: contain; object-position: center; }
 .archive-html-content blockquote { @apply border-l-8 border-black pl-8 py-4 my-16 italic opacity-70 bg-neutral-50 text-2xl font-light; }
 .archive-html-content figure { @apply my-20 space-y-4; }
 .archive-html-content figcaption { @apply archive-text text-[10px] opacity-40 text-center uppercase tracking-widest; }

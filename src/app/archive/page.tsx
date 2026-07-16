@@ -19,7 +19,7 @@ export default function ArchiveIndexPage() {
       </div>
 
       {/* 导航 */}
-      <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference">
+      <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference text-white">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="archive-text text-sm font-bold flex items-center gap-2 group text-white">
             <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToHome")}
