@@ -27,7 +27,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-end">
-          <div className="space-y-12">
+          <div className="space-y-12 pr-8 md:pr-12">
             <motion.h1
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -35,10 +35,10 @@ export default function Home() {
               className="font-serif font-black leading-[0.8] tracking-tighter"
             >
               {/* 对角线母题：DIA 与 GONAL 沿 45° 对角错位咬合，而非水平堆叠 */}
-              <span className="block text-8xl md:text-[10rem]">DIA</span>
+              <span className="block text-8xl md:text-[9rem]">DIA</span>
               <span
-                className="block text-8xl md:text-[10rem] -mt-2 md:-mt-4"
-                style={{ transform: "translateX(0.6em)" }}
+                className="block text-8xl md:text-[9rem] -mt-2 md:-mt-4"
+                style={{ transform: "translateX(0.3em)" }}
               >
                 GONAL
               </span>

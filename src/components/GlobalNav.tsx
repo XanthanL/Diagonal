@@ -27,18 +27,19 @@ export function GlobalNav() {
   if (isDetailPage) return null;
 
   const navItems = [
-    { href: "/#archive", label: t(lang, "documentsTitle") || "Documents" },
-    { href: "/#atlas", label: t(lang, "atlasTitle") || "Atlas" },
-    { href: "/archive", label: lang === "zh" ? "全部档案" : "All Archives" },
+    { href: "/#archive", label: lang === "zh" ? "文献" : "Documents" },
+    { href: "/#atlas", label: lang === "zh" ? "地图集" : "Atlas" },
+    { href: "/artists", label: lang === "zh" ? "艺术家" : "Artists" },
+    { href: "/projects/the-salt-of-life", label: lang === "zh" ? "项目" : "Projects" },
+    { href: "/about", label: lang === "zh" ? "关于" : "About" },
   ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-[60] mix-blend-difference text-white">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        {/* Wordmark - 简化版对角错位 */}
-        <Link href="/" className="archive-text font-bold text-sm tracking-tighter flex items-baseline gap-0">
-          <span>DIA</span>
-          <span className="ml-1">GONAL</span>
+        {/* Wordmark */}
+        <Link href="/" className="archive-text font-bold text-sm tracking-tighter">
+          DIAGONAL
         </Link>
 
         {/* 桌面导航 */}
