@@ -35,14 +35,32 @@ export function SaltSimulation() {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    // 移动端降低粒子数以减少 GPU/CPU 占用
+
+    /**
+     * 根据设备能力动态降级粒子数：
+     * - 移动端：4000
+     * - 桌面端低性能（hardwareConcurrency <= 4）：8000
+     * - 桌面端标准：12000（从 18000 降级，视觉无明显差异但显著降低 CPU 负担）
+     */
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    const particleCount = isMobile ? 6000 : 18000;
+    const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 8 : 8;
+    let particleCount = 12000;
+    if (isMobile) {
+      particleCount = 4000;
+    } else if (cores <= 4) {
+      particleCount = 8000;
+    }
+
     const interactionRadius = 35;
     let logicalWidth = 0;
     let logicalHeight = 0;
     let isCanvasVisible = true;
     let intersectionObserver: IntersectionObserver | null = null;
+
+    // 检测用户是否偏好减少动画（前庭敏感、省电模式等）
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const resize = () => {
       const container = canvas.parentElement;
@@ -50,10 +68,12 @@ export function SaltSimulation() {
         const dpr = window.devicePixelRatio || 1;
         logicalWidth = container.clientWidth;
         logicalHeight = container.clientHeight;
-        
+
         canvas.width = logicalWidth * dpr;
         canvas.height = logicalHeight * dpr;
-        
+
+        // 关键修复：先重置变换矩阵，避免多次 resize 后 scale(dpr) 累积导致画面错位/模糊
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.scale(dpr, dpr);
       }
       initParticles();
@@ -109,7 +129,17 @@ export function SaltSimulation() {
       // 当 canvas 不可见时停止动画循环以节省 CPU/GPU
       if (!isCanvasVisible) return;
       drawBackground();
-      
+
+      // reduced-motion：只绘制静态粒子布局，不进行交互、漂浮或动画循环
+      if (prefersReducedMotion) {
+        particles.forEach(p => {
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+        });
+        // 不请求下一帧，保持静态画面
+        return;
+      }
+
       const t = time * 0.0005;
       const { mouseX, mouseY, isMousePressed, touchPoints } = stateRef.current;
 
@@ -222,12 +252,18 @@ export function SaltSimulation() {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault(); // 阻止滚动和缩放行为
+      // 仅多指触控（pinch 交互）才阻止默认行为，单指触摸允许页面滚动
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+      }
       updateTouchPoints(e);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault(); // 阻止页面跟随滑动滚动
+      // 仅多指移动时阻止页面滚动，单指滑动放行让用户能滚出 hero 区
+      if (e.touches.length >= 2) {
+        e.preventDefault();
+      }
       updateTouchPoints(e);
     };
 
@@ -236,14 +272,17 @@ export function SaltSimulation() {
     };
 
     window.addEventListener('resize', resize);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mouseleave', handleMouseLeave);
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    // reduced-motion 用户不绑定交互事件，避免不必要的计算
+    if (!prefersReducedMotion) {
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mouseup', handleMouseUp);
+      canvas.addEventListener('mouseleave', handleMouseLeave);
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+      canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    }
 
     resize();
     requestAnimationFrame(animate);
@@ -269,14 +308,16 @@ export function SaltSimulation() {
 
     return () => {
       window.removeEventListener('resize', resize);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('mouseleave', handleMouseLeave);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchend', handleTouchEnd);
-      canvas.removeEventListener('touchcancel', handleTouchEnd);
+      if (!prefersReducedMotion) {
+        canvas.removeEventListener('mousemove', handleMouseMove);
+        canvas.removeEventListener('mousedown', handleMouseDown);
+        window.removeEventListener('mouseup', handleMouseUp);
+        canvas.removeEventListener('mouseleave', handleMouseLeave);
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchmove', handleTouchMove);
+        canvas.removeEventListener('touchend', handleTouchEnd);
+        canvas.removeEventListener('touchcancel', handleTouchEnd);
+      }
       if (intersectionObserver) {
         intersectionObserver.disconnect();
       }
@@ -291,9 +332,11 @@ export function SaltSimulation() {
         clipPath: 'polygon(20% 0%, 100% 0%, 100% 80%, 80% 100%, 0% 100%, 0% 20%)'
       }}
     >
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         className="w-full h-full block cursor-auto touch-none"
+        role="presentation"
+        aria-hidden="true"
       />
     </div>
   );

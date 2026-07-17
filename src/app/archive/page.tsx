@@ -94,6 +94,7 @@ export default function ArchiveIndexPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={lang === "zh" ? "搜索关键词…" : "Search…"}
+            aria-label={lang === "zh" ? "搜索档案" : "Search archives"}
             className="w-full max-w-md px-4 py-3 border border-black/20 focus:border-black outline-none archive-text text-sm bg-transparent"
           />
 
@@ -104,6 +105,7 @@ export default function ArchiveIndexPage() {
             </span>
             <button
               onClick={() => setActiveType(null)}
+              aria-pressed={activeType === null}
               className={filterChipClass(activeType === null)}
             >
               {lang === "zh" ? "全部" : "ALL"} ({archiveData.length})
@@ -115,6 +117,7 @@ export default function ArchiveIndexPage() {
                 <button
                   key={type}
                   onClick={() => setActiveType(activeType === type ? null : type)}
+                  aria-pressed={activeType === type}
                   className={filterChipClass(activeType === type)}
                 >
                   {type} ({count})
@@ -130,6 +133,7 @@ export default function ArchiveIndexPage() {
             </span>
             <button
               onClick={() => setActiveRegion(null)}
+              aria-pressed={activeRegion === null}
               className={filterChipClass(activeRegion === null)}
             >
               {lang === "zh" ? "全部" : "ALL"} ({archiveData.length})
@@ -147,6 +151,7 @@ export default function ArchiveIndexPage() {
                 <button
                   key={region}
                   onClick={() => setActiveRegion(activeRegion === region ? null : region)}
+                  aria-pressed={activeRegion === region}
                   className={filterChipClass(activeRegion === region)}
                 >
                   {label} ({count})
@@ -162,6 +167,7 @@ export default function ArchiveIndexPage() {
             </span>
             <button
               onClick={() => setActiveProject(null)}
+              aria-pressed={activeProject === null}
               className={filterChipClass(activeProject === null)}
             >
               {lang === "zh" ? "全部" : "ALL"} ({archiveData.length})
@@ -174,6 +180,7 @@ export default function ArchiveIndexPage() {
                 <button
                   key={project}
                   onClick={() => setActiveProject(activeProject === project ? null : project)}
+                  aria-pressed={activeProject === project}
                   className={filterChipClass(activeProject === project)}
                 >
                   {lang === "zh" ? labels.zh : labels.en} ({count})

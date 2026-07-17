@@ -28,7 +28,7 @@ export function GlobalNav() {
 
   const navItems = [
     { href: "/#archive", label: lang === "zh" ? "文献" : "Documents" },
-    { href: "/#atlas", label: lang === "zh" ? "地图集" : "Atlas" },
+    { href: "/atlas", label: lang === "zh" ? "地图集" : "Atlas" },
     { href: "/artists", label: lang === "zh" ? "艺术家" : "Artists" },
     { href: "/projects/the-salt-of-life", label: lang === "zh" ? "项目" : "Projects" },
     { href: "/about", label: lang === "zh" ? "关于" : "About" },

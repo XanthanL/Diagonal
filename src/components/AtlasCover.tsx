@@ -26,6 +26,8 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
               <img
                 src={getAssetPath(item.cover)}
                 alt={localized.title}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100"
               />
             </div>

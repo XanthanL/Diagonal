@@ -47,7 +47,13 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
             {subCollections.map((sub) => (
               <Link key={sub.id} href={`/atlas/${item.id}/${sub.id}`} className="group block">
                 <div className="relative aspect-[4/5] overflow-hidden border border-white/10">
-                  <img src={sub.cover} alt={sub.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img
+                    src={sub.cover}
+                    alt={sub.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <h3 className="text-3xl font-bold uppercase">{sub.title}</h3>
                   </div>

@@ -27,6 +27,8 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
             <img
               src={getAssetPath(item.thumbnail)}
               alt={localized.title}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (

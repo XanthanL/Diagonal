@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 interface TocItem {
   id: string;
@@ -19,8 +20,10 @@ interface ArchiveTableOfContentsProps {
  * 从已渲染的 archive-html-content 中自动抽取 h2/h3 章节并生成侧边 sticky 目录。
  * - 为每个 h2/h3 注入 id（若未提供）
  * - 监听滚动位置，高亮当前章节
+ * - 语言切换时重建目录（依赖 lang 触发重扫描）
  */
 export function ArchiveTableOfContents({ contentSelector = ".archive-html-content" }: ArchiveTableOfContentsProps) {
+  const { lang } = useI18n();
   const [items, setItems] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState<string>("");
 
@@ -52,6 +55,7 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
     });
 
     setItems(tocItems);
+    setActiveId("");
 
     if (tocItems.length === 0) return;
 
@@ -71,7 +75,7 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
 
     headings.forEach((h) => observer.observe(h));
     return () => observer.disconnect();
-  }, [contentSelector]);
+  }, [contentSelector, lang]);
 
   if (items.length < 2) return null;
 

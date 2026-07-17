@@ -43,30 +43,92 @@ export default function Home() {
                 GONAL
               </span>
               {/* 贯穿 DIA/GONAL 的对角斜线 —— 项目核心视觉母题
-                  浅灰、细线、略缓于 45° 的对角线，淡淡存在于字形之间 */}
+                  更粗、浅灰、略缓于 45° 贴近水平轴，两端收尖形成笔触/刻痕感 */}
+              {/* 外层柔化光晕：让斜线从背景中“浮”出来 */}
               <span
                 aria-hidden="true"
                 className="block absolute pointer-events-none"
                 style={{
-                  top: "12%",
-                  left: "-8%",
-                  width: "116%",
-                  height: "76%",
+                  top: "2%",
+                  left: "50%",
+                  width: "76px",
+                  height: "100%",
+                  marginLeft: "-38px",
                   background:
-                    "linear-gradient(159deg, transparent 49.5%, rgba(0,0,0,0.28) 49.5%, rgba(0,0,0,0.28) 50.5%, transparent 50.5%)",
+                    "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.03) 8%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.03) 92%, transparent 100%)",
+                  transform: "rotate(14deg)",
+                  transformOrigin: "center center",
+                  filter: "blur(10px)",
                 }}
               />
-              {/* 一条更细的伴随线，营造层叠设计感 */}
+              {/* 主斜线体：加粗至 52px，带立体灰渐变 */}
               <span
                 aria-hidden="true"
                 className="block absolute pointer-events-none"
                 style={{
-                  top: "22%",
-                  left: "-4%",
-                  width: "108%",
-                  height: "56%",
+                  top: "3%",
+                  left: "50%",
+                  width: "52px",
+                  height: "98%",
+                  marginLeft: "-26px",
                   background:
-                    "linear-gradient(159deg, transparent 49.7%, rgba(0,0,0,0.12) 49.7%, rgba(0,0,0,0.12) 50.3%, transparent 50.3%)",
+                    "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.06) 5%, rgba(75,75,75,0.22) 18%, rgba(45,45,45,0.32) 50%, rgba(75,75,75,0.22) 82%, rgba(0,0,0,0.06) 95%, transparent 100%)",
+                  transform: "rotate(14deg)",
+                  transformOrigin: "center center",
+                  clipPath:
+                    "polygon(46% 0%, 54% 0%, 62% 1.5%, 68% 4.5%, 68% 95.5%, 62% 98.5%, 54% 100%, 46% 100%, 38% 98.5%, 32% 95.5%, 32% 4.5%, 38% 1.5%)",
+                  filter: "drop-shadow(0 0 6px rgba(0,0,0,0.08)) drop-shadow(-4px 0 12px rgba(0,0,0,0.06))",
+                }}
+              />
+              {/* 内层高光脊线：强化体积感与金属边缘 */}
+              <span
+                aria-hidden="true"
+                className="block absolute pointer-events-none"
+                style={{
+                  top: "3%",
+                  left: "50%",
+                  width: "2px",
+                  height: "98%",
+                  marginLeft: "-1px",
+                  background:
+                    "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.28) 16%, rgba(255,255,255,0.28) 84%, transparent 100%)",
+                  transform: "rotate(14deg)",
+                  transformOrigin: "center center",
+                  mixBlendMode: "screen",
+                }}
+              />
+              {/* 伴随细线：强化层叠、速度感与刻痕张力 */}
+              <span
+                aria-hidden="true"
+                className="block absolute pointer-events-none"
+                style={{
+                  top: "10%",
+                  left: "50%",
+                  width: "3px",
+                  height: "76%",
+                  marginLeft: "36px",
+                  background:
+                    "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.08) 14%, rgba(0,0,0,0.08) 86%, transparent 100%)",
+                  transform: "rotate(14deg)",
+                  transformOrigin: "center center",
+                  clipPath: "polygon(50% 0%, 100% 3%, 100% 97%, 50% 100%, 0% 97%, 0% 3%)",
+                }}
+              />
+              {/* 第二伴随细线：在主斜线另一侧形成对称刻痕 */}
+              <span
+                aria-hidden="true"
+                className="block absolute pointer-events-none"
+                style={{
+                  top: "14%",
+                  left: "50%",
+                  width: "2px",
+                  height: "68%",
+                  marginLeft: "-40px",
+                  background:
+                    "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.05) 18%, rgba(0,0,0,0.05) 82%, transparent 100%)",
+                  transform: "rotate(14deg)",
+                  transformOrigin: "center center",
+                  clipPath: "polygon(50% 0%, 100% 4%, 100% 96%, 50% 100%, 0% 96%, 0% 4%)",
                 }}
               />
             </motion.h1>
