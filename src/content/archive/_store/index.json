@@ -1,0 +1,28 @@
+[
+  {
+    "id": "DIAGONAL-2026-P1QI",
+    "title": "测试标题",
+    "titleEn": "TestTitle",
+    "artist": "对角线计划",
+    "artistEn": "Diagonal",
+    "year": "2026.07.22 17:20",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "测试"
+    ],
+    "tagsEn": [
+      "Test"
+    ],
+    "location": {
+      "city": "成都",
+      "cityEn": "Chengdu",
+      "code": "CD",
+      "coordinates": "30.6N, 104.1E"
+    },
+    "region": "Southwest",
+    "project": "the-salt-of-life",
+    "series": "open-call",
+    "thumbnail": "/images/archive/DIAGONAL-2026-P1QI/cover.jpg"
+  }
+]
