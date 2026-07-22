@@ -1,3 +1,6 @@
+// overlay store：由自助后台写入的新增/覆盖条目（构建期静态导入）
+import overlayArchiveRaw from "@/content/archive/_store/index.json";
+
 export interface Location {
   city: string;
   code: string;
@@ -17,6 +20,11 @@ export interface ArchiveItem {
   tagsEn: string[];
   location: { city: string; cityEn: string; code: string; coordinates: string };
   region: "Southwest" | "Northeast" | "Transition";
+  /**
+   * 草稿标记：由自助后台写入的 overlay 条目使用。
+   * 为 true 时不会出现在公开站点（构建期过滤）。
+   */
+  draft?: boolean;
   /**
    * 所属项目 slug，用于 /projects/[project] 路由聚合
    * - "the-salt-of-life"：生命之盐
@@ -181,7 +189,11 @@ export function getLocalizedAtlasItem(item: AtlasItem, lang: "zh" | "en"): Local
   };
 }
 
-export const archiveData: ArchiveItem[] = [
+/**
+ * 现有（历史）档案条目：手工维护，保持不变。
+ * 自助后台绝不回写此数组，新增/编辑通过 overlay store 叠加。
+ */
+const legacyArchiveData: ArchiveItem[] = [
   {
     id: "DIAGONAL-2026-TA1",
     title: "《旅行的艺术》沙龙分享会——“旅行、生活与艺术”系列活动第一期",
@@ -505,6 +517,20 @@ export const archiveData: ArchiveItem[] = [
     thumbnail: "/images/archive/DIAGONAL-2026-OC1/OpenCall招募丨生命之盐10自贡盐文化考察创作驻留计划_0.jpg",
   },
 ];
+
+const overlayArchiveData = (overlayArchiveRaw as ArchiveItem[]).filter((item) => !item.draft);
+const overlayIds = new Set(overlayArchiveData.map((item) => item.id));
+
+/**
+ * 合并规则：
+ * - overlay 中与 legacy 相同的 id → 覆盖该条元数据（编辑已有文章）
+ * - overlay 中的新 id → 追加
+ * - 统一按 year 时间倒序
+ */
+export const archiveData: ArchiveItem[] = [
+  ...overlayArchiveData,
+  ...legacyArchiveData.filter((item) => !overlayIds.has(item.id)),
+].sort((a, b) => b.year.localeCompare(a.year));
 
 export const atlasData: AtlasItem[] = [
   {
