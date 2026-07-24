@@ -9,6 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@octokit/rest": "^20.1.1",
+    "@tiptap/extension-image": "^2.4.0",
+    "@tiptap/extension-link": "^2.4.0",
+    "@tiptap/pm": "^2.4.0",
+    "@tiptap/react": "^2.4.0",
+    "@tiptap/starter-kit": "^2.4.0",
     "framer-motion": "^11.2.4",
     "next": "14.2.3",
     "react": "^18",

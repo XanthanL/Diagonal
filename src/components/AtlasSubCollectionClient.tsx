@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
 
 export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; subId: string }) {
   const { lang } = useI18n();
@@ -36,7 +37,9 @@ export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; sub
             <div key={index} className="break-inside-avoid space-y-4">
               <div className="relative group p-0">
                 <img
-                  src={img.url}
+                  src={getCloudinaryUrl(img.url, 1080)}
+                  srcSet={getCloudinarySrcSet(img.url) || undefined}
+                  sizes="(min-width: 768px) 620px, 100vw"
                   alt={img.caption || `${subCollection.title}_${(index + 1).toString().padStart(3, '0')}`}
                   loading="lazy"
                   decoding="async"

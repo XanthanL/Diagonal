@@ -19,12 +19,12 @@ export function GlobalNav() {
   const { lang } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // 详情页有自己的导航，不显示全局导航
+  // 详情页有自己的导航，不显示全局导航；后台 /admin 亦不显示公开导航
   const isDetailPage =
     /^\/archive\/[^/]+$/.test(pathname) ||
     /^\/atlas\/[^/]+(\/[^/]+)?$/.test(pathname);
 
-  if (isDetailPage) return null;
+  if (isDetailPage || pathname.startsWith("/admin")) return null;
 
   const navItems = [
     { href: "/#archive", label: lang === "zh" ? "文献" : "Documents" },

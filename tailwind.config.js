@@ -22,8 +22,8 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-inter)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
-        // 引入衬线展示字用于标题与引文，提升艺术出版物质感
-        serif: ["var(--font-serif)", "Georgia", "serif"],
+        // 引入衬线展示字用于标题与引文：拉丁用 Newsreader，中文回退到 Noto Serif SC（思源宋体）
+        serif: ["var(--font-serif)", "var(--font-serif-cjk)", "Georgia", "serif"],
       },
     },
   },

@@ -6,9 +6,6 @@
 # explicitly track the cleaned markdown content in src/
 !/src/content/
 
-# admin CMS (separate deployment, not part of main site)
-/admin/
-
 # dependencies
 /node_modules
 /.pnp

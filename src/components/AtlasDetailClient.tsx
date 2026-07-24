@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
 
 export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   const { lang } = useI18n();
@@ -48,7 +49,9 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
               <Link key={sub.id} href={`/atlas/${item.id}/${sub.id}`} className="group block">
                 <div className="relative aspect-[4/5] overflow-hidden border border-white/10">
                   <img
-                    src={sub.cover}
+                    src={getCloudinaryUrl(sub.cover, 800)}
+                    srcSet={getCloudinarySrcSet(sub.cover, [480, 800, 1200]) || undefined}
+                    sizes="(min-width: 768px) 620px, 100vw"
                     alt={sub.title}
                     loading="lazy"
                     decoding="async"

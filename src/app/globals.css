@@ -47,5 +47,18 @@ body {
 .archive-html-content figure { @apply my-20 space-y-4; }
 .archive-html-content figcaption { @apply archive-text text-[10px] opacity-40 text-center uppercase tracking-widest; }
 .archive-html-content strong { @apply font-black underline decoration-2 underline-offset-4; }
+/* h3 子标题、有序/无序列表：后台富文本会用到，正文渲染同样需要 */
+.archive-html-content h3 { @apply text-xl font-bold mb-4; }
+.archive-html-content ul { @apply list-disc pl-8 space-y-2; }
+.archive-html-content ol { @apply list-decimal pl-8 space-y-2; }
+.archive-html-content a { @apply underline decoration-diagonal-red underline-offset-4; }
+
+/* —— 后台 Tiptap 编辑器最小样式 —— */
+.ProseMirror { @apply min-h-[300px] outline-none; }
+.ProseMirror:focus { @apply outline-none; }
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply text-black/30 float-left h-0 pointer-events-none;
+}
 
 
