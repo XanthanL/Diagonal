@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "id": "DIAGONAL-2026-Q9JA",
+    "title": "我测",
+    "titleEn": "I test",
+    "artist": "测试人员",
+    "artistEn": "XanthanL",
+    "year": "2026.07.25 01:23",
+    "type": "Performance",
+    "typeEn": "Performance",
+    "tags": [
+      "测试标签"
+    ],
+    "tagsEn": [
+      "test_label"
+    ],
+    "location": {
+      "city": "自贡",
+      "cityEn": "Zigong",
+      "code": "ZG",
+      "coordinates": "29.3N, 104.7E"
+    },
+    "region": "Southwest",
+    "project": "other",
+    "thumbnail": "/images/archive/DIAGONAL-2026-Q9JA/cover.jpg"
+  }
+]
