@@ -2,6 +2,8 @@
 
 export const ARCHIVE_CONTENT_DIR = "src/content/archive";
 export const STORE_PATH = "src/content/archive/_store/index.json";
+// 历史文章元数据快照：后台读取以回填「历史」文章的真实元数据（可编辑）
+export const LEGACY_STORE_PATH = "src/content/archive/_store/legacy.json";
 export const IMAGE_DIR_BASE = "public/images/archive";
 
 // 目标仓库坐标（浏览器直连 GitHub API 提交；token 由使用者在登录门粘贴，存 localStorage）

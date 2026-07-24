@@ -105,12 +105,8 @@ export default function DashboardPage() {
                     <span className="border border-amber-500 text-amber-600 px-2 py-0.5">草稿</span>
                   )}
                   {a.hasEn && <span className="border border-black/20 px-2 py-0.5">EN</span>}
-                  <span
-                    className={`px-2 py-0.5 border ${
-                      a.source === "store" ? "border-black/20" : "border-black/10 opacity-50"
-                    }`}
-                  >
-                    {a.source === "store" ? "可编辑" : "历史"}
+                  <span className="px-2 py-0.5 border border-black/20">
+                    {a.source === "store" ? "可编辑" : "历史 · 可编辑"}
                   </span>
                 </div>
               </Link>

@@ -7,6 +7,7 @@ import {
   GH_OWNER,
   GH_REPO,
   IMAGE_DIR_BASE,
+  LEGACY_STORE_PATH,
   STORE_PATH,
 } from "@/lib/admin/constants";
 import { buildArticleHtml, extractBody, extractTitle } from "@/lib/admin/htmlTemplate";
@@ -188,16 +189,19 @@ const emptyItem = (id: string, title: string): ArchiveItem => ({
   project: "the-salt-of-life",
 });
 
-// 文章列表：合并 store（可编辑元数据）+ 文件系统 legacy（历史文章）
+// 文章列表：合并 store（后台新增/已编辑）+ legacy.json（历史文章，可编辑）
 export async function listArticles(token: string): Promise<ArticleListItem[]> {
   const octokit = client(token);
-  const [storeRaw, names] = await Promise.all([
+  const [storeRaw, legacyRaw, names] = await Promise.all([
     readTextFile(octokit, STORE_PATH),
+    readTextFile(octokit, LEGACY_STORE_PATH),
     listArchiveFileNames(octokit),
   ]);
 
   const store: ArchiveItem[] = storeRaw ? JSON.parse(storeRaw) : [];
+  const legacy: ArchiveItem[] = legacyRaw ? JSON.parse(legacyRaw) : [];
   const storeIds = new Set(store.map((s) => s.id));
+  const legacyMap = new Map(legacy.map((l) => [l.id, l]));
 
   const enIds = new Set<string>();
   const allIds = new Set<string>();
@@ -205,6 +209,8 @@ export async function listArticles(token: string): Promise<ArticleListItem[]> {
     if (name.endsWith(".en.html")) enIds.add(name.replace(/\.en\.html$/, ""));
     else if (name.endsWith(".html")) allIds.add(name.replace(/\.html$/, ""));
   }
+  // legacy.json 中的 id 也纳入（即便暂无对应 HTML 文件）
+  for (const l of legacy) allIds.add(l.id);
 
   const list: ArticleListItem[] = [];
   for (const s of store) {
@@ -219,7 +225,14 @@ export async function listArticles(token: string): Promise<ArticleListItem[]> {
   }
   for (const id of Array.from(allIds)) {
     if (storeIds.has(id)) continue;
-    list.push({ id, title: id, source: "legacy", hasEn: enIds.has(id) });
+    const l = legacyMap.get(id);
+    list.push({
+      id,
+      title: l?.title || id,
+      year: l?.year,
+      source: "legacy",
+      hasEn: enIds.has(id) || Boolean(l?.titleEn),
+    });
   }
 
   list.sort((a, b) => {
@@ -237,17 +250,25 @@ export async function getArticle(
   id: string
 ): Promise<{ source: "store" | "legacy" | "new"; item: ArchiveItem; bodyZh: string; bodyEn: string }> {
   const octokit = client(token);
-  const [storeRaw, zhHtml, enHtml] = await Promise.all([
+  const [storeRaw, legacyRaw, zhHtml, enHtml] = await Promise.all([
     readTextFile(octokit, STORE_PATH),
+    readTextFile(octokit, LEGACY_STORE_PATH),
     readTextFile(octokit, `${ARCHIVE_CONTENT_DIR}/${id}.html`),
     readTextFile(octokit, `${ARCHIVE_CONTENT_DIR}/${id}.en.html`),
   ]);
 
   const store: ArchiveItem[] = storeRaw ? JSON.parse(storeRaw) : [];
+  const legacy: ArchiveItem[] = legacyRaw ? JSON.parse(legacyRaw) : [];
   const storeItem = store.find((s) => s.id === id);
+  const legacyItem = legacy.find((s) => s.id === id);
 
-  const item = storeItem || emptyItem(id, zhHtml ? extractTitle(zhHtml) : id);
-  const source: "store" | "legacy" | "new" = storeItem ? "store" : zhHtml ? "legacy" : "new";
+  // 优先级：后台已编辑(store) > 历史元数据(legacy) > 空白模板(new)
+  const item = storeItem || legacyItem || emptyItem(id, zhHtml ? extractTitle(zhHtml) : id);
+  const source: "store" | "legacy" | "new" = storeItem
+    ? "store"
+    : legacyItem || zhHtml
+    ? "legacy"
+    : "new";
 
   return {
     source,
