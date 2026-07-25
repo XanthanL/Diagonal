@@ -337,6 +337,17 @@ export async function publishArticle(
   );
 }
 
+// 检测文件是否存在于仓库（HEAD ref）
+async function fileExists(octokit: Octokit, path: string): Promise<boolean> {
+  try {
+    await withRetry(() => octokit.repos.getContent({ owner, repo, path, ref: branch }));
+    return true;
+  } catch (e: unknown) {
+    if ((e as { status?: number }).status === 404) return false;
+    throw e;
+  }
+}
+
 // 删除文章：移除 store 条目 + HTML 文件 + 图片目录
 export async function deleteArticle(token: string, id: string): Promise<string> {
   if (!id || !/^[A-Za-z0-9._-]+$/.test(id)) throw new Error("非法文章 ID");
@@ -347,10 +358,14 @@ export async function deleteArticle(token: string, id: string): Promise<string> 
   const filtered = store.filter((s) => s.id !== id);
   if (filtered.length === store.length) throw new Error("文章不存在于 store 中");
 
-  const deletePaths: string[] = [
-    `${ARCHIVE_CONTENT_DIR}/${id}.html`,
-    `${ARCHIVE_CONTENT_DIR}/${id}.en.html`,
-  ];
+  // 仅删除实际存在的文件——GitHub Tree API 对 sha:null 要求路径存在于 base tree
+  const deletePaths: string[] = [];
+  const zhPath = `${ARCHIVE_CONTENT_DIR}/${id}.html`;
+  const enPath = `${ARCHIVE_CONTENT_DIR}/${id}.en.html`;
+  const [zhExists, enExists] = await Promise.all([fileExists(octokit, zhPath), fileExists(octokit, enPath)]);
+  if (zhExists) deletePaths.push(zhPath);
+  if (enExists) deletePaths.push(enPath);
+
   const imageFiles = await listDirectory(octokit, `${IMAGE_DIR_BASE}/${id}`);
   deletePaths.push(...imageFiles);
 
