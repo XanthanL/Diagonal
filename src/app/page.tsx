@@ -15,8 +15,8 @@ export default function Home() {
 
   return (
     <div className="relative overflow-hidden pt-24 min-h-screen">
-      {/* 视觉核心：巨大的对角斜线装饰 */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
+      {/* 视觉核心：巨大的对角斜线装饰（仅覆盖 Hero 区域） */}
+      <div className="absolute top-0 left-0 w-full h-screen pointer-events-none z-0">
         <motion.div
           initial={{ opacity: 0, scaleY: 0 }}
           animate={{ opacity: 0.05, scaleY: 1 }}
