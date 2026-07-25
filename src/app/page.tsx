@@ -111,7 +111,20 @@ export default function Home() {
       </section>
 
       {/* Atlas Section - 多步渐变过渡带 + DARK THEME */}
-      <div className="relative z-10 h-64 bg-gradient-to-b from-[#FAFAF8] via-[#8a8785] to-[#1a1a1a]" />
+      <div
+        className="relative z-10 h-80"
+        style={{
+          background: `linear-gradient(to bottom,
+            #FAFAF8 0%,
+            #F0EFEC 15%,
+            #D4D2CE 30%,
+            #8A8885 50%,
+            #4A4845 70%,
+            #2A2928 85%,
+            #1a1a1a 100%
+          )`
+        }}
+      />
       <section id="atlas" className="relative z-10 bg-[#1a1a1a] text-white py-40">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
