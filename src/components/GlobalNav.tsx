@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -18,6 +18,14 @@ export function GlobalNav() {
   const pathname = usePathname();
   const { lang } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    onScroll(); // init
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // 详情页有自己的导航，不显示全局导航；后台 /admin 亦不显示公开导航
   const isDetailPage =
@@ -35,7 +43,13 @@ export function GlobalNav() {
   ];
 
   return (
-    <header className="fixed top-0 left-0 w-full z-[60] mix-blend-difference text-white">
+    <header
+      className={`fixed top-0 left-0 w-full z-[60] transition-all duration-300 ${
+        scrolled
+          ? "bg-white/80 backdrop-blur-md shadow-sm text-[#1A1A1A]"
+          : "mix-blend-difference text-white"
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Wordmark */}
         <Link href="/" className="archive-text font-bold text-sm tracking-tighter">

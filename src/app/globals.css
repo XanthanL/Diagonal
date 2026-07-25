@@ -34,7 +34,7 @@ body {
 
 /* 档案详情页 HTML 内容样式重塑 */
 .archive-html-content {
-  @apply space-y-12 text-lg leading-relaxed;
+  @apply space-y-12 text-lg leading-relaxed font-serif;
 }
 /* h1 改用衬线展示字，去掉 uppercase italic（中文不适用），改用左对齐与左侧细红线 */
 .archive-html-content h1 { @apply font-serif text-5xl md:text-6xl font-black tracking-tighter mb-16 leading-[1.05] border-l-4 border-diagonal-red pl-6; }
@@ -91,9 +91,78 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-scrollBob,
   .animate-atlasProgress,
-  .animate-fadeIn {
+  .animate-fadeIn,
+  #main-content {
     animation: none;
   }
+}
+
+/* —— 全局页面进入动画 —— */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+#main-content {
+  animation: pageEnter 0.3s ease-out;
+}
+
+/* —— 图片加载过渡 —— */
+.img-loading {
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+.img-loaded {
+  opacity: 1;
+  filter: blur(0);
+}
+
+/* —— 自定义滚动条（极简细线风格）—— */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* —— 链接下划线动画 —— */
+.link-animated {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0% 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.3s ease;
+}
+.link-animated:hover {
+  background-size: 100% 1px;
+}
+
+/* —— 中文正文衬线体 —— */
+.prose-zh {
+  font-family: var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+}
+
+/* —— 选中色改为品牌色 —— */
+::selection {
+  background: rgba(179, 58, 42, 0.15);
+  color: inherit;
 }
 
 

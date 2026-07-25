@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArticleForm } from "@/components/admin/ArticleForm";
@@ -70,9 +70,74 @@ function EditorInner() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
+  // —— 本地草稿自动保存 ——
+  const DRAFT_KEY = `diagonal-draft-${rawId}`;
+  const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // 保存草稿到 localStorage（防抖 2s）
+  const saveDraft = useCallback(() => {
+    if (draftTimer.current) clearTimeout(draftTimer.current);
+    draftTimer.current = setTimeout(() => {
+      try {
+        const draft = JSON.stringify({ item, bodyZh, bodyEn, kicker, coverCaption, ts: Date.now() });
+        localStorage.setItem(DRAFT_KEY, draft);
+        setDraftSaved(true);
+        setTimeout(() => setDraftSaved(false), 2000);
+      } catch {}
+    }, 2000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item, bodyZh, bodyEn, kicker, coverCaption, DRAFT_KEY]);
+
+  // 内容变化时触发自动保存
+  useEffect(() => {
+    if (item) saveDraft();
+    return () => { if (draftTimer.current) clearTimeout(draftTimer.current); };
+  }, [item, bodyZh, bodyEn, kicker, coverCaption, saveDraft]);
+
+  // 恢复本地草稿
+  function restoreDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.item) setItem(draft.item);
+      if (draft.bodyZh) setBodyZh(draft.bodyZh);
+      if (draft.bodyEn) setBodyEn(draft.bodyEn);
+      if (draft.kicker) setKicker(draft.kicker);
+      if (draft.coverCaption) setCoverCaption(draft.coverCaption);
+      setMsg({ kind: "ok", text: "已恢复本地草稿" });
+    } catch {}
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+  }
+
   // —— 载入 ——
   useEffect(() => {
     if (isNew) {
+      // 新文章：检查是否有本地草稿
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        try {
+          const draft = JSON.parse(raw);
+          const age = Date.now() - (draft.ts || 0);
+          // 7 天内的草稿才提示恢复
+          if (age < 7 * 24 * 3600 * 1000 && draft.item?.title) {
+            const yes = window.confirm(`发现本地草稿「${draft.item.title || draft.item.id}」，是否恢复？`);
+            if (yes) {
+              setItem(draft.item);
+              setBodyZh(draft.bodyZh || "");
+              setBodyEn(draft.bodyEn || "");
+              setKicker(draft.kicker || "DIAGONAL_EVENT");
+              setCoverCaption(draft.coverCaption || "");
+              setSource("new");
+              return;
+            }
+          }
+        } catch {}
+      }
       setItem(newItemDefaults());
       setSource("new");
       return;
@@ -171,6 +236,7 @@ function EditorInner() {
 
       setItem(finalItem);
       setCoverDataUrl("");
+      clearDraft(); // 发布成功后清除本地草稿
       setMsg({
         kind: "ok",
         text: draft
@@ -206,6 +272,16 @@ function EditorInner() {
           )}
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {draftSaved && (
+            <span className="text-[11px] text-green-600 animate-pulse">已自动保存</span>
+          )}
+          <button
+            onClick={restoreDraft}
+            className="border border-black/20 px-3 py-2 archive-text text-xs hover:border-black"
+            title="从浏览器本地存储恢复上次编辑内容"
+          >
+            恢复草稿
+          </button>
           <button
             onClick={() => setShowPreview((v) => !v)}
             className="border border-black/20 px-3 py-2 archive-text text-xs hover:border-black"

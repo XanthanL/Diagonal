@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { getLocalizedUrl } from "@/lib/path";
 import { artistsData } from "@/lib/artists";
@@ -78,14 +77,8 @@ export function ArtistsIndexClient() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-16">
-                {grouped[letter].map((artist, index) => (
-                  <motion.div
-                    key={artist.slug}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: Math.min(index * 0.05, 0.3) }}
-                  >
+                {grouped[letter].map((artist) => (
+                  <div key={artist.slug}>
                     <Link
                       href={getLocalizedUrl(`/artists/${artist.slug}`)}
                       className="group block border-t border-black/10 pt-6 hover:border-black transition-colors"
@@ -96,11 +89,11 @@ export function ArtistsIndexClient() {
                       <h3 className="text-2xl font-bold tracking-tight group-hover:underline underline-offset-8 decoration-2">
                         {lang === "zh" ? artist.name : artist.nameEn}
                       </h3>
-                      <p className="text-sm opacity-50 italic mt-1">
+                      <p className="text-sm opacity-50 italic font-serif mt-1">
                         {lang === "zh" ? artist.nameEn : artist.name}
                       </p>
                     </Link>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>

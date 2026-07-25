@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
 import { getLocalizedUrl } from "@/lib/path";
 
@@ -174,18 +173,14 @@ export default function AboutPage() {
         </header>
 
         {/* 项目介绍 */}
-        <div className="mb-32 max-w-3xl space-y-6 text-lg leading-relaxed">
+        <div className="mb-32 max-w-3xl space-y-6 text-lg leading-relaxed font-serif">
           {intro.map((para, i) => (
-            <motion.p
+            <p
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
               className={i === 0 ? "text-xl font-medium" : "opacity-80"}
             >
               {para}
-            </motion.p>
+            </p>
           ))}
         </div>
 
@@ -196,21 +191,17 @@ export default function AboutPage() {
           </h2>
           <div className="space-y-6">
             {timeline.map((node, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
                 className="flex items-baseline gap-8 border-b border-black/5 pb-4"
               >
                 <span className="archive-text text-xs opacity-50 w-28 shrink-0 tracking-wider">
                   {node.date}
                 </span>
-                <span className="text-lg leading-snug">
+                <span className="text-lg leading-snug font-serif">
                   {lang === "zh" ? node.zh : node.en}
                 </span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -222,12 +213,8 @@ export default function AboutPage() {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-12">
             {coreTeam.map((member, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
                 className="space-y-2"
               >
                 <div className="text-2xl font-bold tracking-tight">
@@ -241,10 +228,10 @@ export default function AboutPage() {
                 <div className="archive-text text-[10px] tracking-[0.2em] opacity-60">
                   {lang === "zh" ? member.role : member.roleEn}
                 </div>
-                <p className="text-sm opacity-70 leading-relaxed mt-2">
+                <p className="text-sm opacity-70 leading-relaxed mt-2 font-serif">
                   {lang === "zh" ? member.bio : member.bioEn}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -261,12 +248,8 @@ export default function AboutPage() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
             {projectTeam.map((member, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
                 className="space-y-2"
               >
                 <div className="text-xl font-bold tracking-tight">
@@ -280,10 +263,10 @@ export default function AboutPage() {
                 <div className="archive-text text-[10px] tracking-[0.2em] opacity-60">
                   {lang === "zh" ? member.role : member.roleEn}
                 </div>
-                <p className="text-sm opacity-70 leading-relaxed mt-2">
+                <p className="text-sm opacity-70 leading-relaxed mt-2 font-serif">
                   {lang === "zh" ? member.bio : member.bioEn}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

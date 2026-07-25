@@ -18,7 +18,7 @@ export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: Archiv
   const { lang } = useI18n();
 
   return (
-    <article className="min-h-screen bg-white text-black pt-32 pb-40 selection:bg-black selection:text-white">
+    <article className="min-h-screen bg-white text-black pt-32 pb-40">
       {/* 顶部导航 */}
       <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference text-white">
         <div className="max-w-7xl mx-auto flex justify-between items-center">

@@ -1,19 +1,18 @@
 import { ArchiveItem, getLocalizedArchiveItem } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
-import { t } from "@/lib/translations";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { getAssetPath } from "@/lib/path";
+import { useState } from "react";
 
 export function ArchiveCard({ item }: { item: ArchiveItem }) {
   const { lang } = useI18n();
   const localized = getLocalizedArchiveItem(item, lang);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
     <Link href={`/archive/${item.id}`}>
-      <motion.div
-        whileHover={{ y: -5 }}
-        className="group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full"
+      <div
+        className="group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full transition-transform duration-300 hover:-translate-y-1"
       >
         <div className="archive-text text-[9px] mb-4 flex justify-between opacity-50">
           <span>{item.id} // {localized.location.code}</span>
@@ -29,17 +28,25 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
               alt={localized.title}
               loading="lazy"
               decoding="async"
-              className="absolute inset-0 w-full h-full object-cover"
+              onLoad={() => setImgLoaded(true)}
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.03] group-hover:brightness-105 ${
+                imgLoaded ? "img-loaded" : "img-loading"
+              }`}
             />
           ) : (
-            <div className="archive-text text-[9px] text-center opacity-30 leading-tight"
-              dangerouslySetInnerHTML={{ __html: t(lang, "archiveDataPending") }}
-            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center space-y-3">
+                <div className="w-12 h-12 mx-auto border border-black/10 relative">
+                  <div className="absolute inset-0 diagonal-line opacity-30" />
+                </div>
+                <div className="archive-text text-[9px] opacity-30">{item.id}</div>
+              </div>
+            </div>
           )}
 
-          {/* 悬浮时的对角线强调 */}
-          <motion.div
-            className="absolute bottom-0 right-0 w-0 h-[1px] bg-black group-hover:w-full transition-all duration-500 z-20"
+          {/* 悬浮时底部红线强调 */}
+          <div
+            className="absolute bottom-0 left-0 h-[2px] bg-diagonal-red w-0 group-hover:w-full transition-all duration-500 z-20"
           />
         </div>
 
@@ -50,7 +57,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
           <h3 className="text-2xl font-bold tracking-tight leading-[1.3] uppercase group-hover:underline underline-offset-8 decoration-2">
             {localized.title}
           </h3>
-          <p className="text-sm font-medium opacity-60 italic">{localized.artist}</p>
+          <p className="text-sm font-medium opacity-60 italic font-serif">{localized.artist}</p>
 
           <div className="flex flex-wrap gap-2 pt-4">
             {localized.tags.map(tag => (
@@ -58,7 +65,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

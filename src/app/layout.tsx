@@ -69,7 +69,7 @@ export default function RootLayout({
       <head>
         <meta name="referrer" content="strict-origin-when-cross-origin" />
       </head>
-      <body className="antialiased min-h-screen bg-[#FAFAF8] text-[#1A1A1A] selection:bg-black selection:text-white">
+      <body className="antialiased min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
         <Providers>
           {/* Skip-nav：键盘用户按 Tab 可跳过导航直达主内容 */}
           <a

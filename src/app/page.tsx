@@ -36,9 +36,9 @@ export default function Home() {
               className="font-serif font-black leading-[0.8] tracking-tighter relative"
             >
               {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠 */}
-              <span className="block text-6xl sm:text-8xl md:text-[9rem]">DIA</span>
+              <span className="block text-[18vw] sm:text-8xl md:text-[9rem]">DIA</span>
               <span
-                className="block text-6xl sm:text-8xl md:text-[9rem] -mt-2 md:-mt-4"
+                className="block text-[18vw] sm:text-8xl md:text-[9rem] -mt-2 md:-mt-4"
                 style={{ transform: "translateX(0.3em)" }}
               >
                 GONAL
@@ -55,7 +55,7 @@ export default function Home() {
               <div className="archive-text text-sm font-bold border-l-2 border-diagonal-red pl-4">
                 {t(lang, "projectStatus")}
               </div>
-              <p className="text-xl leading-relaxed">
+              <p className="text-xl leading-relaxed font-serif">
                 {t(lang, "heroIntro")}
               </p>
             </motion.div>
@@ -95,16 +95,12 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
           {archiveData.slice(0, 4).map((item, index) => (
-            <motion.div
+            <div
               key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
               className={index % 2 !== 0 ? "lg:mt-24" : ""}
             >
               <ArchiveCard item={item} />
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -115,8 +111,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Atlas Section - DARK THEME */}
-      <section id="atlas" className="relative z-10 bg-black text-white py-40">
+      {/* Atlas Section - 渐变过渡带 + DARK THEME */}
+      <div className="relative z-10 h-32 bg-gradient-to-b from-[#FAFAF8] to-[#1a1a1a]" />
+      <section id="atlas" className="relative z-10 bg-[#1a1a1a] text-white py-40">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
             <motion.div
@@ -144,16 +141,10 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-24">
-            {atlasData.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
+            {atlasData.map((item) => (
+              <div key={item.id}>
                 <AtlasCover item={item} />
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
