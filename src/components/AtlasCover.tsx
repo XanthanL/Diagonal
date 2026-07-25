@@ -33,23 +33,23 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
             </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center opacity-20">
-              <span className="archive-text text-[10px]">{t(lang, "noVisualRecord")}</span>
+              <span className="archive-text text-[9px]">{t(lang, "noVisualRecord")}</span>
             </div>
           )}
 
           {/* 封面元数据标注 */}
           <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
-            <div className="archive-text text-[8px] bg-white/10 backdrop-blur-md px-2 py-1 text-white border border-white/20">
+            <div className="archive-text text-[9px] bg-white/10 backdrop-blur-md px-2 py-1 text-white border border-white/20">
               {item.id}
             </div>
-            <div className="archive-text text-[8px] text-white/40 vertical-rl tracking-[0.3em]">
+            <div className="archive-text text-[9px] text-white/40 vertical-rl tracking-[0.3em]">
               LOC: {item.location.code}_{item.region.toUpperCase().slice(0, 2)}
             </div>
           </div>
 
           {/* 底部交互提示 */}
           <div className="absolute bottom-0 left-0 w-full p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 bg-gradient-to-t from-black/80 to-transparent">
-            <span className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest">
+            <span className="archive-text text-[9px] text-diagonal-red font-bold tracking-widest">
               {t(lang, "openAtlas")}
             </span>
           </div>

@@ -14,6 +14,10 @@ module.exports = {
           black: "#000000",
           white: "#FFFFFF",
           gray: "#F2F2F2",
+          // 微暖灰底：替代纯白背景，减少视觉疲劳
+          warmGray: "#FAFAF8",
+          // 暗色表面：Atlas / SaltSimulation 等暗色区段统一用此值
+          surface: "#0c0c0e",
           // 从纯红 #FF0000（系统警告色）改为接近盐铁氧化物的暗朱色
           // 保留激进语气但具有物质性，与艺术机构调性匹配
           red: "#B33A2A",

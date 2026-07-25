@@ -62,30 +62,40 @@ export function GlobalNav() {
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="md:hidden archive-text text-xs"
-          aria-label="Menu"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? "✕" : "☰"}
         </button>
       </div>
 
-      {/* 移动端展开菜单 */}
+      {/* 移动端展开菜单 + 背景遮罩 */}
       {mobileOpen && (
-        <nav className="md:hidden bg-black text-white px-6 py-4 space-y-3 border-t border-white/10">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className="block archive-text text-xs opacity-70 hover:opacity-100"
-            >
-              {item.label}
-            </Link>
-          ))}
-          <div className="pt-3 border-t border-white/10">
-            <LanguageSwitcher />
-          </div>
-        </nav>
+        <div
+          className="md:hidden fixed inset-0 top-[56px] z-[59] bg-black/40 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
       )}
+      <nav
+        className={`md:hidden fixed top-[56px] left-0 w-full z-[60] bg-black text-white px-6 py-5 space-y-3 border-t border-white/10 transition-all duration-200 ease-out ${
+          mobileOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
+        }`}
+      >
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setMobileOpen(false)}
+            className="block archive-text text-xs opacity-70 hover:opacity-100"
+          >
+            {item.label}
+          </Link>
+        ))}
+        <div className="pt-3 border-t border-white/10">
+          <LanguageSwitcher />
+        </div>
+      </nav>
     </header>
   );
 }

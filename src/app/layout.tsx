@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono, Newsreader, Noto_Serif_SC } from "next/font/google";
 import { getAbsoluteUrl, siteUrl } from "@/lib/path";
-import { I18nProvider } from "@/lib/i18n";
+import { Providers } from "@/components/Providers";
 import { GlobalNav } from "@/components/GlobalNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
@@ -69,12 +69,19 @@ export default function RootLayout({
       <head>
         <meta name="referrer" content="strict-origin-when-cross-origin" />
       </head>
-      <body className="antialiased min-h-screen bg-white text-black selection:bg-black selection:text-white">
-        <I18nProvider>
+      <body className="antialiased min-h-screen bg-[#FAFAF8] text-[#1A1A1A] selection:bg-black selection:text-white">
+        <Providers>
+          {/* Skip-nav：键盘用户按 Tab 可跳过导航直达主内容 */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-black focus:text-white focus:px-4 focus:py-2 focus:text-sm"
+          >
+            跳转到主内容
+          </a>
           <GlobalNav />
-          <main>{children}</main>
+          <main id="main-content">{children}</main>
           <SiteFooter />
-        </I18nProvider>
+        </Providers>
       </body>
     </html>
   );

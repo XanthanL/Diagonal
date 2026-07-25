@@ -51,7 +51,7 @@ export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: Archiv
         <div className="archive-text text-[10px] opacity-30 tracking-[0.2em] uppercase">
           {t(lang, "endOfRecord")} / {id}
         </div>
-        <div className="archive-text text-[8px] opacity-20">
+        <div className="archive-text text-[9px] opacity-20">
           {t(lang, "archiveSystemVersion")}
         </div>
       </div>

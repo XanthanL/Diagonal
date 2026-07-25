@@ -15,7 +15,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
         whileHover={{ y: -5 }}
         className="group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full"
       >
-        <div className="archive-text text-[10px] mb-4 flex justify-between opacity-50">
+        <div className="archive-text text-[9px] mb-4 flex justify-between opacity-50">
           <span>{item.id} // {localized.location.code}</span>
           <span>{item.year}</span>
         </div>
@@ -32,7 +32,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
               className="absolute inset-0 w-full h-full object-cover"
             />
           ) : (
-            <div className="archive-text text-[8px] text-center opacity-30 leading-tight"
+            <div className="archive-text text-[9px] text-center opacity-30 leading-tight"
               dangerouslySetInnerHTML={{ __html: t(lang, "archiveDataPending") }}
             />
           )}
@@ -44,7 +44,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
         </div>
 
         <div className="space-y-4 mt-auto">
-          <div className="archive-text text-[10px] bg-black text-white px-2 py-0.5 inline-block mb-1">
+          <div className="archive-text text-[9px] bg-black text-white px-2 py-0.5 inline-block mb-1">
             {localized.type}
           </div>
           <h3 className="text-2xl font-bold tracking-tight leading-[1.3] uppercase group-hover:underline underline-offset-8 decoration-2">
@@ -54,7 +54,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
 
           <div className="flex flex-wrap gap-2 pt-4">
             {localized.tags.map(tag => (
-              <span key={tag} className="archive-text text-[8px] opacity-40">#{tag}</span>
+              <span key={tag} className="archive-text text-[9px] opacity-40">#{tag}</span>
             ))}
           </div>
         </div>
