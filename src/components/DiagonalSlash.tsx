@@ -19,7 +19,7 @@ export function DiagonalSlash() {
           marginLeft: "-38px",
           background:
             "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.03) 8%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.03) 92%, transparent 100%)",
-          transform: "rotate(14deg)",
+          transform: "rotate(45deg)",
           transformOrigin: "center center",
           filter: "blur(10px)",
         }}
@@ -36,7 +36,7 @@ export function DiagonalSlash() {
           marginLeft: "-26px",
           background:
             "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.06) 5%, rgba(75,75,75,0.22) 18%, rgba(45,45,45,0.32) 50%, rgba(75,75,75,0.22) 82%, rgba(0,0,0,0.06) 95%, transparent 100%)",
-          transform: "rotate(14deg)",
+          transform: "rotate(45deg)",
           transformOrigin: "center center",
           clipPath:
             "polygon(46% 0%, 54% 0%, 62% 1.5%, 68% 4.5%, 68% 95.5%, 62% 98.5%, 54% 100%, 46% 100%, 38% 98.5%, 32% 95.5%, 32% 4.5%, 38% 1.5%)",
@@ -55,7 +55,7 @@ export function DiagonalSlash() {
           marginLeft: "-1px",
           background:
             "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.28) 16%, rgba(255,255,255,0.28) 84%, transparent 100%)",
-          transform: "rotate(14deg)",
+          transform: "rotate(45deg)",
           transformOrigin: "center center",
           mixBlendMode: "screen",
         }}
@@ -72,7 +72,7 @@ export function DiagonalSlash() {
           marginLeft: "36px",
           background:
             "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.08) 14%, rgba(0,0,0,0.08) 86%, transparent 100%)",
-          transform: "rotate(14deg)",
+          transform: "rotate(45deg)",
           transformOrigin: "center center",
           clipPath: "polygon(50% 0%, 100% 3%, 100% 97%, 50% 100%, 0% 97%, 0% 3%)",
         }}
@@ -89,7 +89,7 @@ export function DiagonalSlash() {
           marginLeft: "-40px",
           background:
             "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.05) 18%, rgba(0,0,0,0.05) 82%, transparent 100%)",
-          transform: "rotate(14deg)",
+          transform: "rotate(45deg)",
           transformOrigin: "center center",
           clipPath: "polygon(50% 0%, 100% 4%, 100% 96%, 50% 100%, 0% 96%, 0% 4%)",
         }}
