@@ -64,7 +64,7 @@ function EditorInner() {
   const [coverCaption, setCoverCaption] = useState("");
   const [coverDataUrl, setCoverDataUrl] = useState<string>(""); // 新选封面的 dataURL
 
-  const [tab, setTab] = useState<"zh" | "en">("zh");
+  const [previewLang, setPreviewLang] = useState<"zh" | "en">("zh");
   const [showPreview, setShowPreview] = useState(true);
   const [loading, setLoading] = useState(!isNew);
   const [busy, setBusy] = useState(false);
@@ -116,10 +116,9 @@ function EditorInner() {
   const previewHtml = useMemo(() => {
     if (!item) return "";
     const previewItem: ArchiveItem = { ...item, thumbnail: coverPreview };
-    const lang = tab;
-    const body = lang === "en" ? bodyEn : bodyZh;
-    return buildArticleHtml({ item: previewItem, kicker, coverCaption, body, lang });
-  }, [item, coverPreview, kicker, coverCaption, bodyZh, bodyEn, tab]);
+    const body = previewLang === "en" ? bodyEn : bodyZh;
+    return buildArticleHtml({ item: previewItem, kicker, coverCaption, body, lang: previewLang });
+  }, [item, coverPreview, kicker, coverCaption, bodyZh, bodyEn, previewLang]);
 
   async function submit(draft: boolean) {
     if (!item) return;
@@ -242,71 +241,68 @@ function EditorInner() {
         </div>
       )}
 
-      <div className={`grid gap-8 ${showPreview ? "lg:grid-cols-2" : "grid-cols-1"}`}>
-        {/* 左：编辑 */}
-        <div className="space-y-8">
-          <section className="bg-white border border-black/10 p-6">
-            <h2 className="archive-text text-xs tracking-widest opacity-40 mb-5">元数据</h2>
-            <ArticleForm
-              item={item}
-              onChange={patchItem}
-              idEditable={isNew}
-              kicker={kicker}
-              onKicker={setKicker}
-              coverCaption={coverCaption}
-              onCoverCaption={setCoverCaption}
-              coverPreview={coverPreview}
-              onCoverFile={onCoverFile}
-            />
-          </section>
+      {/* 元数据 */}
+      <section className="bg-white border border-black/10 p-6 mb-8">
+        <h2 className="archive-text text-xs tracking-widest opacity-40 mb-5">元数据</h2>
+        <ArticleForm
+          item={item}
+          onChange={patchItem}
+          idEditable={isNew}
+          kicker={kicker}
+          onKicker={setKicker}
+          coverCaption={coverCaption}
+          onCoverCaption={setCoverCaption}
+          coverPreview={coverPreview}
+          onCoverFile={onCoverFile}
+        />
+      </section>
 
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <button
-                onClick={() => setTab("zh")}
-                className={`px-4 py-1.5 archive-text text-xs border ${
-                  tab === "zh" ? "bg-black text-white border-black" : "border-black/20 hover:border-black"
-                }`}
-              >
-                中文正文
-              </button>
-              <button
-                onClick={() => setTab("en")}
-                className={`px-4 py-1.5 archive-text text-xs border ${
-                  tab === "en" ? "bg-black text-white border-black" : "border-black/20 hover:border-black"
-                }`}
-              >
-                英文正文（可选）
-              </button>
-            </div>
-            {tab === "zh" ? (
-              <RichEditor key="zh" value={bodyZh} onChange={setBodyZh} />
-            ) : (
-              <RichEditor key="en" value={bodyEn} onChange={setBodyEn} />
-            )}
-            {tab === "en" && (
-              <p className="text-[11px] opacity-40 mt-2">
-                英文版仅在「英文标题」与「英文正文」均填写时才会生成 {item.id}.en.html。
-              </p>
-            )}
-          </section>
+      {/* 中英文正文并排 */}
+      <section className="grid md:grid-cols-2 gap-6 mb-8">
+        <div>
+          <h3 className="archive-text text-xs tracking-widest opacity-40 mb-3">中文正文</h3>
+          <RichEditor key="zh" value={bodyZh} onChange={setBodyZh} />
         </div>
+        <div>
+          <h3 className="archive-text text-xs tracking-widest opacity-40 mb-3">英文正文（可选）</h3>
+          <RichEditor key="en" value={bodyEn} onChange={setBodyEn} />
+          <p className="text-[11px] opacity-40 mt-2">
+            英文版仅在「英文标题」与「英文正文」均填写时才会生成 {item.id}.en.html。
+          </p>
+        </div>
+      </section>
 
-        {/* 右：预览 */}
-        {showPreview && (
-          <div className="space-y-3">
-            <div className="archive-text text-xs tracking-widest opacity-40">
-              实时预览（{tab === "zh" ? "中文" : "英文"}）· 最终以重建后的线上页面为准
-            </div>
-            <div className="bg-white border border-black/10 p-8 lg:sticky lg:top-6 max-h-[calc(100vh-6rem)] overflow-auto">
-              <div
-                className="archive-preview"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
-              />
-            </div>
+      {/* 预览（底部全宽折叠面板） */}
+      {showPreview && (
+        <section className="border-t border-black/10 pt-6">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="archive-text text-xs tracking-widest opacity-40">实时预览</span>
+            <button
+              onClick={() => setPreviewLang("zh")}
+              className={`px-3 py-1 archive-text text-xs border ${
+                previewLang === "zh" ? "bg-black text-white border-black" : "border-black/20 hover:border-black"
+              }`}
+            >
+              中文
+            </button>
+            <button
+              onClick={() => setPreviewLang("en")}
+              className={`px-3 py-1 archive-text text-xs border ${
+                previewLang === "en" ? "bg-black text-white border-black" : "border-black/20 hover:border-black"
+              }`}
+            >
+              English
+            </button>
+            <span className="text-[11px] opacity-30 ml-auto">最终以重建后的线上页面为准</span>
           </div>
-        )}
-      </div>
+          <div className="bg-white border border-black/10 p-8 max-h-[60vh] overflow-auto">
+            <div
+              className="archive-preview"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          </div>
+        </section>
+      )}
     </div>
   );
 }
