@@ -84,7 +84,6 @@ export default function Home() {
             className="space-y-4"
           >
             <h2 className="text-6xl font-black tracking-tighter uppercase italic">{t(lang, "documentsTitle")}</h2>
-            <p className="archive-text text-sm opacity-50 tracking-[0.2em]">{t(lang, "documentsSubtitle")}</p>
           </motion.div>
 
           <div className="archive-text text-[10px] space-y-1 opacity-60">
@@ -111,8 +110,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Atlas Section - 渐变过渡带 + DARK THEME */}
-      <div className="relative z-10 h-32 bg-gradient-to-b from-[#FAFAF8] to-[#1a1a1a]" />
+      {/* Atlas Section - 多步渐变过渡带 + DARK THEME */}
+      <div className="relative z-10 h-64 bg-gradient-to-b from-[#FAFAF8] via-[#8a8785] to-[#1a1a1a]" />
       <section id="atlas" className="relative z-10 bg-[#1a1a1a] text-white py-40">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
