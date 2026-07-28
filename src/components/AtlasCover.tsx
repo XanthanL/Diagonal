@@ -3,7 +3,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { getAssetPath } from "@/lib/path";
+import { getAssetPath, getLocalSrcSet, srcSetFallback } from "@/lib/path";
 
 export function AtlasCover({ item }: { item: AtlasItem }) {
   const { lang } = useI18n();
@@ -25,9 +25,12 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
             <div className="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out scale-105 group-hover:scale-100">
               <img
                 src={getAssetPath(item.cover)}
+                srcSet={getLocalSrcSet(item.cover) || undefined}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 alt={localized.title}
                 loading="lazy"
                 decoding="async"
+                onError={srcSetFallback}
                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100"
               />
             </div>

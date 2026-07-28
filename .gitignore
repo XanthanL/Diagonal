@@ -6,6 +6,9 @@
 # explicitly track the cleaned markdown content in src/
 !/src/content/
 
+# admin CMS (separate deployment, not part of main site)
+/admin/
+
 # dependencies
 /node_modules
 /.pnp
@@ -24,6 +27,11 @@
 # misc
 .DS_Store
 *.pem
+
+# 构建期生成的图片变体（scripts/optimize-images.js），不提交仓库
+public/images/**/*.w480.webp
+public/images/**/*.w960.webp
+public/images/**/*.w1600.webp
 
 # debug
 npm-debug.log*

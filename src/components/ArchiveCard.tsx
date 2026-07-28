@@ -1,7 +1,7 @@
 import { ArchiveItem, getLocalizedArchiveItem } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
-import { getAssetPath } from "@/lib/path";
+import { getAssetPath, getLocalSrcSet, srcSetFallback } from "@/lib/path";
 import { useState } from "react";
 
 export function ArchiveCard({ item }: { item: ArchiveItem }) {
@@ -25,10 +25,13 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
           {item.thumbnail ? (
             <img
               src={getAssetPath(item.thumbnail)}
+              srcSet={getLocalSrcSet(item.thumbnail) || undefined}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               alt={localized.title}
               loading="lazy"
               decoding="async"
               onLoad={() => setImgLoaded(true)}
+              onError={srcSetFallback}
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.03] group-hover:brightness-105 ${
                 imgLoaded ? "img-loaded" : "img-loading"
               }`}
