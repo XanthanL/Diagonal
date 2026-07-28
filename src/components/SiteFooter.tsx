@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getLocalizedUrl } from "@/lib/path";
 
 // 站点页脚：后台 /admin 下不显示，保持后台界面纯净
 export function SiteFooter() {
@@ -26,10 +28,18 @@ export function SiteFooter() {
           </p>
         </div>
 
-        {/* 右侧：版权信息 */}
-        <div className="archive-text text-[9px] opacity-30 text-right space-y-1">
-          <div>© 2024–2026 DIAGONAL PROJECT</div>
-          <div>ZIGONG / HEGANG / CHENGDU</div>
+        {/* 右侧：版权信息与制作说明入口 */}
+        <div className="archive-text text-[9px] text-right space-y-1">
+          <div className="opacity-30">© 2024–2026 DIAGONAL PROJECT</div>
+          <div className="opacity-30">ZIGONG / HEGANG / CHENGDU</div>
+          <div className="opacity-40 pt-2">
+            <Link
+              href={getLocalizedUrl("/colophon")}
+              className="hover:opacity-100 hover:text-diagonal-red transition-all"
+            >
+              COLOPHON · SITE BY XANTHANL
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

@@ -100,12 +100,12 @@ const projectTeam = [
       "Founder of DreamJIO Travel Store, instructor of Shuguang Middle School Photography Club.",
   },
   {
-    name: "彭思崴",
-    nameEn: "Peng Siwei",
+    name: "XanthanL",
+    nameEn: "",
     role: "网页设计",
     roleEn: "WEB DESIGN",
-    bio: "本网站网页设计师。",
-    bioEn: "Web designer of this website.",
+    bio: "本网站设计与开发者，更多作品见页尾「制作说明」。",
+    bioEn: "Designer and developer of this website. More works in the Colophon.",
   },
   {
     name: "Christian",

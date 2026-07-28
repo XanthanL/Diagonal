@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/atlas`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/artists`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${siteUrl}/colophon`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   const archivePages: MetadataRoute.Sitemap = archiveData.map((item) => ({
