@@ -463,6 +463,15 @@ function buildCart(g, x, z) {
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.34, R + 0.5, 0.34), woodMat);
     post.position.set(0, (R + 0.5) / 2, s * 0.6); post.castShadow = true; cart.add(post);
   });
+  // 竹篾捆绑：轴碗处 + 立柱顶（藤篾捆扎，不用铁钉，呼应天车工艺）
+  const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  [-1, 1].forEach((s) => {
+    const topRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.05, 6, 16), bindMat);
+    topRing.rotation.x = Math.PI / 2;
+    topRing.position.set(0, R + 0.4, s * 0.6); cart.add(topRing);
+    const axRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.05, 6, 16), bindMat);
+    axRing.position.set(0, R, s * 0.4); cart.add(axRing); // 轴端缠绕（默认朝向即绕 z 轴）
+  });
   g.add(cart);
   g.userData.spin.push({ mesh: wheel, axis: 'z', speed: 0.4 });
 }
@@ -502,6 +511,19 @@ function buildDuijia(g, x, z) {
   // 踏板（杠杆另一端，工人踩踏）
   const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.5), woodTex(WOOD_LIGHT, 0.8));
   pedal.position.set(x + 1.3, pivotY - 0.1, z); g.add(pedal);
+  // 竹篾捆绑：门形架穿斗节点 + 花辊轴端 + 碓头连接（藤篾捆扎，不用铁钉）
+  const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  [-1, 1].forEach((s) => {
+    const postRing = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.05, 6, 16), bindMat);
+    postRing.rotation.x = Math.PI / 2;
+    postRing.position.set(x + s * 1.2, base + H - 0.15, z); g.add(postRing);
+    const hubRing = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.05, 6, 16), bindMat);
+    hubRing.rotation.y = Math.PI / 2; // 绕 x 轴（花辊轴）缠绕
+    hubRing.position.set(x + s * 1.1, pivotY, z); g.add(hubRing);
+  });
+  const headRing = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.05, 6, 16), bindMat);
+  headRing.rotation.x = Math.PI / 2;
+  headRing.position.set(x - 1.3, pivotY - 0.3, z); g.add(headRing);
 }
 
 // 两点之间的木杆 / 斜撑（按方向自动朝向）

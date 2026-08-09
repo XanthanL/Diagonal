@@ -15,16 +15,19 @@ import { STAGE_X } from "./layout";
  * 否则整组模型会偏离产线。
  *
  * 工艺叙事（自左向右，压力 / 温度逐效降低）：
- *   Ⅰ效(高温高压, 通新鲜蒸汽) → Ⅱ效 → Ⅲ效 → Ⅳ效(高真空低温)
+ *   Ⅰ效(高温高压, 通新鲜蒸汽) → Ⅱ效 → Ⅲ效 → Ⅳ效(高真空低温, 兼作结晶器)
  *   二次蒸汽逐效回用：上一效二次蒸汽 = 下一效加热室热源
- *   卤水顺流：Ⅰ→Ⅱ→Ⅲ→Ⅳ 逐效浓缩，末效排出盐浆
+ *   卤水顺流：Ⅰ→Ⅱ→Ⅲ→Ⅳ 逐效浓缩，末效(结晶器)排出盐浆
  *   Ⅳ效二次蒸汽 → 混合冷凝器 + 真空泵（维持末效真空）
  *
  * 颜色叙事：
  *   Ⅰ效(amber 热) → Ⅳ效(brine 冷) 温度梯度；加热室辉光随效递减。
+ *
+ * 真剖面：四效 + 冷凝器统一用世界空间裁剪面（保留 z<=0 半边）从相机侧干净剖开，
+ * 内部列管 / 卤水 / 晶体完整可见；晶体、卤水、气泡不加裁剪，保持实体。
  */
 
-// 温度 / 压力梯度（与 data.ts 一致：首效 ~130℃，末效 ~48℃；压力 0.18→0.012 MPa）
+// 温度 / 压力梯度（首效 ~130℃，末效 ~48℃；压力 0.18→0.012 MPa）
 const EFFECTS = [
   { temp: 130, pressure: 0.18 },
   { temp: 105, pressure: 0.09 },
@@ -46,6 +49,10 @@ export function effectX(i: number): number {
 export const EVAP_BRINE_INLET: [number, number, number] = [effectX(0), -1.5, -0.5];
 export const EVAP_SALT_OUTLET: [number, number, number] = [effectX(3), -1.25, 0.0];
 
+// 裁剪面（世界空间，不随单元 x 平移改变 z）
+const EVAP_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0); // 四效：保留 z<=0
+const COND_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), -1.4); // 冷凝器：保留 z<=-1.4
+
 // 垂直布局基准（相对坐标）
 const GROUND = -2.4;
 const HEATER_R = 0.92;
@@ -60,8 +67,13 @@ const LIQ_TOP = 0.85;
 const LIQ_BOT = -0.55;
 const DISCHARGE_Y = -1.3; // 排料锥尖（晶体汇集 / 盐浆出口）
 
-// 半剖（剖切面朝相机 +z）
-const CUT: [number, number] = [Math.PI / 2, Math.PI];
+// 加热室：周边列管 + 中央降液管（自然循环）
+const TUBE_COUNT = 8;
+const TUBE_R = 0.5;
+const DOWN_R = 0.34;
+
+// 逐效悬浮晶体数量（前效少、末效密集；末效兼结晶器）
+const CRYSTAL_COUNTS = [3, 7, 11, 16];
 
 /** 单效蒸发器（加热室 + 蒸发结晶室） */
 function Evaporator({
@@ -83,10 +95,31 @@ function Evaporator({
   const bubbleRefs = useRef<THREE.Mesh[]>([]);
   const glowRef = useRef<THREE.Mesh>(null);
   const steamRef = useRef<THREE.Mesh>(null);
+  const boilRef = useRef<THREE.Mesh>(null);
 
+  // 周边列管位置（环形均布）
+  const tubePos = useMemo(
+    () =>
+      Array.from({ length: TUBE_COUNT }, (_, j) => {
+        const a = (j / TUBE_COUNT) * Math.PI * 2;
+        return [Math.cos(a) * TUBE_R, Math.sin(a) * TUBE_R] as [number, number];
+      }),
+    []
+  );
+  // 沸腾气泡：绑定到某根列管，沿管高上行（管内沸腾）
+  const bubbles = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        tube: i % TUBE_COUNT,
+        speed: 0.5 + Math.random() * 0.5,
+        phase: Math.random(),
+      })),
+    []
+  );
+  // 悬浮 NaCl 晶体（数量随效递增）
   const crystals = useMemo(
     () =>
-      Array.from({ length: 12 }).map(() => ({
+      Array.from({ length: CRYSTAL_COUNTS[index - 1] }).map(() => ({
         r0: 0.18 + Math.random() * 0.5,
         a0: Math.random() * Math.PI * 2,
         speed: 0.16 + Math.random() * 0.2,
@@ -94,28 +127,37 @@ function Evaporator({
         grow: 0.045 + Math.random() * 0.05,
         rot: Math.random() * 1.2,
       })),
-    []
+    [index]
   );
-  const bubbles = useMemo(
+  // 末效静态晶床（盐浆在此沉积）
+  const bed = useMemo(
     () =>
-      Array.from({ length: 7 }).map(() => ({
-        x: (Math.random() - 0.5) * 1.1,
-        z: (Math.random() - 0.5) * 1.1,
-        speed: 0.7 + Math.random() * 0.7,
-        phase: Math.random(),
-      })),
-    []
+      isLast
+        ? Array.from({ length: 26 }).map(() => {
+            const a = Math.random() * Math.PI * 2;
+            const rr = Math.random() * 0.42;
+            return {
+              x: Math.cos(a) * rr,
+              z: Math.sin(a) * rr,
+              y: DISCHARGE_Y + 0.06 + Math.random() * 0.22,
+              s: 0.07 + Math.random() * 0.06,
+            };
+          })
+        : [],
+    [isLast]
   );
 
   const temp = EFFECTS[index - 1].temp;
   const pressure = EFFECTS[index - 1].pressure;
-  // 温度梯度色：Ⅰ效(热) → Ⅳ效(冷)，直观表达逐效降温，无需文字
+  // 温度梯度色：Ⅰ效(热) → Ⅳ效(冷)
   const gradientColor = useMemo(
     () => new THREE.Color(metalColors.amber).lerp(new THREE.Color(metalColors.brine), (index - 1) / 3),
     [index]
   );
   // 加热室辉光强度随效递减（热 → 冷）
   const heatGlow = 0.55 - ((index - 1) / 3) * 0.42;
+  // 沸腾剧烈度随效略减（高温效更剧烈）
+  const boil = 1 - ((index - 1) / 3) * 0.55;
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -130,12 +172,12 @@ function Evaporator({
       m.rotation.set(t * c.rot, t * c.rot * 0.7, 0);
       m.scale.setScalar(c.grow * (0.5 + u * 1.4));
     });
-    // 沸腾气泡
+    // 管内沸腾：气泡沿绑定列管上升
     bubbleRefs.current.forEach((m, i) => {
       if (!m) return;
       const b = bubbles[i];
-      const y = ((t * b.speed + b.phase) % 1.5) - 0.75;
-      m.position.set(b.x, y, b.z);
+      const y = HEATER_CY - HEATER_H / 2 + ((t * b.speed + b.phase) % 1) * HEATER_H;
+      m.position.set(tubePos[b.tube][0], y, tubePos[b.tube][1]);
       m.scale.setScalar(0.05 + Math.sin((y + 0.75) * 3) * 0.02);
     });
     if (glowRef.current) {
@@ -145,6 +187,10 @@ function Evaporator({
     if (steamRef.current) {
       (steamRef.current.material as THREE.MeshStandardMaterial).opacity =
         0.16 + Math.sin(t * 1.4 + index) * 0.06;
+    }
+    if (boilRef.current) {
+      (boilRef.current.material as THREE.MeshStandardMaterial).opacity =
+        (0.06 + Math.sin(t * 2.2 + index) * 0.03) * boil;
     }
   });
 
@@ -176,9 +222,9 @@ function Evaporator({
         />
       </mesh>
 
-      {/* 加热室（壳程半剖，可见列管） */}
+      {/* 加热室（真剖面：全圆柱 + 裁剪面，可见列管） */}
       <mesh position={[0, HEATER_CY, 0]} castShadow>
-        <cylinderGeometry args={[HEATER_R, HEATER_R, HEATER_H, 32, 1, true, CUT[0], CUT[1]]} />
+        <cylinderGeometry args={[HEATER_R, HEATER_R, HEATER_H, 32]} />
         <meshStandardMaterial
           color={heaterColor}
           metalness={0.55}
@@ -186,19 +232,21 @@ function Evaporator({
           transparent
           opacity={0.42}
           side={THREE.DoubleSide}
+          clippingPlanes={[EVAP_CLIP]}
         />
       </mesh>
-      {/* 列管（剖切可见） */}
-      {Array.from({ length: 6 }).map((_, i) => {
-        const angle = (i / 5) * Math.PI;
-        const r = 0.46;
-        return (
-          <mesh key={i} position={[Math.cos(angle) * r, HEATER_CY, Math.sin(angle) * r]}>
-            <cylinderGeometry args={[0.07, 0.07, HEATER_H - 0.05, 10]} />
-            <meshStandardMaterial color={metalColors.amber} metalness={0.7} roughness={0.3} />
-          </mesh>
-        );
-      })}
+      {/* 中央降液管（自然循环：管内沸腾 → 中心回流） */}
+      <mesh position={[0, HEATER_CY, 0]}>
+        <cylinderGeometry args={[DOWN_R, DOWN_R, HEATER_H - 0.05, 24]} />
+        <meshStandardMaterial color={metalColors.alloyLight} metalness={0.5} roughness={0.4} transparent opacity={0.5} />
+      </mesh>
+      {/* 周边列管（沸腾发生在管内） */}
+      {tubePos.map((p, i) => (
+        <mesh key={i} position={[p[0], HEATER_CY, p[1]]}>
+          <cylinderGeometry args={[0.07, 0.07, HEATER_H - 0.05, 10]} />
+          <meshStandardMaterial color={metalColors.amber} metalness={0.7} roughness={0.3} />
+        </mesh>
+      ))}
       {/* 加热室顶 / 底封板 */}
       <mesh position={[0, HEATER_CY + HEATER_H / 2, 0]}>
         <cylinderGeometry args={[HEATER_R, HEATER_R, 0.08, 28]} />
@@ -220,25 +268,31 @@ function Evaporator({
         </group>
       )}
 
-      {/* 蒸发结晶室（半剖） */}
+      {/* 蒸发结晶室（真剖面） */}
       <mesh position={[0, CHAMBER_CY, 0]} castShadow>
-        <cylinderGeometry args={[CHAMBER_R, CHAMBER_R, CHAMBER_H, 40, 1, true, CUT[0], CUT[1]]} />
+        <cylinderGeometry args={[CHAMBER_R, CHAMBER_R, CHAMBER_H, 40]} />
         <meshStandardMaterial
           color={metalColors.alloyLight}
           metalness={0.4}
           roughness={0.25}
           transparent
-          opacity={0.22}
+          opacity={0.2}
           side={THREE.DoubleSide}
+          clippingPlanes={[EVAP_CLIP]}
         />
       </mesh>
-      {/* 内部卤水（浓度随效递增，颜色略偏盐白） */}
+      {/* 沸腾微辉光（剧烈度随效递减） */}
+      <mesh ref={boilRef} position={[0, (LIQ_TOP + LIQ_BOT) / 2, 0]}>
+        <cylinderGeometry args={[CHAMBER_R - 0.12, CHAMBER_R - 0.12, LIQ_TOP - LIQ_BOT, 40]} />
+        <meshStandardMaterial color={metalColors.brineLight} emissive={metalColors.brineLight} emissiveIntensity={0.5} transparent opacity={0.06} depthWrite={false} />
+      </mesh>
+      {/* 内部卤水（浓度随效递增：Ⅰ清 → Ⅳ偏盐白更稠） */}
       <mesh position={[0, (LIQ_TOP + LIQ_BOT) / 2, 0]}>
         <cylinderGeometry args={[CHAMBER_R - 0.05, CHAMBER_R - 0.05, LIQ_TOP - LIQ_BOT, 40]} />
         <meshStandardMaterial
-          color={metalColors.brine}
+          color={new THREE.Color(metalColors.brine).lerp(new THREE.Color(metalColors.salt), (index - 1) / 3)}
           transparent
-          opacity={0.32}
+          opacity={0.28 + ((index - 1) / 3) * 0.18}
           roughness={0.1}
         />
       </mesh>
@@ -250,8 +304,8 @@ function Evaporator({
 
       {/* 锥顶 + 蒸汽出口 */}
       <mesh position={[0, CHAMBER_CY + CHAMBER_H / 2 + TOP_CONE_H / 2, 0]}>
-        <coneGeometry args={[CHAMBER_R, TOP_CONE_H, 40, 1, true, CUT[0], CUT[1]]} />
-        <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.35} side={THREE.DoubleSide} />
+        <coneGeometry args={[CHAMBER_R, TOP_CONE_H, 40]} />
+        <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.35} side={THREE.DoubleSide} clippingPlanes={[EVAP_CLIP]} />
       </mesh>
       <mesh position={[0, STEAM_TOP, 0]}>
         <cylinderGeometry args={[0.24, 0.24, 0.4, 18]} />
@@ -264,11 +318,9 @@ function Evaporator({
         <meshStandardMaterial color={metalColors.alloy} metalness={0.55} roughness={0.4} />
       </mesh>
 
-      {/* 底部排料锥（晶体汇集） */}
+      {/* 底部排料锥（晶体汇集，真剖面） */}
       <mesh position={[0, (CHAMBER_CY - CHAMBER_H / 2 + DISCHARGE_Y) / 2, 0]}>
-        <cylinderGeometry
-          args={[CHAMBER_R - 0.05, 0.22, CHAMBER_CY - CHAMBER_H / 2 - DISCHARGE_Y, 36, 1, true, CUT[0], CUT[1]]}
-        />
+        <cylinderGeometry args={[CHAMBER_R - 0.05, 0.22, CHAMBER_CY - CHAMBER_H / 2 - DISCHARGE_Y, 36]} />
         <meshStandardMaterial
           color={metalColors.alloy}
           metalness={0.45}
@@ -276,6 +328,7 @@ function Evaporator({
           transparent
           opacity={0.4}
           side={THREE.DoubleSide}
+          clippingPlanes={[EVAP_CLIP]}
         />
       </mesh>
       {/* 盐浆出口短管（末效连离心机；其余仅示意） */}
@@ -284,9 +337,17 @@ function Evaporator({
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.4} />
       </mesh>
 
-      {/* 沸腾气泡 */}
+      {/* 末效静态晶床（盐浆沉积） */}
+      {bed.map((b, i) => (
+        <mesh key={`bed-${i}`} position={[b.x, b.y, b.z]} scale={b.s}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color={metalColors.salt} roughness={0.25} emissive="#b8dcef" emissiveIntensity={0.15} />
+        </mesh>
+      ))}
+
+      {/* 管内沸腾气泡 */}
       {bubbles.map((b, i) => (
-        <mesh key={i} ref={(el) => { if (el) bubbleRefs.current[i] = el; }} position={[b.x, 0, b.z]}>
+        <mesh key={i} ref={(el) => { if (el) bubbleRefs.current[i] = el; }} position={[tubePos[b.tube][0], 0, tubePos[b.tube][1]]}>
           <sphereGeometry args={[1, 10, 8]} />
           <meshStandardMaterial color={metalColors.brineLight} transparent opacity={0.5} roughness={0.3} />
         </mesh>
@@ -336,9 +397,9 @@ function Condenser({ x, z }: { x: number; z: number }) {
         <cylinderGeometry args={[0.5, 0.58, COND_CY - COND_H / 2 - GROUND, 18]} />
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.45} roughness={0.55} />
       </mesh>
-      {/* 外壳（半剖） */}
+      {/* 外壳（真剖面：全圆柱 + 裁剪面） */}
       <mesh position={[0, COND_CY, 0]} castShadow>
-        <cylinderGeometry args={[COND_R, COND_R, COND_H, 28, 1, true, Math.PI / 2, Math.PI]} />
+        <cylinderGeometry args={[COND_R, COND_R, COND_H, 28]} />
         <meshStandardMaterial
           color={metalColors.alloyLight}
           metalness={0.35}
@@ -346,6 +407,7 @@ function Condenser({ x, z }: { x: number; z: number }) {
           transparent
           opacity={0.38}
           side={THREE.DoubleSide}
+          clippingPlanes={[COND_CLIP]}
         />
       </mesh>
       {/* 内部冷却喷淋管（水平） */}
@@ -401,6 +463,10 @@ export function EvaporateUnit({
   const condLocalX = localEffectX(3) + 1.9; // 冷凝器在 Ⅳ效右侧
   const condZ = -1.4; // 置于后排，避免与盐浆管路（z=0）冲突
 
+  // 连接四效支座的基座裙条（强化"一组设备"整体感）
+  const skirtX0 = localEffectX(0) - 1.0;
+  const skirtX1 = localEffectX(3) + 1.0;
+
   return (
     <group
       position={[cx, 0, 0]}
@@ -409,6 +475,12 @@ export function EvaporateUnit({
         onSelect?.();
       }}
     >
+      {/* 基座裙条（连四效支座） */}
+      <mesh position={[(skirtX0 + skirtX1) / 2, GROUND + 0.03, 0]} castShadow>
+        <boxGeometry args={[skirtX1 - skirtX0, 0.12, 1.5]} />
+        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.3} roughness={0.85} />
+      </mesh>
+
       {/* 四效蒸发器 */}
       {EFFECTS.map((_, i) => (
         <Evaporator
@@ -439,7 +511,7 @@ export function EvaporateUnit({
         speed={0.22}
       />
 
-      {/* —— 二次蒸汽逐效回用：上一效顶部 → 下一效加热室 —— */}
+      {/* —— 二次蒸汽逐效回用：上一效顶部 → 下一效加热室（按序脉动表达梯级利用） —— */}
       {[0, 1, 2].map((i) => (
         <FlowTube
           key={`steam-${i}`}
@@ -454,6 +526,7 @@ export function EvaporateUnit({
           particleCount={6}
           particleSize={0.1}
           speed={0.18}
+          phase={i / 3}
         />
       ))}
 
@@ -472,7 +545,7 @@ export function EvaporateUnit({
         speed={0.18}
       />
 
-      {/* —— 卤水顺流（forward feed）：Ⅰ→Ⅱ→Ⅲ→Ⅳ 逐效浓缩 —— */}
+      {/* —— 卤水顺流（forward feed）：Ⅰ→Ⅱ→Ⅲ→Ⅳ 逐效浓缩（颜色随效变稠） —— */}
       {[0, 1, 2].map((i) => (
         <FlowTube
           key={`feed-${i}`}
@@ -481,7 +554,7 @@ export function EvaporateUnit({
             [localEffectX(i) + SPACING * 0.5, -0.55, 0],
             [localEffectX(i + 1) - CHAMBER_R * 0.82, -0.2, 0],
           ]}
-          color={metalColors.brine}
+          color={new THREE.Color(metalColors.brine).lerp(new THREE.Color(metalColors.salt), (i + 1) / 3).getStyle()}
           radius={0.07}
           particleCount={6}
           particleSize={0.11}
@@ -495,7 +568,7 @@ export function EvaporateUnit({
           <Tag
             position={[localEffectX(0) - 2.4, HEATER_CY + 0.9, -0.4]}
             label={zh ? "新鲜蒸汽" : "Fresh steam"}
-            value="→ Ⅰ效"
+            value={zh ? "生蒸汽加热 → Ⅰ效" : "live steam → I"}
             color={metalColors.steam}
           />
           <Tag
@@ -503,6 +576,12 @@ export function EvaporateUnit({
             label={zh ? "混合冷凝器 · 真空泵" : "Condenser · vacuum pump"}
             value={zh ? "维持末效真空" : "holds last-effect vacuum"}
             color={metalColors.brine}
+          />
+          <Tag
+            position={[localEffectX(3), DISCHARGE_Y + 0.2, 0]}
+            label={zh ? "结晶器" : "Crystallizer"}
+            value={zh ? "产盐浆 → 离心" : "salt slurry → centrifuge"}
+            color={metalColors.salt}
           />
         </>
       )}

@@ -17,6 +17,8 @@ export function FlowTube({
   speed = 0.22,
   particleSize = 0.12,
   showTube = true,
+  /** 粒子相位偏移（0~1），用于让多条管按序脉动、表达梯级/序列关系 */
+  phase = 0,
 }: {
   points: [number, number, number][];
   color?: string;
@@ -25,6 +27,7 @@ export function FlowTube({
   speed?: number;
   particleSize?: number;
   showTube?: boolean;
+  phase?: number;
 }) {
   const curve = useMemo(
     () => new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p))),
@@ -33,7 +36,7 @@ export function FlowTube({
   const refs = useRef<THREE.Mesh[]>([]);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime * speed;
+    const t = state.clock.elapsedTime * speed + phase;
     refs.current.forEach((m, i) => {
       if (!m) return;
       const u = (t + i / particleCount) % 1;

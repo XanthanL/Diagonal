@@ -28,6 +28,10 @@ export function SceneShell({
       dpr={[1, 2]}
       camera={{ position: cameraPosition, fov: 38 }}
       gl={{ antialias: true, alpha: true }}
+      onCreated={({ gl }) => {
+        // 开启局部裁剪，供 EvaporateUnit 用世界空间裁剪面做真剖面（其他单元未使用裁剪面，无副作用）
+        gl.localClippingEnabled = true;
+      }}
     >
       <Suspense fallback={null}>
         <ambientLight intensity={ambient} color="#f4f7fa" />

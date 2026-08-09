@@ -29,8 +29,8 @@ export const STAGE_X = {
 export const anchors: Record<string, Anchor> = {
   // 环节 1 含地质剖面（高 4.4）与四台设备，取景需更远、视点略高
   brine: { pos: [STAGE_X.brine, 0.3, 0], distance: 14, height: 3.8 },
-  // 环节 2 含四效 + 冷凝器，横向较宽，取景略远
-  evaporate: { pos: [STAGE_X.evaporate + 0.5, 0.5, 0], distance: 13.5, height: 4 },
+  // 环节 2 含四效 + 冷凝器，横向较宽，取景略远（distance 15 保证四效+冷凝器全入镜）
+  evaporate: { pos: [STAGE_X.evaporate + 0.5, 0.5, 0], distance: 15, height: 4.2 },
   centrifuge: { pos: [STAGE_X.centrifuge - 1.4, 0.3, 0], distance: 11, height: 3.2 },
   dry: { pos: [STAGE_X.dry + 1.0, 0.6, 0], distance: 11, height: 3.0 },
   pack: { pos: [STAGE_X.pack + 1.4, 0.4, 0], distance: 12, height: 3.2 },
