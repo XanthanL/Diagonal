@@ -32,8 +32,8 @@ export const anchors: Record<string, Anchor> = {
   // 环节 2 含四效 + 冷凝器，横向较宽，取景略远（distance 15 保证四效+冷凝器全入镜）
   evaporate: { pos: [STAGE_X.evaporate + 0.5, 0.5, 0], distance: 15, height: 4.2 },
   centrifuge: { pos: [STAGE_X.centrifuge - 1.4, 0.3, 0], distance: 11, height: 3.2 },
-  dry: { pos: [STAGE_X.dry + 1.0, 0.6, 0], distance: 11, height: 3.0 },
-  pack: { pos: [STAGE_X.pack + 1.4, 0.4, 0], distance: 12, height: 3.2 },
+  dry: { pos: [STAGE_X.dry + 1.0, 0.6, 0], distance: 12.5, height: 3.4 },
+  pack: { pos: [STAGE_X.pack + 1.4, 0.4, 0], distance: 13, height: 3.6 },
 };
 
 // 全景相机位置（看到整条产线）

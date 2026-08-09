@@ -246,7 +246,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* 卡片 3：盐厂 3D 解构（试作）→ /salt-plant-3d/ */}
+          {/* 卡片 3：天车 3D 解构 → /salt-plant-3d/ */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -258,7 +258,7 @@ export default function Home() {
             >
               <SaltPlantCover />
               <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
-                SALT PLANT · WHOLE-PLANT 3D
+                DERRICK · TIMBER HEADFRAME
               </div>
               <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
                 {t(lang, "labEnter")}

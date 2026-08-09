@@ -53,7 +53,7 @@ export function StageCard({
             onClick={onOpenInfo}
             className="w-full py-1.5 rounded-md bg-paper-200 text-ink-700 border border-black/10 hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40 transition text-[11px] font-mono"
           >
-            原理 / 参数 →
+            {lang === "zh" ? "原理 / 参数 →" : "Principle / Parameters →"}
           </button>
         </div>
       </motion.div>

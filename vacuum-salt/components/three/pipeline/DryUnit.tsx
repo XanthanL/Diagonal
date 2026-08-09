@@ -241,49 +241,104 @@ function FluidBed({ lang }: { lang: "zh" | "en" }) {
   );
 }
 
-// ---------- 3. 振动筛（按粒度分级） ----------
-const SCREEN_W = 1.8;
-const SCREEN_D = 1.4;
-const grades = [
-  { label: "粗", z: -0.45 },
-  { label: "中", z: 0 },
-  { label: "细", z: 0.45 },
-];
+// ---------- 3. 振动筛（多层分级：粗/中/细） ----------
+const SCREEN_W = 2.4;
+const SCREEN_D = 1.3;
+const SCREEN_SY = -0.1; // 筛体组 y（相对单元原点）
+const DECK_Y = [0.0, -0.26, -0.52]; // 上(粗)/中(中)/下(细) 三层筛面
+const FEED_X = -SCREEN_W / 2;
+const DISCH_X = SCREEN_W / 2;
 
 function VibratingScreen() {
   const screenRef = useRef<THREE.Group>(null);
+  const grainRefs = useRef<THREE.Mesh[]>([]);
+  const GRADE = DECK_Y.length;
+  const grains = useMemo(
+    () =>
+      Array.from({ length: 27 }).map((_, i) => {
+        const grade = i % GRADE; // 0粗 1中 2细
+        return {
+          grade,
+          z: (Math.random() - 0.5) * (SCREEN_D - 0.3),
+          phase: Math.random(),
+          speed: 0.16 + Math.random() * 0.08,
+          bob: 0.02 + Math.random() * 0.025,
+          bobSp: 7 + Math.random() * 4,
+          spin: 0.6 + Math.random() * 0.9,
+        };
+      }),
+    [GRADE]
+  );
   useFrame((state) => {
     const t = state.clock.elapsedTime;
+    // 整体低频振动（驱动颗粒输送）
     if (screenRef.current) {
-      screenRef.current.position.x = X_SCREEN + Math.sin(t * 9) * 0.05; // 低频振动
-      screenRef.current.rotation.z = -0.16 + Math.sin(t * 9) * 0.012;
+      screenRef.current.position.x = X_SCREEN + Math.sin(t * 11) * 0.04;
     }
+    grains.forEach((g, i) => {
+      const m = grainRefs.current[i];
+      if (!m) return;
+      const p = (t * g.speed + g.phase) % 1; // 0..1 沿筛面输送
+      const x = FEED_X + p * SCREEN_W;
+      // 入料端先落到对应筛层：前 18% 由顶层沉降到所属层（表达"过筛分级"）
+      let y = DECK_Y[g.grade];
+      if (p < 0.18) y = THREE.MathUtils.lerp(DECK_Y[0], DECK_Y[g.grade], p / 0.18);
+      y += Math.sin(t * g.bobSp + g.phase) * g.bob; // 振动上下抖
+      m.position.set(x, y, g.z);
+      m.rotation.y = t * g.spin;
+      m.rotation.x = Math.sin(t * g.bobSp) * 0.4;
+    });
   });
   return (
-    <group ref={screenRef} position={[X_SCREEN, -0.2, 0]} rotation={[-0, 0, -0.16]}>
-      {/* 筛框 */}
-      <mesh castShadow>
-        <boxGeometry args={[SCREEN_W, 0.14, SCREEN_D]} />
-        <meshStandardMaterial color={metalColors.alloyDark} metalness={0.5} roughness={0.5} />
-      </mesh>
-      {/* 筛网（线框，表达孔隙） */}
-      <mesh position={[0, 0.09, 0]}>
-        <boxGeometry args={[SCREEN_W - 0.1, 0.02, SCREEN_D - 0.1]} />
-        <meshStandardMaterial color={metalColors.alloy} wireframe transparent opacity={0.5} />
-      </mesh>
-      {/* 分级出料（粗/中/细） */}
-      {grades.map((g, i) => (
-        <group key={i} position={[0.7, -0.35, g.z]}>
-          <mesh position={[0, -0.1, 0]} castShadow>
-            <boxGeometry args={[0.34, 0.34, 0.34]} />
+    <group ref={screenRef} position={[X_SCREEN, SCREEN_SY, 0]}>
+      {/* 支撑侧框 */}
+      {[-SCREEN_W / 2, SCREEN_W / 2].map((dx, i) => (
+        <mesh
+          key={i}
+          position={[dx, (SCREEN_SY + DECK_Y[0] + GROUND) / 2 - 0.1, 0]}
+          castShadow
+        >
+          <boxGeometry args={[0.1, DECK_Y[0] - GROUND + 0.5, SCREEN_D + 0.3]} />
+          <meshStandardMaterial color={metalColors.alloyDark} metalness={0.5} roughness={0.5} />
+        </mesh>
+      ))}
+      {/* 三层筛面：半透板 + 网格(筛网观感) */}
+      {DECK_Y.map((dy, d) => (
+        <group key={d} position={[0, dy, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[SCREEN_W, 0.05, SCREEN_D]} />
             <meshStandardMaterial
-              color={metalColors.salt}
-              roughness={0.3}
-              emissive={metalColors.brineLight}
-              emissiveIntensity={0.1}
+              color={metalColors.alloy}
+              metalness={0.4}
+              roughness={0.5}
+              transparent
+              opacity={0.26}
+              side={THREE.DoubleSide}
+              depthWrite={false}
             />
           </mesh>
+          <gridHelper
+            args={[SCREEN_W, 16, metalColors.alloyLight, metalColors.alloyMid]}
+            position={[0, 0.035, 0]}
+          />
         </group>
+      ))}
+      {/* 入料溜槽（接流化床来料） */}
+      <mesh position={[FEED_X - 0.1, DECK_Y[0] + 0.32, 0]} rotation={[0, 0, -0.5]} castShadow>
+        <boxGeometry args={[0.5, 0.18, SCREEN_D - 0.3]} />
+        <meshStandardMaterial color={metalColors.alloyDark} metalness={0.55} roughness={0.4} />
+      </mesh>
+      {/* 颗粒（按粒度分三层输送） */}
+      {grains.map((g, i) => (
+        <mesh key={i} ref={(el) => { if (el) grainRefs.current[i] = el; }} scale={0.05}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial
+            color={metalColors.salt}
+            roughness={0.3}
+            emissive={metalColors.brineLight}
+            emissiveIntensity={0.12}
+          />
+        </mesh>
       ))}
     </group>
   );
@@ -447,6 +502,52 @@ export function DryUnit({
         particleCount={3}
         particleSize={0.07}
         speed={0.16}
+      />
+
+      {/* 粗/中 分级出料收集（筛体右端下方） */}
+      {[0, 1].map((d) => (
+        <group
+          key={d}
+          position={[
+            X_SCREEN + DISCH_X + 0.5,
+            SCREEN_SY + DECK_Y[d] - 0.35,
+            d === 0 ? -0.42 : 0.42,
+          ]}
+        >
+          <mesh castShadow>
+            <boxGeometry args={[0.5, 0.5, 0.5]} />
+            <meshStandardMaterial color={metalColors.alloyDark} metalness={0.5} roughness={0.5} />
+          </mesh>
+          {[
+            [-0.1, -0.1],
+            [0.1, -0.1],
+            [0, 0.05],
+          ].map((p, k) => (
+            <mesh key={k} position={[p[0], 0.32, p[1]]} scale={0.12} castShadow>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshStandardMaterial
+                color={metalColors.salt}
+                roughness={0.3}
+                emissive={metalColors.brineLight}
+                emissiveIntensity={0.1}
+              />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* 细盐（合格品）→ 干盐出口（去包装）：补足「筛分 → 出口」断点 */}
+      <FlowTube
+        points={[
+          [X_SCREEN + DISCH_X, SCREEN_SY + DECK_Y[2], 0],
+          [STAGE_X.dry + 3.0, -0.6, 0],
+          DRY_OUTLET,
+        ]}
+        color={metalColors.salt}
+        radius={0.07}
+        particleCount={5}
+        particleSize={0.09}
+        speed={0.2}
       />
 
       {/* 对准本环节时才出现的极简说明（避免全景时文字堆叠） */}

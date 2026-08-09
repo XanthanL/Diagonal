@@ -24,61 +24,55 @@ export function NavBar({
 }: NavBarProps) {
   return (
     <header className="absolute top-0 inset-x-0 z-30 pointer-events-none">
-      <div className="panel border-b border-black/10 pointer-events-auto">
-        <div className="flex items-center justify-between gap-3 px-4 py-2">
-          {/* 品牌 / 标题（点击打开引言） */}
+      {/* 主站同款纤细半透明模糊栏（对齐 diagonal GlobalNav 的 scrolled 态） */}
+      <div className="pointer-events-auto bg-white/80 backdrop-blur-md border-b border-black/[0.06] shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
+          {/* 品牌：DIAGONAL wordmark + 子项目标签（点击打开引言） */}
           <button
             onClick={onOpenIntro}
-            className="flex items-center gap-2.5 group min-w-0"
+            className="flex items-baseline gap-2 group min-w-0"
             title="自贡井卤起源"
           >
-            {/* 对角斜线品牌徽标：呼应主站 DIA/GONAL 核心母题 */}
-            <div className="relative w-8 h-8 shrink-0 overflow-hidden rounded-md border border-black/10 bg-white">
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 pointer-events-none diagonal-line"
-                style={{ opacity: 0.5 }}
-              />
-              <span
-                aria-hidden="true"
-                className="absolute left-1/2 top-1/2 w-[2px] h-5 -ml-px -mt-2.5 rotate-45"
-                style={{ background: "linear-gradient(180deg, #B33A2A, #8E2D20)" }}
-              />
-            </div>
-            <div className="min-w-0 text-left">
-              <div className="archive-text text-[9px] text-ink-500 leading-none">
-                ZIGONG · VACUUM SALT
-              </div>
-              <div className="text-[13px] text-ink-900 font-medium tracking-wide truncate leading-tight mt-0.5">
-                真空制盐工艺 3D 解构
-              </div>
-            </div>
+            <span className="archive-text font-bold text-sm tracking-tighter text-ink-900 group-hover:text-diagonal-red transition-colors">
+              DIAGONAL
+            </span>
+            <span className="archive-text text-[9px] text-ink-400 leading-none hidden sm:inline">
+              / VACUUM SALT
+            </span>
           </button>
 
-          {/* 全局控制 */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* 全局控制：主站同款 archive-text 无框导航项 */}
+          <div className="flex items-center gap-5 shrink-0">
             <button
               onClick={onOverview}
-              className="hidden sm:block px-2.5 py-1.5 rounded-md text-[11px] text-ink-600 hover:text-ink-900 border border-black/10 hover:border-diagonal-red/50 transition font-mono"
+              className="hidden sm:block archive-text text-[11px] text-ink-600 hover:text-ink-900 transition-opacity"
               title="回到全景"
             >
-              全景
+              {lang === "zh" ? "全景" : "OVERVIEW"}
             </button>
             <button
               onClick={onOpenRefs}
-              className="hidden sm:block px-2.5 py-1.5 rounded-md text-[11px] text-ink-600 hover:text-ink-900 transition font-mono"
+              className="hidden sm:block archive-text text-[11px] text-ink-600 hover:text-ink-900 transition-opacity"
             >
-              参考资料
+              {lang === "zh" ? "参考资料" : "REFERENCES"}
             </button>
+            {/* 语言切换：主站同款药丸开关 */}
             <button
               onClick={onToggleLang}
-              className="px-2.5 py-1.5 rounded-md text-[11px] text-ink-600 hover:text-ink-900 border border-black/10 hover:border-diagonal-red/50 transition font-mono"
+              aria-label={lang === "zh" ? "Switch to English" : "切换到中文"}
+              className="group relative flex items-center gap-1.5 archive-text text-[11px] font-bold uppercase tracking-widest text-ink-700 hover:text-diagonal-red transition-colors"
             >
-              {lang === "zh" ? "EN" : "中"}
+              <span className="relative flex h-3.5 w-7 items-center rounded-full border border-black/20 bg-black/5 px-0.5">
+                <span
+                  className="block h-2 w-2 rounded-full bg-diagonal-red transition-all"
+                  style={{ marginLeft: lang === "en" ? "auto" : "0" }}
+                />
+              </span>
+              <span className="min-w-[1.4rem] text-left">{lang === "zh" ? "EN" : "中"}</span>
             </button>
             <button
               onClick={onOpenIntro}
-              className="w-8 h-8 rounded-md text-ink-500 hover:text-ink-900 border border-black/10 hover:border-diagonal-red/50 transition flex items-center justify-center"
+              className="archive-text text-[11px] text-ink-600 hover:text-ink-900 transition-opacity"
               title="自贡井卤起源"
               aria-label="关于"
             >

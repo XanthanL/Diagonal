@@ -264,7 +264,7 @@ export function ControlDeck(props: ControlDeckProps) {
                       onClick={onOpenInfo}
                       className="flex-1 py-2 rounded-md bg-paper-200 text-ink-700 border border-black/10 hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40 transition text-[11px] font-mono"
                     >
-                      原理 / 参数 →
+                      {lang === "zh" ? "原理 / 参数 →" : "Principle / Parameters →"}
                     </button>
                   </div>
 
