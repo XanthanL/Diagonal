@@ -8,9 +8,9 @@ import { SceneShell, CameraFocus } from "../SceneShell";
 import { metalColors } from "../Tag";
 import { BrineUnit, BRINE_OUTLET } from "./BrineUnit";
 import { EvaporateUnit, EVAP_BRINE_INLET, EVAP_SALT_OUTLET } from "./EvaporateUnit";
-import { CentrifugeUnit } from "./CentrifugeUnit";
-import { DryUnit } from "./DryUnit";
-import { PackUnit } from "./PackUnit";
+import { CentrifugeUnit, CENTRIFUGE_INLET, CENTRIFUGE_WET_OUTLET } from "./CentrifugeUnit";
+import { DryUnit, DRY_INLET, DRY_OUTLET } from "./DryUnit";
+import { PackUnit, PACK_INLET } from "./PackUnit";
 import { FlowTube } from "./FlowTube";
 import { FlowRail } from "./FlowRail";
 import { StageMarker } from "./StageMarker";
@@ -109,9 +109,21 @@ export function PipelineScene({ cameraStageId, onSelectStage, lang = "zh" }: Pip
           focused={cameraStageId === "evaporate"}
           lang={lang}
         />
-        <CentrifugeUnit onSelect={() => onSelectStage("centrifuge")} />
-        <DryUnit onSelect={() => onSelectStage("dry")} />
-        <PackUnit onSelect={() => onSelectStage("pack")} />
+        <CentrifugeUnit
+          onSelect={() => onSelectStage("centrifuge")}
+          focused={cameraStageId === "centrifuge"}
+          lang={lang}
+        />
+        <DryUnit
+          onSelect={() => onSelectStage("dry")}
+          focused={cameraStageId === "dry"}
+          lang={lang}
+        />
+        <PackUnit
+          onSelect={() => onSelectStage("pack")}
+          focused={cameraStageId === "pack"}
+          lang={lang}
+        />
 
         {/* 连接管路：精卤 → Ⅰ效加热室（绕行后侧，避免穿过蒸发器本体） */}
         <FlowTube
@@ -127,37 +139,38 @@ export function PipelineScene({ cameraStageId, onSelectStage, lang = "zh" }: Pip
           speed={0.24}
         />
 
-        {/* 盐浆 → 离心机（从Ⅳ效排料口引出） */}
+        {/* 盐浆 → 离心机（从Ⅳ效排料口引出，接入旋流器进料口） */}
         <FlowTube
           points={[
             EVAP_SALT_OUTLET,
             [EVAP_SALT_OUTLET[0] + 0.8, -0.9, 0],
-            [STAGE_X.centrifuge - 1.2, -0.5, 0],
-            [STAGE_X.centrifuge, 2.2, 0],
+            [STAGE_X.centrifuge - 3.5, 0.6, 0],
+            [STAGE_X.centrifuge - 2.9, 1.6, 0],
+            CENTRIFUGE_INLET,
           ]}
           color={metalColors.salt}
           particleCount={6}
           speed={0.2}
         />
 
-        {/* 湿盐 → 干燥床 */}
+        {/* 湿盐 → 干燥床（接入流化床左下进料口） */}
         <FlowTube
           points={[
-            [STAGE_X.centrifuge, -0.6, 0],
-            [STAGE_X.dry - 1.4, -0.6, 0],
-            [STAGE_X.dry - 1.4, -0.1, 0],
+            CENTRIFUGE_WET_OUTLET,
+            [STAGE_X.dry - 2.4, -0.6, 0],
+            DRY_INLET,
           ]}
           color={metalColors.salt}
           particleCount={5}
           speed={0.22}
         />
 
-        {/* 干盐 → 包装机 */}
+        {/* 干盐 → 包装机（流化床出料 → 包装机进料口） */}
         <FlowTube
           points={[
-            [STAGE_X.dry + 3.0, -0.4, 0],
-            [STAGE_X.pack - 0.6, -0.4, 0],
-            [STAGE_X.pack - 0.6, 0.4, 0],
+            DRY_OUTLET,
+            [STAGE_X.pack - 1.4, -0.4, 0],
+            PACK_INLET,
           ]}
           color={metalColors.salt}
           particleCount={5}

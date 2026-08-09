@@ -31,9 +31,9 @@ export const anchors: Record<string, Anchor> = {
   brine: { pos: [STAGE_X.brine, 0.3, 0], distance: 14, height: 3.8 },
   // 环节 2 含四效 + 冷凝器，横向较宽，取景略远
   evaporate: { pos: [STAGE_X.evaporate + 0.5, 0.5, 0], distance: 13.5, height: 4 },
-  centrifuge: { pos: [STAGE_X.centrifuge, 0.5, 0], distance: 9, height: 3 },
-  dry: { pos: [STAGE_X.dry, 0.5, 0], distance: 10, height: 3.2 },
-  pack: { pos: [STAGE_X.pack, 0.5, 0], distance: 11, height: 3.5 },
+  centrifuge: { pos: [STAGE_X.centrifuge - 1.4, 0.3, 0], distance: 11, height: 3.2 },
+  dry: { pos: [STAGE_X.dry + 1.0, 0.6, 0], distance: 11, height: 3.0 },
+  pack: { pos: [STAGE_X.pack + 1.4, 0.4, 0], distance: 12, height: 3.2 },
 };
 
 // 全景相机位置（看到整条产线）

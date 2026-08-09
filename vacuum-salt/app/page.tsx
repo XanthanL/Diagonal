@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { stages } from "@/lib/data";
 import { useLang } from "@/lib/useLang";
 import { usePlayback } from "@/lib/usePlayback";
@@ -9,6 +9,13 @@ import { NavBar } from "@/components/hud/NavBar";
 import { ControlDeck } from "@/components/hud/ControlDeck";
 import { InfoPanel, IntroPanel } from "@/components/hud/InfoPanel";
 import { RefsPanel } from "@/components/hud/RefsPanel";
+
+/** 客户端挂载后才渲染子节点，避免 useMediaQuery 等客户端状态导致 hydration mismatch */
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? children : null;
+}
 
 export default function Home() {
   const { lang, toggle } = useLang();
@@ -93,10 +100,15 @@ export default function Home() {
         onOpenInfo={() => setInfoOpen(true)}
       />
 
-      {/* 抽屉与弹层 */}
-      <InfoPanel stage={stage} lang={lang} open={infoOpen} onClose={() => setInfoOpen(false)} />
-      <IntroPanel lang={lang} open={introOpen} onClose={() => setIntroOpen(false)} />
-      <RefsPanel open={refsOpen} lang={lang} onClose={() => setRefsOpen(false)} />
+      {/* 抽屉与弹层：全部延迟到客户端挂载后渲染。
+          IntroPanel 默认 open=true，其 framer-motion motion.div 在 SSR 输出 animate 终态样式、
+          而客户端首帧渲染 initial 初态样式，二者不一致会触发 hydration mismatch 并导致交互失效，
+          故用 ClientOnly 包裹，既规避 mismatch 又保留入场动画（挂载后播放）。 */}
+      <ClientOnly>
+        <InfoPanel stage={stage} lang={lang} open={infoOpen} onClose={() => setInfoOpen(false)} />
+        <IntroPanel lang={lang} open={introOpen} onClose={() => setIntroOpen(false)} />
+        <RefsPanel open={refsOpen} lang={lang} onClose={() => setRefsOpen(false)} />
+      </ClientOnly>
     </main>
   );
 }
