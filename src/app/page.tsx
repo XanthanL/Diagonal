@@ -9,6 +9,7 @@ import { ArchiveCard } from "@/components/ArchiveCard";
 import { AtlasCover } from "@/components/AtlasCover";
 import { DiagonalSlash } from "@/components/DiagonalSlash";
 import { VacuumSaltCover } from "@/components/VacuumSaltCover";
+import { SaltPlantCover } from "@/components/SaltPlantCover";
 
 export default function Home() {
   const { lang } = useI18n();
@@ -179,7 +180,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 卡片 1：真空制盐 3D 解构 → /vacuum-salt/ */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -242,6 +243,33 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold tracking-tight">{t(lang, "labSaltTitle")}</h3>
               <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltDesc")}</p>
+            </div>
+          </motion.div>
+
+          {/* 卡片 3：盐厂 3D 解构（试作）→ /salt-plant-3d/ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Link
+              href="/salt-plant-3d/index.html"
+              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+            >
+              <SaltPlantCover />
+              <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
+                SALT PLANT · WHOLE-PLANT 3D
+              </div>
+              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
+                {t(lang, "labEnter")}
+              </div>
+            </Link>
+            <div className="mt-5 space-y-1.5">
+              <div className="archive-text text-[10px] text-black/40 font-bold tracking-widest">
+                {t(lang, "labSaltPlantLabel")}
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">{t(lang, "labSaltPlantTitle")}</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltPlantDesc")}</p>
             </div>
           </motion.div>
         </div>

@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/copy-salt-plant.js && next dev",
     "dev:vacuum": "cd vacuum-salt && NEXT_PUBLIC_BASE_PATH=/vacuum-salt npm run dev -- -p 3001",
     "images": "node scripts/optimize-images.js",
     "prebuild": "node scripts/optimize-images.js",
     "build": "next build",
     "build:with-vacuum": "npm run build && node scripts/merge-vacuum.js",
     "merge:vacuum": "node scripts/merge-vacuum.js",
+    "sync:salt-plant": "node scripts/copy-salt-plant.js",
     "preview": "npm run build:with-vacuum && npx serve out",
     "start": "next start",
     "lint": "next lint"

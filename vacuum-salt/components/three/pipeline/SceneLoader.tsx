@@ -23,13 +23,15 @@ function LoadingFallback() {
 export function SceneLoader({
   cameraStageId,
   onSelectStage,
+  lang = "zh",
 }: {
   cameraStageId: string | null;
   onSelectStage: (id: string) => void;
+  lang?: "zh" | "en";
 }) {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <PipelineScene cameraStageId={cameraStageId} onSelectStage={onSelectStage} />
+      <PipelineScene cameraStageId={cameraStageId} onSelectStage={onSelectStage} lang={lang} />
     </Suspense>
   );
 }

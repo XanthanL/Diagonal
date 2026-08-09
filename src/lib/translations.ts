@@ -40,6 +40,9 @@ export const translations = {
     labVacuumDesc: "四川自贡井矿盐卤真空制盐全流程 3D 解构，可交互查看五大工艺环节。",
     labSaltTitle: "盐粒子模拟",
     labSaltDesc: "上万盐晶粒子的实时模拟，鼠标或触控即可搅动晶体云。",
+    labSaltPlantLabel: "SUBPROJECT · SALT PLANT 3D",
+    labSaltPlantTitle: "盐厂 3D 解构",
+    labSaltPlantDesc: "真空制盐工艺的全新 3D 试作：白底工业风、暖灰设备与品牌红焦点，可交互查看整厂流程。",
 
     // Archive
     backToHome: "HOME",
@@ -109,6 +112,10 @@ export const translations = {
     labSaltTitle: "Salt Particle Simulation",
     labSaltDesc:
       "A real-time simulation of thousands of salt crystals — stir the crystal cloud with mouse or touch.",
+    labSaltPlantLabel: "SUBPROJECT · SALT PLANT 3D",
+    labSaltPlantTitle: "SALT PLANT 3D",
+    labSaltPlantDesc:
+      "A fresh 3D take on vacuum salt-making: light industrial look, warm-gray equipment with brand-red focal points — explore the whole-plant flow interactively.",
 
     // Archive
     backToHome: "HOME",

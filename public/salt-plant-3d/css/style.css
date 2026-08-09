@@ -1,0 +1,266 @@
+:root {
+  /* diagonal 设计系统 */
+  --paper: #FAFAF8;          /* 暖纸 */
+  --ink: #1A1A1A;            /* 墨 */
+  --ink-500: #57534E;        /* 次级文字 */
+  --muted: #8A847B;          /* 弱化文字 */
+  --red: #B33A2A;            /* 品牌红 */
+  --red-soft: rgba(179, 58, 42, 0.10);
+  --line: rgba(26, 26, 26, 0.12);   /* 发丝黑边 */
+  --line-strong: rgba(26, 26, 26, 0.22);
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-solid: #FFFFFF;
+  --bg: #FAFAF8;
+  --text: var(--ink);
+  --accent: var(--red);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#scene-root { position: fixed; inset: 0; z-index: 1; }
+#scene-root canvas { display: block; }
+
+/* 等宽眉标（对齐 diagonal 的 archive-text） */
+.eyebrow {
+  font-family: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ---------------- 顶部栏 ---------------- */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px;
+  background: linear-gradient(180deg, rgba(250,250,248,0.94), rgba(250,250,248,0));
+  pointer-events: none;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark {
+  position: relative; overflow: hidden;
+  width: 46px; height: 46px; border-radius: 12px;
+  display: grid; place-items: center;
+  font-size: 23px; font-weight: 800; color: var(--ink);
+  background:
+    linear-gradient(125deg, transparent 44%, rgba(179,58,42,0.92) 47%, rgba(179,58,42,0.92) 51%, transparent 54%),
+    #FFFFFF;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 4px 16px rgba(26,26,26,0.08);
+}
+.brand-text h1 {
+  font-size: 19px; font-weight: 700; letter-spacing: 0.5px;
+  font-family: "Newsreader", "Noto Serif SC", "Songti SC", serif;
+}
+.brand-text p {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px; color: var(--muted); margin-top: 3px; letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.legend span {
+  display: flex; align-items: center; gap: 6px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px; color: var(--ink-500); letter-spacing: 0.04em;
+}
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1px var(--line); }
+
+/* ---------------- 左侧导航 ---------------- */
+#sidebar {
+  position: fixed; top: 84px; left: 18px; z-index: 10;
+  width: 232px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(26,26,26,0.06);
+}
+.side-title {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 10px; padding-left: 4px; font-weight: 600;
+}
+#nav-list { display: flex; flex-direction: column; gap: 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px;
+  background: rgba(26,26,26,0.02);
+  border: 1px solid transparent;
+  color: var(--text); cursor: pointer; text-align: left;
+  font-family: inherit; font-size: 14px;
+  transition: all 0.18s ease;
+}
+.nav-item:hover { background: rgba(179,58,42,0.06); border-color: var(--line); }
+.nav-item.active {
+  background: var(--red-soft);
+  border-color: rgba(179,58,42,0.45);
+}
+.nav-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px var(--line); }
+.nav-idx { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nav-name { font-weight: 600; }
+.side-tip {
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line);
+  font-size: 11px; color: var(--muted); line-height: 1.6;
+}
+
+/* ---------------- 右侧详情 ---------------- */
+#infopanel {
+  position: fixed; top: 84px; right: 18px; z-index: 10;
+  width: 320px; max-height: calc(100vh - 170px); overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(26,26,26,0.06);
+  opacity: 0; transform: translateX(20px);
+  transition: all 0.35s ease; pointer-events: none;
+}
+#infopanel.show { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.ip-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.ip-color { width: 4px; align-self: stretch; border-radius: 4px; min-height: 46px; background: var(--red); }
+.ip-index {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.22em; text-transform: uppercase;
+}
+.ip-head h2 { font-size: 20px; font-weight: 700; margin: 2px 0; font-family: "Newsreader","Noto Serif SC",serif; }
+.ip-sub { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--red); letter-spacing: 0.06em; }
+
+.ip-block { margin-bottom: 14px; }
+.ip-block h3 {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 6px; font-weight: 600;
+  display: flex; align-items: center; gap: 7px;
+}
+.ip-block h3::before { content: ""; width: 3px; height: 12px; background: var(--red); border-radius: 2px; }
+.ip-block p { font-size: 13px; line-height: 1.7; color: var(--ink-500); }
+
+.ip-reaction { display: flex; flex-direction: column; gap: 6px; }
+.ip-reaction code {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 12px; color: var(--ink);
+  background: var(--red-soft);
+  border: 1px solid rgba(179,58,42,0.25);
+  padding: 6px 9px; border-radius: 8px;
+}
+.ip-equip { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ip-equip li {
+  font-size: 12px; color: var(--ink-500);
+  padding: 6px 9px; background: rgba(26,26,26,0.03);
+  border-radius: 8px; border: 1px solid var(--line);
+}
+.ip-params { display: flex; flex-wrap: wrap; gap: 6px; }
+.ip-params span {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px; color: var(--red);
+  padding: 4px 9px; border-radius: 20px;
+  background: var(--red-soft); border: 1px solid rgba(179,58,42,0.3);
+}
+.ip-out { margin-bottom: 0; }
+.ip-output {
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(26,26,26,0.04);
+  border: 1px solid var(--line-strong);
+}
+
+/* ---------------- 底部控制 ---------------- */
+#controls {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 10;
+  display: flex; gap: 8px; padding: 8px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(26,26,26,0.06);
+}
+.ctrl {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 13px; border-radius: 10px;
+  background: rgba(26,26,26,0.02);
+  border: 1px solid transparent; color: var(--text);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: all 0.18s ease;
+}
+.ctrl:hover { background: rgba(179,58,42,0.07); border-color: var(--line); }
+.ctrl .ci { font-size: 15px; opacity: 0.85; }
+.ctrl.active { background: var(--red-soft); border-color: rgba(179,58,42,0.45); color: var(--red); }
+.ctrl.off { opacity: 0.5; }
+
+/* ---------------- 3D 标签 ---------------- */
+.station-label {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 12px 8px; border-radius: 12px;
+  background: rgba(255,255,255,0.9); border: 1px solid var(--line-strong);
+  backdrop-filter: blur(6px); white-space: nowrap;
+  pointer-events: none; transform: translateY(-50%);
+  box-shadow: 0 6px 18px rgba(26,26,26,0.08);
+}
+.station-label .badge {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+}
+.station-label .label-name { font-size: 15px; font-weight: 700; margin-top: 3px; color: var(--ink); font-family: "Newsreader","Noto Serif SC",serif; }
+.station-label .label-sub { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
+
+/* ---------------- 开场遮罩 ---------------- */
+#intro {
+  position: fixed; inset: 0; z-index: 30;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 40%, rgba(250,250,248,0.9), rgba(245,243,238,0.97));
+  backdrop-filter: blur(4px);
+  transition: opacity 0.5s ease;
+}
+#intro.hidden { opacity: 0; pointer-events: none; }
+.intro-card {
+  width: min(520px, 86vw); text-align: center;
+  padding: 38px 34px; border-radius: 22px;
+  background: var(--panel-solid); border: 1px solid var(--line);
+  box-shadow: 0 20px 60px rgba(26,26,26,0.12);
+}
+.intro-mark {
+  position: relative; overflow: hidden;
+  width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 16px;
+  display: grid; place-items: center; font-size: 32px; font-weight: 800; color: var(--ink);
+  background:
+    linear-gradient(125deg, transparent 44%, rgba(179,58,42,0.92) 47%, rgba(179,58,42,0.92) 51%, transparent 54%),
+    #FFFFFF;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 8px 24px rgba(26,26,26,0.1);
+}
+.intro-card h2 {
+  font-size: 23px; margin-bottom: 14px; letter-spacing: 0.5px;
+  font-family: "Newsreader","Noto Serif SC",serif;
+}
+.intro-card p { font-size: 14px; line-height: 1.8; color: var(--ink-500); }
+.intro-sub { margin-top: 12px; color: var(--muted); font-size: 13px; }
+#intro-enter {
+  margin-top: 22px; padding: 12px 30px; border: none; border-radius: 12px;
+  font-family: inherit; font-size: 15px; font-weight: 700; color: #fff; cursor: pointer;
+  background: var(--red);
+  box-shadow: 0 8px 24px rgba(179,58,42,0.3); transition: transform 0.15s ease, background 0.15s ease;
+}
+#intro-enter:hover { transform: translateY(-2px); background: #9c3122; }
+
+/* 滚动条 */
+#infopanel::-webkit-scrollbar { width: 6px; }
+#infopanel::-webkit-scrollbar-thumb { background: rgba(26,26,26,0.25); border-radius: 3px; }
+
+@media (max-width: 860px) {
+  #sidebar { display: none; }
+  #infopanel { width: min(320px, calc(100vw - 36px)); }
+  .legend { display: none; }
+}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自贡井盐 · 真空制盐 3D 工艺流程</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./js/vendor/three.module.js",
+      "three/addons/": "./js/vendor/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="scene-root"></div>
+
+  <header id="topbar">
+    <div class="brand">
+      <div class="brand-mark">盐</div>
+      <div class="brand-text">
+        <h1 id="tb-title">自贡井盐 · 真空制盐</h1>
+        <p id="tb-sub">真空制盐 3D 工艺流程可视化</p>
+      </div>
+    </div>
+    <div id="legend" class="legend"></div>
+  </header>
+
+  <aside id="sidebar">
+    <div id="side-title" class="side-title">工艺流程</div>
+    <div id="nav-list"></div>
+    <div id="side-tip" class="side-tip">点击工序聚焦视角 · 拖拽旋转 · 滚轮缩放</div>
+  </aside>
+
+  <section id="infopanel">
+    <div class="ip-head">
+      <span id="ip-color" class="ip-color"></span>
+      <div>
+        <div id="ip-index" class="ip-index">工序</div>
+        <h2 id="ip-name">工序名称</h2>
+        <div id="ip-sub" class="ip-sub">Subtitle</div>
+      </div>
+    </div>
+    <div class="ip-block">
+      <h3 id="ip-title">工艺原理</h3>
+      <p id="ip-principle"></p>
+    </div>
+    <div class="ip-block">
+      <h3 id="ip-reaction-title">主要反应 / 说明</h3>
+      <div id="ip-reaction" class="ip-reaction"></div>
+    </div>
+    <div class="ip-block">
+      <h3 id="ip-equip-title">主要设备</h3>
+      <ul id="ip-equip" class="ip-equip"></ul>
+    </div>
+    <div class="ip-block">
+      <h3 id="ip-params-title">关键参数</h3>
+      <div id="ip-params" class="ip-params"></div>
+    </div>
+    <div class="ip-block ip-out">
+      <h3 id="ip-output-title">产物</h3>
+      <div id="ip-output" class="ip-output"></div>
+    </div>
+  </section>
+
+  <footer id="controls">
+    <button id="btn-prev" class="ctrl" data-ct-key="prev"><span class="ci">‹</span><span class="ct">上一步</span></button>
+    <button id="btn-tour" class="ctrl" data-ct-key="tour"><span class="ci">◎</span><span class="ct">自动导览</span></button>
+    <button id="btn-next" class="ctrl" data-ct-key="next"><span class="ci">›</span><span class="ct">下一步</span></button>
+    <button id="btn-play" class="ctrl" data-ct-key="play"><span class="ci">▶</span><span class="ct">物流</span></button>
+    <button id="btn-rotate" class="ctrl" data-ct-key="rotate"><span class="ci">↻</span><span class="ct">自转关</span></button>
+    <button id="btn-labels" class="ctrl" data-ct-key="labels"><span class="ci">A</span><span class="ct">标签</span></button>
+    <button id="btn-lang" class="ctrl" data-ct-key="lang"><span class="ci">文</span><span class="ct">EN</span></button>
+    <button id="btn-reset" class="ctrl" data-ct-key="reset"><span class="ci">⌂</span><span class="ct">总览</span></button>
+    <button id="btn-download" class="ctrl" data-ct-key="download" title="下载整个项目（含 Three.js，可离线运行）"><span class="ci">⤓</span><span class="ct">下载</span></button>
+  </footer>
+
+  <div id="intro">
+    <div class="intro-card">
+      <div class="intro-mark">盐</div>
+      <h2 id="intro-title">自贡井盐 · 真空制盐</h2>
+      <p id="intro-desc"></p>
+      <p id="intro-sub" class="intro-sub"></p>
+      <button id="intro-enter">进入流程 ▸</button>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

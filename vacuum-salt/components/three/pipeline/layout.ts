@@ -15,8 +15,10 @@ export interface Anchor {
 }
 
 // 环节中心 x 坐标（从左到右）
+// 注意：环节 1（井卤开采与净化）设备组较宽（约 11.5 单位），
+// 需与环节 2 的末效冷凝器留出间距，故 brine 左移至 -20。
 export const STAGE_X = {
-  brine: -18,
+  brine: -20,
   evaporate: -6,
   centrifuge: 4,
   dry: 12,
@@ -25,8 +27,10 @@ export const STAGE_X = {
 
 // 各环节相机锚点
 export const anchors: Record<string, Anchor> = {
-  brine: { pos: [STAGE_X.brine, 0.5, 0], distance: 11, height: 3.5 },
-  evaporate: { pos: [STAGE_X.evaporate, 0.5, 0], distance: 12, height: 4 },
+  // 环节 1 含地质剖面（高 4.4）与四台设备，取景需更远、视点略高
+  brine: { pos: [STAGE_X.brine, 0.3, 0], distance: 14, height: 3.8 },
+  // 环节 2 含四效 + 冷凝器，横向较宽，取景略远
+  evaporate: { pos: [STAGE_X.evaporate + 0.5, 0.5, 0], distance: 13.5, height: 4 },
   centrifuge: { pos: [STAGE_X.centrifuge, 0.5, 0], distance: 9, height: 3 },
   dry: { pos: [STAGE_X.dry, 0.5, 0], distance: 10, height: 3.2 },
   pack: { pos: [STAGE_X.pack, 0.5, 0], distance: 11, height: 3.5 },
@@ -37,7 +41,7 @@ export const overviewCamera: [number, number, number] = [2, 9, 26];
 
 // 地面平台范围
 export const PLATFORM = {
-  xMin: -24,
+  xMin: -27,
   xMax: 26,
   depth: 7,
   y: -2.6,

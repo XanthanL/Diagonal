@@ -66,7 +66,7 @@ export default function Home() {
 
       {/* 一体化 3D 产线 */}
       <div className="absolute inset-0">
-        <SceneLoader cameraStageId={activeCameraId} onSelectStage={handleSelectStage} />
+        <SceneLoader cameraStageId={activeCameraId} onSelectStage={handleSelectStage} lang={lang} />
       </div>
 
       {/* 顶部细栏 */}

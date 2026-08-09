@@ -6,8 +6,8 @@ import { useEffect } from "react";
 import * as THREE from "three";
 import { SceneShell, CameraFocus } from "../SceneShell";
 import { metalColors } from "../Tag";
-import { BrineUnit } from "./BrineUnit";
-import { EvaporateUnit } from "./EvaporateUnit";
+import { BrineUnit, BRINE_OUTLET } from "./BrineUnit";
+import { EvaporateUnit, EVAP_BRINE_INLET, EVAP_SALT_OUTLET } from "./EvaporateUnit";
 import { CentrifugeUnit } from "./CentrifugeUnit";
 import { DryUnit } from "./DryUnit";
 import { PackUnit } from "./PackUnit";
@@ -43,10 +43,12 @@ interface PipelineSceneProps {
   cameraStageId: string | null;
   /** 点击 3D 中的模块 / 板块时回调 */
   onSelectStage: (id: string) => void;
+  /** 界面语言（3D 内浮标文案跟随） */
+  lang?: "zh" | "en";
 }
 
 /** 一体化产线：五环节设备相连 + 流向管路 + 相机飞行 */
-export function PipelineScene({ cameraStageId, onSelectStage }: PipelineSceneProps) {
+export function PipelineScene({ cameraStageId, onSelectStage, lang = "zh" }: PipelineSceneProps) {
   const anchor: Anchor = cameraStageId
     ? anchors[cameraStageId]
     : { pos: [0, 0.5, 0], distance: 0, height: 0 };
@@ -97,46 +99,39 @@ export function PipelineScene({ cameraStageId, onSelectStage }: PipelineScenePro
         ))}
 
         {/* 五大环节设备（点击模块即飞向该环节） */}
-        <BrineUnit onSelect={() => onSelectStage("brine")} />
-        <EvaporateUnit onSelect={() => onSelectStage("evaporate")} />
+        <BrineUnit
+          onSelect={() => onSelectStage("brine")}
+          focused={cameraStageId === "brine"}
+          lang={lang}
+        />
+        <EvaporateUnit
+          onSelect={() => onSelectStage("evaporate")}
+          focused={cameraStageId === "evaporate"}
+          lang={lang}
+        />
         <CentrifugeUnit onSelect={() => onSelectStage("centrifuge")} />
         <DryUnit onSelect={() => onSelectStage("dry")} />
         <PackUnit onSelect={() => onSelectStage("pack")} />
 
-        {/* 连接管路：精卤 → 蒸发器 */}
+        {/* 连接管路：精卤 → Ⅰ效加热室（绕行后侧，避免穿过蒸发器本体） */}
         <FlowTube
           points={[
-            [STAGE_X.brine + 6.0, -0.4, 0],
-            [STAGE_X.brine + 7.5, 0.3, 0],
-            [STAGE_X.evaporate + 1.5 * 2.6, 0.3, 0],
-            [STAGE_X.evaporate + 1.5 * 2.6, -1.5, 0],
+            BRINE_OUTLET,
+            [BRINE_OUTLET[0] + 1.6, -1.74, -1.6],
+            [BRINE_OUTLET[0] + 3.2, -1.7, -2.5],
+            [EVAP_BRINE_INLET[0] - 0.3, -1.55, -1.4],
+            EVAP_BRINE_INLET,
           ]}
           color={metalColors.brine}
-          particleCount={7}
+          particleCount={8}
           speed={0.24}
         />
 
-        {/* 二次蒸汽逐效回用（顶部弧线） */}
+        {/* 盐浆 → 离心机（从Ⅳ效排料口引出） */}
         <FlowTube
           points={[
-            [STAGE_X.evaporate + 1.5 * 2.6, 2.4, 0],
-            [STAGE_X.evaporate + 0.5 * 2.6, 3.0, 0],
-            [STAGE_X.evaporate + 0.5 * 2.6, 2.4, 0],
-            [STAGE_X.evaporate - 0.5 * 2.6, 3.0, 0],
-            [STAGE_X.evaporate - 0.5 * 2.6, 2.4, 0],
-            [STAGE_X.evaporate - 1.5 * 2.6, 3.0, 0],
-          ]}
-          color={metalColors.steam}
-          radius={0.06}
-          particleCount={6}
-          speed={0.18}
-          particleSize={0.1}
-        />
-
-        {/* 盐浆 → 离心机 */}
-        <FlowTube
-          points={[
-            [STAGE_X.evaporate - 1.5 * 2.6, -0.5, 0],
+            EVAP_SALT_OUTLET,
+            [EVAP_SALT_OUTLET[0] + 0.8, -0.9, 0],
             [STAGE_X.centrifuge - 1.2, -0.5, 0],
             [STAGE_X.centrifuge, 2.2, 0],
           ]}
