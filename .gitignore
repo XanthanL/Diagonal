@@ -3,6 +3,9 @@
 /Diagonal-content-backup/
 /content/
 
+# WorkBuddy agent internal data (not part of the project)
+/.workbuddy/
+
 # explicitly track the cleaned markdown content in src/
 !/src/content/
 

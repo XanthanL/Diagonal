@@ -10,6 +10,15 @@ import { AtlasCover } from "@/components/AtlasCover";
 import { DiagonalSlash } from "@/components/DiagonalSlash";
 import { SaltSimulation } from "@/components/SaltSimulation";
 
+// vacuum-salt 子项目的五大工艺环节（用于首页入口展示，与 vacuum-salt/lib/data.ts 同步）
+const vacuumStages = [
+  { id: "brine", zh: "井卤开采与净化", en: "Well Brine Mining & Purification" },
+  { id: "evaporate", zh: "多效蒸发结晶", en: "Multi-effect Evaporation & Crystallization" },
+  { id: "centrifuge", zh: "离心脱水", en: "Centrifugal Dewatering" },
+  { id: "dry", zh: "干燥与筛分", en: "Drying & Screening" },
+  { id: "pack", zh: "包装与仓储", en: "Packaging & Storage" },
+];
+
 export default function Home() {
   const { lang } = useI18n();
 
@@ -106,6 +115,100 @@ export default function Home() {
         <div className="mt-40 pt-12 border-t border-black flex justify-center">
           <Link href="/archive" className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all">
             {t(lang, "loadFullIndex")}
+          </Link>
+        </div>
+      </section>
+
+      {/* Vacuum Salt Section - diagonal 子项目入口 */}
+      <section id="vacuum-salt" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
+        <div className="flex flex-col md:flex-row justify-between items-baseline mb-24 gap-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="space-y-4"
+          >
+            <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
+              {t(lang, "vacuumSaltLabel")}
+            </div>
+            <h2 className="text-6xl font-black tracking-tighter uppercase italic leading-none">
+              {t(lang, "vacuumSaltTitle")}
+            </h2>
+          </motion.div>
+          <div className="archive-text text-[10px] space-y-1 opacity-60">
+            <div>SUBPROJECT OF DIAGONAL</div>
+            <div>05 STAGES · INTERACTIVE 3D</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* 左：介绍 + 五环节列表 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="space-y-10"
+          >
+            <p className="text-xl leading-relaxed font-serif">{t(lang, "vacuumSaltIntro")}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-black/5 border border-black/5">
+              {vacuumStages.map((s, i) => (
+                <div key={s.id} className="bg-[#FAFAF8] p-5 flex gap-3 items-baseline">
+                  <span className="archive-text text-[10px] text-diagonal-red">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <div className="text-sm font-semibold text-ink-900">{s.zh}</div>
+                    <div className="text-[11px] text-ink-500 font-mono">{s.en}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 右：可点击预览卡（呼应对角母题与盐标记） */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Link
+              href="/vacuum-salt/"
+              className="group relative block aspect-[4/5] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+            >
+              <div className="diagonal-line opacity-10" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-8">
+                <div className="relative w-20 h-20 overflow-hidden rounded-2xl border border-diagonal-red/40 bg-white">
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, transparent 46%, rgba(179,58,42,0.55) 49%, rgba(179,58,42,0.9) 50%, rgba(179,58,42,0.55) 51%, transparent 54%)",
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center text-diagonal-red font-bold text-3xl">
+                    盐
+                  </div>
+                </div>
+                <div className="archive-text text-[10px] text-center opacity-60 leading-relaxed">
+                  VACUUM SALT
+                  <br />
+                  3D PIPELINE
+                </div>
+              </div>
+              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
+                ENTER →
+              </div>
+            </Link>
+          </motion.div>
+        </div>
+
+        <div className="mt-16 flex justify-center">
+          <Link
+            href="/vacuum-salt/"
+            className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all"
+          >
+            {t(lang, "vacuumSaltEnter")}
           </Link>
         </div>
       </section>

@@ -23,6 +23,14 @@ export const translations = {
       "“地图集”通过视觉碎片记录现场考察、物质遗存与空间叙事，构建起从西南到东北的艺术地理图谱。",
     scrollToDiscover: "SCROLL TO DISCOVER",
 
+    // Vacuum Salt（子项目入口）
+    vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
+    vacuumSaltTitle: "真空制盐",
+    vacuumSaltIntro:
+      "以四川自贡井矿盐卤为题材的真空制盐全流程 3D 解构：从深井汲卤、多效蒸发结晶，到离心脱水、干燥筛分与包装仓储。点击进入可交互产线，逐环节查看工艺原理与关键参数。",
+    vacuumSaltEnter: "进入 3D 产线 →",
+    vacuumSaltNav: "真空制盐",
+
     // Archive
     backToHome: "HOME",
     fullArchiveIndex: "Full Archive Index",
@@ -71,6 +79,14 @@ export const translations = {
     atlasIntro:
       "“The Atlas” records field investigations, material remnants, and spatial narratives through visual fragments, constructing an artistic geography from the southwest to the northeast.",
     scrollToDiscover: "SCROLL TO DISCOVER",
+
+    // Vacuum Salt（子项目入口）
+    vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
+    vacuumSaltTitle: "VACUUM SALT",
+    vacuumSaltIntro:
+      "An interactive 3D deconstruction of the vacuum salt-making process from Zigong's well brine — from deep-well mining and multi-effect evaporation & crystallization, to centrifugal dewatering, drying & screening, and packaging. Enter the pipeline to explore each stage's principles and key parameters.",
+    vacuumSaltEnter: "ENTER THE PIPELINE →",
+    vacuumSaltNav: "Vacuum Salt",
 
     // Archive
     backToHome: "HOME",
