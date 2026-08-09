@@ -30,12 +30,16 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
-      - name: Build Next.js
+      - name: Build Next.js (diagonal)
         run: npm run build
+      - name: Build & merge vacuum-salt subproject
+        # 构建真空制盐子项目（basePath=/vacuum-salt）并合并进 out/vacuum-salt，
+        # 使线上 /vacuum-salt/ 不再 404
+        run: node scripts/merge-vacuum.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out # Next.js 静态输出目录
+          path: ./out # Next.js 静态输出目录（含合并后的 vacuum-salt/）
 
   deploy:
     environment:
