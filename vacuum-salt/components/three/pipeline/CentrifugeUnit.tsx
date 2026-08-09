@@ -1,7 +1,6 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors } from "../Tag";
@@ -25,7 +24,8 @@ export function CentrifugeUnit() {
   );
 
   useFrame((state, delta) => {
-    if (drumRef.current) drumRef.current.rotation.y += delta * 5;
+    // 降速匀速旋转，更沉稳；母液粒子带淡出让循环无跳变
+    if (drumRef.current) drumRef.current.rotation.y += delta * 2.2;
     const t = state.clock.elapsedTime;
     motherRefs.current.forEach((m, i) => {
       if (!m) return;
@@ -83,13 +83,6 @@ export function CentrifugeUnit() {
           <cylinderGeometry args={[1.9, 1.9, 0.4, 36, 1, true]} />
           <meshStandardMaterial color={metalColors.alloy} metalness={0.45} roughness={0.5} side={THREE.DoubleSide} transparent opacity={0.6} />
         </mesh>
-
-        <Html position={[-1.6, 1.4, 0]} center distanceFactor={13}>
-          <div className="panel rounded-md px-2 py-1 text-[10px] leading-tight shadow-soft">
-            <div className="label-eyebrow text-[9px]">离心脱水</div>
-            <div className="font-mono text-ink-900">湿盐含水 ≈ 3~5%</div>
-          </div>
-        </Html>
       </group>
     </group>
   );

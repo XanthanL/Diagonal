@@ -42,3 +42,13 @@ export const PLATFORM = {
   depth: 7,
   y: -2.6,
 };
+
+/** 产线整体几何度量（用于自适应取景） */
+export const PIPELINE = {
+  centerX: (PLATFORM.xMin + PLATFORM.xMax) / 2,
+  centerY: 0.4,
+  halfWidth: (PLATFORM.xMax - PLATFORM.xMin) / 2,
+};
+
+/** 地面编号基座朝向相机一侧的 z 偏移（放在平台前沿，避免遮挡设备） */
+export const STAGE_FRONT_Z = 3.1;

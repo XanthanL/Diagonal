@@ -66,9 +66,13 @@ export function SceneShell({
           // 禁用右键平移，避免偏离产线；保留左键旋转与中键/滚轮缩放
           mouseButtons={{ left: 1, right: 0, middle: 16, wheel: 16 }}
           minDistance={5}
-          maxDistance={30}
+          // 上限放宽，配合全景自适应取景（竖屏需拉远才能看全产线）
+          maxDistance={72}
           maxPolarAngle={Math.PI / 2.05}
           minPolarAngle={Math.PI / 6}
+          // 平滑阻尼，让聚焦/全景切换更有质感
+          smoothTime={0.55}
+          draggingSmoothTime={0.18}
         />
       </Suspense>
     </Canvas>

@@ -39,9 +39,10 @@ export function FlowTube({
       const u = (t + i / particleCount) % 1;
       const p = curve.getPointAt(u);
       m.position.copy(p);
-      // 中段略大，首尾渐隐
-      const s = particleSize * Math.sin(u * Math.PI);
-      m.scale.setScalar(Math.max(0.04, s));
+      // 中段略大，首尾平滑淡入淡出（sin 包络），避免硬截断跳变
+      const env = Math.sin(u * Math.PI);
+      m.scale.setScalar(Math.max(0.001, particleSize * env));
+      (m.material as THREE.MeshStandardMaterial).opacity = env;
     });
   });
 
@@ -67,7 +68,7 @@ export function FlowTube({
           }}
         >
           <sphereGeometry args={[1, 12, 10]} />
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} roughness={0.3} />
+          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} roughness={0.3} transparent />
         </mesh>
       ))}
     </group>

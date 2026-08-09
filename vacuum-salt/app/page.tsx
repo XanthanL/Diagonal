@@ -6,7 +6,7 @@ import { useLang } from "@/lib/useLang";
 import { usePlayback } from "@/lib/usePlayback";
 import { SceneLoader } from "@/components/three/pipeline/SceneLoader";
 import { NavBar } from "@/components/hud/NavBar";
-import { StageCard } from "@/components/hud/StageCard";
+import { ControlDeck } from "@/components/hud/ControlDeck";
 import { InfoPanel, IntroPanel } from "@/components/hud/InfoPanel";
 import { RefsPanel } from "@/components/hud/RefsPanel";
 
@@ -33,7 +33,7 @@ export default function Home() {
     setInfoOpen(false);
   };
 
-  // 下一步：保持聚焦
+  // 上一步 / 下一步：保持聚焦
   const handleNext = () => {
     playback.next();
     setFocused(true);
@@ -51,7 +51,7 @@ export default function Home() {
   const stageId = focused ? stage.id : null;
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-paper-100">
+    <main className="relative w-screen h-[100dvh] overflow-hidden bg-paper-100">
       {/* 背景网格 */}
       <div
         className="absolute inset-0 bg-grid-faint opacity-50 pointer-events-none"
@@ -63,41 +63,37 @@ export default function Home() {
         <SceneLoader focusStageId={stageId} />
       </div>
 
-      {/* HUD 层 */}
+      {/* 顶部细栏 */}
       <NavBar
-        stages={stages}
-        current={playback.stageIndex}
-        focused={focused}
         lang={lang}
-        playing={playback.playing}
-        speed={playback.speed}
-        onGoto={handleGoto}
+        focused={focused}
         onExitFocus={() => setFocused(false)}
-        onNext={handleNext}
-        onPrev={handlePrev}
-        onTogglePlay={handleTogglePlay}
-        onCycleSpeed={cycleSpeed}
         onToggleLang={toggle}
         onOpenIntro={() => setIntroOpen(true)}
         onOpenRefs={() => setRefsOpen(true)}
       />
 
-      <StageCard
-        stage={stage}
-        lang={lang}
+      {/* 控制台（桌面浮层 / 移动底部抽屉） */}
+      <ControlDeck
+        stages={stages}
+        current={playback.stageIndex}
         focused={focused}
-        onOpenInfo={() => setInfoOpen(true)}
+        playing={playback.playing}
+        speed={playback.speed}
+        lang={lang}
+        onGoto={handleGoto}
+        onTogglePlay={handleTogglePlay}
+        onNext={handleNext}
+        onPrev={handlePrev}
+        onCycleSpeed={cycleSpeed}
         onToggleFocus={() => setFocused((f) => !f)}
+        onOpenInfo={() => setInfoOpen(true)}
       />
 
+      {/* 抽屉与弹层 */}
       <InfoPanel stage={stage} lang={lang} open={infoOpen} onClose={() => setInfoOpen(false)} />
       <IntroPanel lang={lang} open={introOpen} onClose={() => setIntroOpen(false)} />
       <RefsPanel open={refsOpen} lang={lang} onClose={() => setRefsOpen(false)} />
-
-      {/* 底部提示 */}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] text-ink-400 font-mono pointer-events-none">
-        数据为工业参考值 · 3D 为工艺示意非真实比例
-      </div>
     </main>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors } from "../Tag";
@@ -40,7 +39,7 @@ export function BrineUnit() {
     const t = state.clock.elapsedTime;
     wellRefs.current.forEach((m, i) => {
       if (!m) return;
-      const u = (t * 0.35 + i / 8) % 1;
+      const u = (t * 0.22 + i / 8) % 1;
       m.position.copy(wellCurve.getPointAt(u));
     });
     precipRefs.current.forEach((m, i) => {
@@ -91,13 +90,6 @@ export function BrineUnit() {
             <meshStandardMaterial color={metalColors.amber} emissive={metalColors.amber} emissiveIntensity={0.4} />
           </mesh>
         ))}
-
-        <Html position={[0, -0.3, 0]} center distanceFactor={14}>
-          <div className="panel rounded-md px-2 py-1 text-[10px] shadow-soft">
-            <div className="label-eyebrow text-[9px]">深井汲卤</div>
-            <div className="font-mono text-ink-900">≈ 1000m+</div>
-          </div>
-        </Html>
       </group>
 
       {/* 净化反应槽（井口右侧） */}
@@ -135,12 +127,6 @@ export function BrineUnit() {
           <cylinderGeometry args={[0.05, 0.05, 1.6, 8]} />
           <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} />
         </mesh>
-        <Html position={[0, 1.7, 0]} center distanceFactor={13}>
-          <div className="panel rounded-md px-2 py-1 text-[10px] shadow-soft">
-            <div className="label-eyebrow text-[9px]">石灰—纯碱法</div>
-            <div className="font-mono text-ink-700">除 Ca²⁺ / Mg²⁺</div>
-          </div>
-        </Html>
       </group>
 
       {/* 过滤器（产出精卤） */}
@@ -149,12 +135,6 @@ export function BrineUnit() {
           <cylinderGeometry args={[0.7, 0.7, 1.6, 24]} />
           <meshStandardMaterial color={metalColors.alloy} metalness={0.45} roughness={0.4} />
         </mesh>
-        <Html position={[0, 1.3, 0]} center distanceFactor={13}>
-          <div className="panel rounded-md px-2 py-1 text-[10px] shadow-soft">
-            <div className="label-eyebrow text-[9px]">精卤输出</div>
-            <div className="font-mono text-brine-600">NaCl 295~310 g/L</div>
-          </div>
-        </Html>
       </group>
     </group>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
 import { metalColors } from "../Tag";
@@ -59,12 +58,6 @@ export function PackUnit() {
           <boxGeometry args={[0.3, 0.4, 0.26]} />
           <meshStandardMaterial color={metalColors.salt} roughness={0.5} emissive="#b8dcef" emissiveIntensity={0.08} />
         </mesh>
-        <Html position={[-0.9, 1.4, 0]} center distanceFactor={13}>
-          <div className="panel rounded-md px-2 py-1 text-[10px] leading-tight shadow-soft">
-            <div className="label-eyebrow text-[9px]">定量包装</div>
-            <div className="font-mono text-ink-900">NaCl ≥ 99.1%</div>
-          </div>
-        </Html>
       </group>
 
       {/* 码垛机械臂 */}

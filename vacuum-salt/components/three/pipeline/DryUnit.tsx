@@ -1,7 +1,6 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors } from "../Tag";
@@ -54,7 +53,8 @@ export function DryUnit() {
       m.scale.setScalar(0.05 * (1 - u * 0.5));
     });
     if (screenRef.current) {
-      screenRef.current.position.x = Math.sin(t * 12) * 0.03;
+      // 降频降幅，避免高频抖动显得粗糙
+      screenRef.current.position.x = Math.sin(t * 7) * 0.018;
     }
   });
 
@@ -96,12 +96,6 @@ export function DryUnit() {
             <meshStandardMaterial color={metalColors.salt} roughness={0.2} emissive="#b8dcef" emissiveIntensity={0.12} />
           </mesh>
         ))}
-        <Html position={[-1.7, 1.4, 0]} center distanceFactor={13}>
-          <div className="panel rounded-md px-2 py-1 text-[10px] leading-tight shadow-soft">
-            <div className="label-eyebrow text-[9px]">沸腾干燥</div>
-            <div className="font-mono text-brine-600">含水 &lt; 0.3%</div>
-          </div>
-        </Html>
       </group>
 
       {/* 振动筛（流化床右侧） */}

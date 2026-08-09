@@ -1,7 +1,6 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors } from "../Tag";
@@ -18,14 +17,10 @@ const EFFECTS = [
 function Evaporator({
   x,
   index,
-  temp,
-  pressure,
   isLast,
 }: {
   x: number;
   index: number;
-  temp: number;
-  pressure: number;
   isLast: boolean;
 }) {
   const crystalRefs = useRef<THREE.Mesh[]>([]);
@@ -51,6 +46,11 @@ function Evaporator({
         phase: Math.random() * Math.PI * 2,
       })),
     []
+  );
+  // 温度梯度色：Ⅰ效(热) → Ⅳ效(冷/高真空)，直观表达逐效降温，无需文字
+  const gradientColor = useMemo(
+    () => new THREE.Color(metalColors.amber).lerp(new THREE.Color(metalColors.brine), (index - 1) / 3),
+    [index]
   );
 
   useFrame((state) => {
@@ -98,6 +98,11 @@ function Evaporator({
         <cylinderGeometry args={[1.25, 1.25, 2.4, 40]} />
         <meshStandardMaterial color={metalColors.alloyLight} metalness={0.4} roughness={0.25} transparent opacity={0.85} />
       </mesh>
+      {/* 温度梯度色环（Ⅰ效热 → Ⅳ效冷） */}
+      <mesh position={[0, 1.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.18, 0.045, 10, 48]} />
+        <meshStandardMaterial color={gradientColor} emissive={gradientColor} emissiveIntensity={0.55} roughness={0.4} />
+      </mesh>
       {/* 锥顶 */}
       <mesh position={[0, 1.65, 0]}>
         <coneGeometry args={[1.25, 0.8, 40]} />
@@ -132,21 +137,6 @@ function Evaporator({
         <coneGeometry args={[0.4, 1.0, 16, 1, true]} />
         <meshStandardMaterial color={metalColors.steam} transparent opacity={0.2} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
-      {/* 效序号 + 参数 */}
-      <Html position={[0, -2.5, 0]} center distanceFactor={13}>
-        <div className="panel rounded px-1.5 py-0.5 text-[10px] font-mono shadow-soft">
-          <span className="text-ink-900">{"Ⅰ Ⅱ Ⅲ Ⅳ".split(" ")[index - 1]}</span>
-          <span className="text-ink-500 ml-1">效</span>
-        </div>
-      </Html>
-      <Html position={[1.4, 1.0, 0]} center distanceFactor={13}>
-        <div className="panel rounded-md px-2 py-1 text-[10px] leading-tight shadow-soft">
-          <div className="text-ink-500">料温</div>
-          <div className="font-mono text-ink-900">≈ {temp}℃</div>
-          <div className="text-ink-500 mt-0.5">绝压</div>
-          <div className="font-mono text-brine-600">≈ {pressure} MPa</div>
-        </div>
-      </Html>
     </group>
   );
 }
@@ -158,13 +148,11 @@ export function EvaporateUnit() {
   // 四效从左到右：Ⅰ(高温) → Ⅳ(低温真空)
   return (
     <group>
-      {EFFECTS.map((e, i) => (
+      {EFFECTS.map((_, i) => (
         <Evaporator
           key={i}
           x={cx + (1.5 - i) * spacing}
           index={i + 1}
-          temp={e.temp}
-          pressure={e.pressure}
           isLast={i === 3}
         />
       ))}
@@ -174,11 +162,6 @@ export function EvaporateUnit() {
           <cylinderGeometry args={[0.6, 0.6, 1.4, 24]} />
           <meshStandardMaterial color={metalColors.alloyDark} metalness={0.55} roughness={0.4} />
         </mesh>
-        <Html position={[0, 1.0, 0]} center distanceFactor={12}>
-          <div className="panel rounded px-1.5 py-0.5 text-[9px] shadow-soft">
-            <span className="text-ink-600">冷凝器 · 真空泵</span>
-          </div>
-        </Html>
       </group>
     </group>
   );

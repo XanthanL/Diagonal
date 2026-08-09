@@ -1,0 +1,313 @@
+"use client";
+
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import type { Lang } from "@/lib/useLang";
+import type { StageData } from "@/lib/types";
+import { StageCard } from "./StageCard";
+
+interface ControlDeckProps {
+  stages: StageData[];
+  current: number;
+  focused: boolean;
+  playing: boolean;
+  speed: 1 | 2 | 3;
+  lang: Lang;
+  onGoto: (i: number) => void;
+  onTogglePlay: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onCycleSpeed: () => void;
+  onToggleFocus: () => void;
+  onOpenInfo: () => void;
+}
+
+/** 播放控制（上一步 / 播放暂停 / 下一步 / 倍速） */
+function Playback({
+  playing,
+  speed,
+  onPrev,
+  onTogglePlay,
+  onNext,
+  onCycleSpeed,
+}: {
+  playing: boolean;
+  speed: 1 | 2 | 3;
+  onPrev: () => void;
+  onTogglePlay: () => void;
+  onNext: () => void;
+  onCycleSpeed: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <CtrlBtn onClick={onPrev} label="上一环节">◀</CtrlBtn>
+      <button
+        onClick={onTogglePlay}
+        aria-label={playing ? "暂停" : "播放"}
+        className="w-10 h-10 rounded-full bg-diagonal-red text-white hover:bg-diagonal-redDark transition flex items-center justify-center text-sm shadow-[0_0_0_1px_rgba(179,58,42,0.2),0_8px_24px_rgba(179,58,42,0.18)]"
+      >
+        {playing ? "❚❚" : "▶"}
+      </button>
+      <CtrlBtn onClick={onNext} label="下一环节">▶</CtrlBtn>
+      <button
+        onClick={onCycleSpeed}
+        className="ml-0.5 px-2.5 h-9 rounded-full text-[11px] font-mono text-ink-700 hover:text-ink-900 border border-line-soft hover:border-diagonal-red/50 transition bg-white"
+        title="切换倍速"
+      >
+        {speed}×
+      </button>
+    </div>
+  );
+}
+
+function CtrlBtn({
+  onClick,
+  children,
+  label,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={label}
+      className="w-9 h-9 rounded-full text-ink-600 hover:text-ink-900 hover:bg-paper-200 transition flex items-center justify-center text-[11px]"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** 环节步骤条（桌面显示名称，窄屏只显示编号） */
+function Stepper({
+  stages,
+  current,
+  focused,
+  lang,
+  onGoto,
+}: {
+  stages: StageData[];
+  current: number;
+  focused: boolean;
+  lang: Lang;
+  onGoto: (i: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+      {stages.map((s, i) => {
+        const isActive = i === current && focused;
+        const isCurrent = i === current;
+        return (
+          <div key={s.id} className="flex items-center shrink-0">
+            <button
+              onClick={() => onGoto(i)}
+              title={lang === "zh" ? s.name : s.nameEn}
+              className={`group flex items-center gap-2 px-2 py-1.5 rounded-md transition border ${
+                isActive
+                  ? "bg-diagonal-red/10 border-diagonal-red/40"
+                  : isCurrent
+                  ? "bg-diagonal-red/5 border-diagonal-red/20"
+                  : "border-transparent hover:bg-paper-200"
+              }`}
+            >
+              <span
+                className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-mono transition ${
+                  isActive
+                    ? "bg-diagonal-red text-white"
+                    : isCurrent
+                    ? "bg-diagonal-red/15 text-diagonal-red"
+                    : "bg-paper-300 text-ink-500 group-hover:bg-diagonal-red/10"
+                }`}
+              >
+                {i + 1}
+              </span>
+              <span
+                className={`hidden lg:inline text-xs whitespace-nowrap ${
+                  isActive ? "text-ink-900 font-medium" : "text-ink-600 group-hover:text-ink-900"
+                }`}
+              >
+                {lang === "zh" ? s.name : s.nameEn}
+              </span>
+            </button>
+            {i < stages.length - 1 && <div className="w-2.5 h-px bg-line-med mx-0.5 shrink-0" />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * 控制台：
+ * - 桌面：左侧垂直居中的环节摘要卡 + 底部居中的「步骤条 + 播放」胶囊。
+ * - 移动：底部抽屉，默认收起（露出一行：播放 + 当前环节 + 进度点），
+ *   点按展开完整步骤与操作，绝不整屏遮挡 3D。
+ */
+export function ControlDeck(props: ControlDeckProps) {
+  const {
+    stages,
+    current,
+    focused,
+    playing,
+    speed,
+    lang,
+    onGoto,
+    onTogglePlay,
+    onNext,
+    onPrev,
+    onCycleSpeed,
+    onToggleFocus,
+    onOpenInfo,
+  } = props;
+  const [expanded, setExpanded] = useState(false);
+  const stage = stages[current];
+
+  return (
+    <>
+      {/* ===== 桌面端 ===== */}
+      <div className="hidden md:block absolute inset-0 z-30 pointer-events-none">
+        {/* 环节摘要卡：左缘垂直居中，避开顶栏与底部胶囊 */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-[330px] max-w-[40vw] pointer-events-auto">
+          <StageCard
+            stage={stage}
+            lang={lang}
+            focused={focused}
+            onOpenInfo={onOpenInfo}
+            onToggleFocus={onToggleFocus}
+          />
+        </div>
+        {/* 底部中央：步骤条 + 播放 */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+          <div className="panel rounded-full pl-2 pr-1.5 py-1.5 flex items-center gap-2 shadow-lift">
+            <Stepper stages={stages} current={current} focused={focused} lang={lang} onGoto={onGoto} />
+            <div className="w-px h-6 bg-line-med" />
+            <Playback
+              playing={playing}
+              speed={speed}
+              onPrev={onPrev}
+              onTogglePlay={onTogglePlay}
+              onNext={onNext}
+              onCycleSpeed={onCycleSpeed}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ===== 移动端：底部抽屉 ===== */}
+      <div className="md:hidden absolute inset-x-0 bottom-0 z-30 pointer-events-none">
+        <div
+          className="pointer-events-auto panel border-t border-line-soft rounded-t-2xl shadow-lift"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          {/* 收起态（常显一行） */}
+          <div className="flex items-center gap-3 px-3.5 py-2.5">
+            <button
+              onClick={onTogglePlay}
+              aria-label={playing ? "暂停" : "播放"}
+              className="w-10 h-10 shrink-0 rounded-full bg-diagonal-red text-white flex items-center justify-center text-sm shadow-[0_0_0_1px_rgba(179,58,42,0.2),0_8px_24px_rgba(179,58,42,0.18)]"
+            >
+              {playing ? "❚❚" : "▶"}
+            </button>
+
+            <button
+              onClick={() => setExpanded((e) => !e)}
+              className="flex-1 min-w-0 text-left"
+              aria-expanded={expanded}
+            >
+              <div className="label-eyebrow leading-none">
+                STAGE {String(stage.index + 1).padStart(2, "0")} / 05
+              </div>
+              <div className="text-sm font-medium text-ink-900 truncate leading-tight">
+                {lang === "zh" ? stage.name : stage.nameEn}
+              </div>
+            </button>
+
+            {/* 迷你进度点（可直接跳转） */}
+            <div className="flex items-center gap-1 shrink-0">
+              {stages.map((s, i) => (
+                <button
+                  key={s.id}
+                  onClick={() => onGoto(i)}
+                  aria-label={lang === "zh" ? s.name : s.nameEn}
+                  className={`w-1.5 h-1.5 rounded-full transition ${
+                    i === current ? "bg-diagonal-red scale-125" : "bg-line-med"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={() => setExpanded((e) => !e)}
+              aria-label={expanded ? "收起" : "展开"}
+              className="w-8 h-8 shrink-0 rounded-md text-ink-500 hover:text-ink-900 border border-line-soft flex items-center justify-center"
+            >
+              {expanded ? "⌄" : "⌃"}
+            </button>
+          </div>
+
+          {/* 展开内容 */}
+          <AnimatePresence initial={false}>
+            {expanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.24, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 pt-1 space-y-3 max-h-[52vh] overflow-y-auto">
+                  <p className="text-[12px] text-ink-600 leading-relaxed">{stage.tagline}</p>
+
+                  <div className="flex items-center gap-2 text-[10px] text-ink-500 flex-wrap">
+                    <span className="px-1.5 py-0.5 rounded bg-paper-200 text-ink-700">{stage.input}</span>
+                    <span className="text-diagonal-red">→</span>
+                    <span className="px-1.5 py-0.5 rounded bg-paper-200 text-ink-700 border border-line-soft">
+                      {stage.output}
+                    </span>
+                  </div>
+
+                  <Stepper stages={stages} current={current} focused={focused} lang={lang} onGoto={onGoto} />
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={onToggleFocus}
+                      className={`flex-1 py-2 rounded-md transition text-[11px] font-mono border ${
+                        focused
+                          ? "bg-diagonal-red text-white border-diagonal-red"
+                          : "bg-white text-ink-700 border-line-med hover:border-diagonal-red/50"
+                      }`}
+                    >
+                      {focused ? "聚焦中 ✓" : "聚焦此环节"}
+                    </button>
+                    <button
+                      onClick={onOpenInfo}
+                      className="flex-1 py-2 rounded-md bg-paper-200 text-ink-700 border border-line-soft hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40 transition text-[11px] font-mono"
+                    >
+                      原理 / 参数 →
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Playback
+                      playing={playing}
+                      speed={speed}
+                      onPrev={onPrev}
+                      onTogglePlay={onTogglePlay}
+                      onNext={onNext}
+                      onCycleSpeed={onCycleSpeed}
+                    />
+                    <div className="text-[9px] text-ink-400 font-mono">
+                      数据为工业参考值 · 3D 为工艺示意
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </>
+  );
+}
