@@ -8,6 +8,7 @@ import { t } from "@/lib/translations";
 import { ArchiveCard } from "@/components/ArchiveCard";
 import { AtlasCover } from "@/components/AtlasCover";
 import { DiagonalSlash } from "@/components/DiagonalSlash";
+import { VacuumSaltCover } from "@/components/VacuumSaltCover";
 
 export default function Home() {
   const { lang } = useI18n();
@@ -96,114 +97,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* THE LAB Section - 与 Documents / Atlas 并列的实验/展示板块 */}
-      <section id="lab" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
-        <div className="flex flex-col md:flex-row justify-between items-baseline mb-24 gap-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="space-y-4"
-          >
-            <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
-              {t(lang, "labLabel")}
-            </div>
-            <h2 className="text-6xl font-black tracking-tighter uppercase italic leading-none">
-              {t(lang, "labTitle")}
-            </h2>
-          </motion.div>
-          <div className="max-w-xs space-y-6">
-            <p className="text-sm opacity-50 leading-relaxed italic">
-              {t(lang, "labIntro")}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* 卡片 1：真空制盐 3D 解构 → /vacuum-salt/ */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <Link
-              href="/vacuum-salt/"
-              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
-            >
-              <div className="diagonal-line opacity-10" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-8">
-                <div className="relative w-20 h-20 overflow-hidden rounded-2xl border border-diagonal-red/40 bg-white">
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, transparent 46%, rgba(179,58,42,0.55) 49%, rgba(179,58,42,0.9) 50%, rgba(179,58,42,0.55) 51%, transparent 54%)",
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center text-diagonal-red font-bold text-3xl">
-                    盐
-                  </div>
-                </div>
-                <div className="archive-text text-[10px] text-center opacity-60 leading-relaxed">
-                  VACUUM SALT
-                  <br />
-                  3D PIPELINE
-                </div>
-              </div>
-              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
-                {t(lang, "labEnter")}
-              </div>
-            </Link>
-            <div className="mt-5 space-y-1.5">
-              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest">
-                {t(lang, "vacuumSaltLabel")}
-              </div>
-              <h3 className="text-2xl font-black tracking-tight">{t(lang, "vacuumSaltTitle")}</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labVacuumDesc")}</p>
-            </div>
-          </motion.div>
-
-          {/* 卡片 2：盐粒子模拟 → /lab/salt-particle */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <Link
-              href="/lab/salt-particle"
-              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#0c0c0e] overflow-hidden hover:border-diagonal-red/40 transition-colors"
-            >
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "repeating-linear-gradient(0deg, rgba(255,255,255,0.045) 0px, rgba(255,255,255,0.045) 1px, transparent 1px, transparent 4px), radial-gradient(120% 120% at 72% 18%, rgba(179,58,42,0.22), transparent 55%)",
-                }}
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-8">
-                <div className="archive-text text-[11px] text-white/70 tracking-[0.3em]">
-                  SALT · PARTICLE · SIM
-                </div>
-                <div className="archive-text text-[10px] text-white/40">
-                  REAL-TIME CRYSTAL CLOUD
-                </div>
-              </div>
-              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
-                {t(lang, "labEnter")}
-              </div>
-            </Link>
-            <div className="mt-5 space-y-1.5">
-              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest">
-                INTERACTIVE · 实时模拟
-              </div>
-              <h3 className="text-2xl font-black tracking-tight">{t(lang, "labSaltTitle")}</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltDesc")}</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Atlas Section - 多步渐变过渡带 + DARK THEME */}
       <div
         className="relative z-10 h-80"
@@ -254,6 +147,108 @@ export default function Home() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* THE LAB Section - 实验性质，置于 Atlas 之后、页面末尾的低调版块 */}
+      <div
+        className="relative z-10 h-40"
+        style={{
+          background: `linear-gradient(to bottom, #1a1a1a 0%, #2A2928 15%, #4A4845 30%, #8A8885 50%, #D4D2CE 70%, #F0EFEC 85%, #FAFAF8 100%)`,
+        }}
+      />
+      <section id="lab" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-black/5">
+        <div className="flex flex-col md:flex-row justify-between items-baseline mb-14 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="space-y-3"
+          >
+            <div className="archive-text text-[10px] text-black/40 font-bold tracking-widest border-l border-black/20 pl-4">
+              {t(lang, "labLabel")}
+              <span className="ml-2 text-diagonal-red/60">· DEMO</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-none">
+              {t(lang, "labTitle")}
+            </h2>
+          </motion.div>
+          <div className="max-w-xs space-y-4">
+            <p className="text-xs opacity-40 leading-relaxed italic">
+              {t(lang, "labIntro")}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* 卡片 1：真空制盐 3D 解构 → /vacuum-salt/ */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Link
+              href="/vacuum-salt/"
+              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+            >
+              <VacuumSaltCover />
+              <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
+                VACUUM SALT · 3D PIPELINE
+              </div>
+              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
+                {t(lang, "labEnter")}
+              </div>
+            </Link>
+            <div className="mt-5 space-y-1.5">
+              <div className="archive-text text-[10px] text-black/40 font-bold tracking-widest">
+                {t(lang, "vacuumSaltLabel")}
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">{t(lang, "vacuumSaltTitle")}</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labVacuumDesc")}</p>
+            </div>
+          </motion.div>
+
+          {/* 卡片 2：盐粒子模拟 → /lab/salt-particle */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Link
+              href="/lab/salt-particle"
+              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#0c0c0e] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "repeating-linear-gradient(0deg, rgba(255,255,255,0.045) 0px, rgba(255,255,255,0.045) 1px, transparent 1px, transparent 4px), radial-gradient(120% 120% at 72% 18%, rgba(179,58,42,0.22), transparent 55%)",
+                }}
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-8">
+                <div className="archive-text text-[11px] text-white/70 tracking-[0.3em]">
+                  SALT · PARTICLE · SIM
+                </div>
+                <div className="archive-text text-[10px] text-white/40">
+                  REAL-TIME CRYSTAL CLOUD
+                </div>
+              </div>
+              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
+                {t(lang, "labEnter")}
+              </div>
+            </Link>
+            <div className="mt-5 space-y-1.5">
+              <div className="archive-text text-[10px] text-black/40 font-bold tracking-widest">
+                INTERACTIVE · 实时模拟
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">{t(lang, "labSaltTitle")}</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltDesc")}</p>
+            </div>
+          </motion.div>
+        </div>
+
+        <p className="mt-10 archive-text text-[10px] opacity-30 tracking-widest">
+          EXPERIMENTAL · 实验性质 · 非档案主体内容
+        </p>
       </section>
 
       {/* Scroll Indicator（CSS animation，不占主线程） */}

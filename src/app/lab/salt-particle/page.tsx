@@ -37,7 +37,7 @@ export default function SaltParticlePage() {
           </p>
         </div>
 
-        <div className="mt-10 aspect-[16/10] md:aspect-[2/1] w-full">
+        <div className="mt-10 aspect-[4/5] md:aspect-[2/1] w-full">
           <SaltSimulation />
         </div>
 
