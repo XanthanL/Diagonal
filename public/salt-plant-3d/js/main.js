@@ -1,4 +1,4 @@
-// 自贡井盐 · 真空制盐 3D 工艺流程可视化（精细版 + 中英双语）
+// 自贡井盐 · 天车（木构井架）3D 解构（中英双语）
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
@@ -266,11 +266,9 @@ function buildWell(g) {
   buildDerrick(g, -0.6, 0.2, 15, 2.1, 6, wood, woodDark, true);
   buildDerrick(g, 1.9, -0.5, 11, 1.6, 5, woodLight, woodDark, false);
 
-  // 井口（石/木箍）+ 卤水光点（呼应 diagonal 数据色）
+  // 井口（石/木箍）
   const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.95, 1.0, 16), woodDark);
   collar.position.set(0.4, 1.1, 0); collar.castShadow = true; g.add(collar);
-  const brineCap = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 12), glowMat(0x2F6F8F));
-  brineCap.position.set(0.4, 1.9, 0); g.add(brineCap);
   // 顿钻钻杆（入井）
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 6, 10), woodTex(0x473A2B, 0.9));
   stem.position.set(0.4, -1.6, 0); g.add(stem);
@@ -656,32 +654,11 @@ function applyLang() {
 function stopTour() {
   autoTour = false; tourTimer = 0;
   const b = document.getElementById('btn-tour');
-  b.classList.remove('active'); refreshControlsText();
+  if (b) b.classList.remove('active');
+  refreshControlsText();
 }
 
 function bindUI() {
-  document.getElementById('btn-reset').onclick = () => {
-    tween = { fromPos: camera.position.clone(), toPos: new THREE.Vector3(16, 12, 26), fromTarget: controls.target.clone(), toTarget: new THREE.Vector3(0, 6, 0), t: 0, dur: 1.1 };
-    setActive(-1);
-  };
-  document.getElementById('btn-play').onclick = () => { playing = !playing; refreshControlsText(); };
-  document.getElementById('btn-rotate').onclick = () => { controls.autoRotate = !controls.autoRotate; controls.autoRotateSpeed = 0.6; refreshControlsText(); };
-  document.getElementById('btn-labels').onclick = () => { showLabels = !showLabels; applyLabelsText(); refreshControlsText(); };
-  document.getElementById('btn-lang').onclick = () => { state.lang = state.lang === 'zh' ? 'en' : 'zh'; applyLang(); };
-  document.getElementById('btn-download').onclick = () => {
-    const a = document.createElement('a');
-    a.href = './salt-plant-3d.zip';
-    a.download = 'salt-plant-3d.zip';
-    document.body.appendChild(a); a.click(); a.remove();
-  };
-  document.getElementById('btn-tour').onclick = () => {
-    autoTour = !autoTour; tourTimer = 0; tourIndex = 0;
-    document.getElementById('btn-tour').classList.toggle('active', autoTour);
-    refreshControlsText();
-    if (autoTour) focusOn(0);
-  };
-  document.getElementById('btn-prev').onclick = () => { stopTour(); focusOn((currentActive + PROCESS.length - 1) % PROCESS.length); };
-  document.getElementById('btn-next').onclick = () => { stopTour(); focusOn((currentActive + 1) % PROCESS.length); };
   document.getElementById('intro-enter').onclick = () => document.getElementById('intro').classList.add('hidden');
 }
 

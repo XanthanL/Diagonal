@@ -178,27 +178,6 @@ html, body {
   border: 1px solid var(--line-strong);
 }
 
-/* ---------------- 底部控制 ---------------- */
-#controls {
-  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 10;
-  display: flex; gap: 8px; padding: 8px;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: 14px; backdrop-filter: blur(12px);
-  box-shadow: 0 8px 30px rgba(26,26,26,0.06);
-}
-.ctrl {
-  display: flex; align-items: center; gap: 7px;
-  padding: 9px 13px; border-radius: 10px;
-  background: rgba(26,26,26,0.02);
-  border: 1px solid transparent; color: var(--text);
-  font-family: inherit; font-size: 13px; cursor: pointer;
-  transition: all 0.18s ease;
-}
-.ctrl:hover { background: rgba(179,58,42,0.07); border-color: var(--line); }
-.ctrl .ci { font-size: 15px; opacity: 0.85; }
-.ctrl.active { background: var(--red-soft); border-color: rgba(179,58,42,0.45); color: var(--red); }
-.ctrl.off { opacity: 0.5; }
-
 /* ---------------- 3D 标签 ---------------- */
 .station-label {
   display: flex; flex-direction: column; align-items: center; gap: 2px;

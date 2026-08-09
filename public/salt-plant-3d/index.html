@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>自贡井盐 · 天车 3D 解构</title>
+  <title>天车 3D 解构</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
@@ -22,10 +22,21 @@
 
   <header id="topbar">
     <div class="brand">
-      <div class="brand-mark">车</div>
+      <div class="brand-mark"><svg viewBox="0 0 32 32" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="16" y1="6.5" x2="3" y2="28"/>
+        <line x1="16" y1="6.5" x2="29" y2="28"/>
+        <line x1="8" y1="28" x2="16" y2="6.5"/>
+        <line x1="24" y1="28" x2="16" y2="6.5"/>
+        <line x1="11" y1="20.5" x2="21" y2="20.5"/>
+        <line x1="12.6" y1="13.5" x2="19.4" y2="13.5"/>
+        <line x1="11" y1="20.5" x2="19.4" y2="13.5"/>
+        <line x1="21" y1="20.5" x2="12.6" y2="13.5"/>
+        <circle cx="16" cy="6.5" r="2.4"/>
+        <circle cx="16" cy="28" r="3.3"/>
+      </svg></div>
       <div class="brand-text">
-        <h1 id="tb-title">自贡井盐 · 天车</h1>
-        <p id="tb-sub">自贡井盐 木构天车 3D 解构</p>
+        <h1 id="tb-title">天车</h1>
+        <p id="tb-sub">木构天车 3D 解构</p>
       </div>
     </div>
     <div id="legend" class="legend"></div>
@@ -68,22 +79,21 @@
     </div>
   </section>
 
-  <footer id="controls">
-    <button id="btn-prev" class="ctrl" data-ct-key="prev"><span class="ci">‹</span><span class="ct">上一步</span></button>
-    <button id="btn-tour" class="ctrl" data-ct-key="tour"><span class="ci">◎</span><span class="ct">自动聚焦</span></button>
-    <button id="btn-next" class="ctrl" data-ct-key="next"><span class="ci">›</span><span class="ct">下一步</span></button>
-    <button id="btn-play" class="ctrl" data-ct-key="play"><span class="ci">▶</span><span class="ct">动画</span></button>
-    <button id="btn-rotate" class="ctrl" data-ct-key="rotate"><span class="ci">↻</span><span class="ct">自转关</span></button>
-    <button id="btn-labels" class="ctrl" data-ct-key="labels"><span class="ci">A</span><span class="ct">标签</span></button>
-    <button id="btn-lang" class="ctrl" data-ct-key="lang"><span class="ci">文</span><span class="ct">EN</span></button>
-    <button id="btn-reset" class="ctrl" data-ct-key="reset"><span class="ci">⌂</span><span class="ct">总览</span></button>
-    <button id="btn-download" class="ctrl" data-ct-key="download" title="下载整个项目（含 Three.js，可离线运行）"><span class="ci">⤓</span><span class="ct">下载</span></button>
-  </footer>
-
   <div id="intro">
     <div class="intro-card">
-      <div class="intro-mark">车</div>
-      <h2 id="intro-title">自贡井盐 · 天车</h2>
+      <div class="intro-mark"><svg viewBox="0 0 32 32" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="16" y1="6.5" x2="3" y2="28"/>
+        <line x1="16" y1="6.5" x2="29" y2="28"/>
+        <line x1="8" y1="28" x2="16" y2="6.5"/>
+        <line x1="24" y1="28" x2="16" y2="6.5"/>
+        <line x1="11" y1="20.5" x2="21" y2="20.5"/>
+        <line x1="12.6" y1="13.5" x2="19.4" y2="13.5"/>
+        <line x1="11" y1="20.5" x2="19.4" y2="13.5"/>
+        <line x1="21" y1="20.5" x2="12.6" y2="13.5"/>
+        <circle cx="16" cy="6.5" r="2.4"/>
+        <circle cx="16" cy="28" r="3.3"/>
+      </svg></div>
+      <h2 id="intro-title">天车</h2>
       <p id="intro-desc"></p>
       <p id="intro-sub" class="intro-sub"></p>
       <button id="intro-enter">进入天车 ▸</button>

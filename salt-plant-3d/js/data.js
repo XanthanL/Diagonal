@@ -4,8 +4,8 @@
 
 export const PROCESS = [
   {
-    id: 'derrick', index: 1, name: '天车', subtitle: '井盐木构井架',
-    nameEn: 'Derrick', subtitleEn: 'Timber Headframe',
+    id: 'derrick', index: 1, name: '天车', subtitle: '',
+    nameEn: 'Derrick', subtitleEn: '',
     model: 'well', color: 0x8C755A, position: [0, 0, 0],
     equipment: ['天车（收分木井架）', '大车（提卤绞盘）', '地辊（转向定滑轮）', '碓架（冲击顿钻）', '风篾（防风拉索）', '汲卤筒（提卤桶）'],
     equipmentEn: ['Derrick (tapered timber frame)', 'Cart (draw-wheel)', 'Ground roller (deflector)', 'Duijia (percussion rig)', 'Wind stays (guy lines)', 'Bailer (draw bucket)'],
@@ -37,26 +37,26 @@ export const LEGEND = [
 // UI 多语言文案
 export const I18N = {
   zh: {
-    title: '自贡井盐 · 天车',
-    sub: '自贡井盐 木构天车 3D 解构',
+    title: '天车',
+    sub: '木构天车 3D 解构',
     sideTitle: '天车装置',
     sideTip: '点击聚焦视角 · 拖拽旋转 · 滚轮缩放',
     ctrl: { prev: '上一步', tour: '自动聚焦', next: '下一步', play: '动画', playOff: '已停止', rotate: '自转', rotateOff: '自转关', labels: '标签', labelsOff: '标签关', reset: '总览', touring: '聚焦中', download: '下载' },
-    introTitle: '自贡井盐 · 天车',
+    introTitle: '天车',
     introDesc: '自贡井盐的标志——木构天车（井架）。以杉木为骨、竹篾绳捆扎，全程无铁钉；顶端天辊、地面地辊与大车构成提卤滑轮组，碓架以冲击顿钻凿井。本页为其实时 3D 解构。',
-    introSub: '拖拽旋转视角，点击左侧装置或底部按钮聚焦查看；动画展示提卤与顿钻。',
+    introSub: '拖拽旋转视角，点击左侧装置聚焦查看；动画展示提卤与顿钻。',
     introBtn: '进入天车 ▸',
     ipIndex: '装置', ipPrinciple: '工艺原理', ipReaction: '结构 · 营建要点', ipEquip: '主要构件', ipParams: '关键形制', ipOutput: '提卤产出',
   },
   en: {
-    title: 'Zigong Well Salt · Derrick',
-    sub: '3D Deconstruction of the Timber Headframe',
+    title: 'Derrick',
+    sub: '3D Deconstruction of the Timber Derrick',
     sideTitle: 'The Derrick',
     sideTip: 'Click to focus · Drag to orbit · Scroll to zoom',
     ctrl: { prev: 'Prev', tour: 'Auto Focus', next: 'Next', play: 'Animate', playOff: 'Stopped', rotate: 'Rotate', rotateOff: 'Rotate Off', labels: 'Labels', labelsOff: 'Labels Off', reset: 'Overview', touring: 'Focusing', download: 'Download' },
-    introTitle: 'Zigong Well Salt · Derrick',
+    introTitle: 'Derrick',
     introDesc: 'The emblem of Zigong well salt — the timber derrick. Fir framed and bamboo-lashed with no iron nails; a sky roller aloft and ground rollers and draw-cart below form the lifting pulley train, while the percussion rig drills by impact. This page is its live 3D deconstruction.',
-    introSub: 'Drag to orbit; click the unit at left or the buttons below to focus. Animation shows brine lifting and percussion drilling.',
+    introSub: 'Drag to orbit; click the unit at left to focus. Animation shows brine lifting and percussion drilling.',
     introBtn: 'Enter ▸',
     ipIndex: 'Unit', ipPrinciple: 'Principle', ipReaction: 'Structure · Build', ipEquip: 'Components', ipParams: 'Key Specs', ipOutput: 'Output',
   },
