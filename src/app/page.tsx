@@ -8,16 +8,6 @@ import { t } from "@/lib/translations";
 import { ArchiveCard } from "@/components/ArchiveCard";
 import { AtlasCover } from "@/components/AtlasCover";
 import { DiagonalSlash } from "@/components/DiagonalSlash";
-import { SaltSimulation } from "@/components/SaltSimulation";
-
-// vacuum-salt 子项目的五大工艺环节（用于首页入口展示，与 vacuum-salt/lib/data.ts 同步）
-const vacuumStages = [
-  { id: "brine", zh: "井卤开采与净化", en: "Well Brine Mining & Purification" },
-  { id: "evaporate", zh: "多效蒸发结晶", en: "Multi-effect Evaporation & Crystallization" },
-  { id: "centrifuge", zh: "离心脱水", en: "Centrifugal Dewatering" },
-  { id: "dry", zh: "干燥与筛分", en: "Drying & Screening" },
-  { id: "pack", zh: "包装与仓储", en: "Packaging & Storage" },
-];
 
 export default function Home() {
   const { lang } = useI18n();
@@ -35,51 +25,38 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-24 items-end">
-          <div className="space-y-12 pr-8 md:pr-12">
-            <motion.h1
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="font-serif font-black leading-[0.8] tracking-tighter relative"
+      <section className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-32">
+        <div className="max-w-4xl space-y-14">
+          <motion.h1
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="font-serif font-black leading-[0.8] tracking-tighter relative"
+          >
+            {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠 */}
+            <span className="block text-[18vw] sm:text-8xl md:text-[9rem]">DIA</span>
+            <span
+              className="block text-[18vw] sm:text-8xl md:text-[9rem] -mt-2 md:-mt-4"
+              style={{ transform: "translateX(0.3em)" }}
             >
-              {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠 */}
-              <span className="block text-[18vw] sm:text-8xl md:text-[9rem]">DIA</span>
-              <span
-                className="block text-[18vw] sm:text-8xl md:text-[9rem] -mt-2 md:-mt-4"
-                style={{ transform: "translateX(0.3em)" }}
-              >
-                GONAL
-              </span>
-              <DiagonalSlash />
-            </motion.h1>
+              GONAL
+            </span>
+            <DiagonalSlash />
+          </motion.h1>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="max-w-md space-y-6"
-            >
-              <div className="archive-text text-sm font-bold border-l-2 border-diagonal-red pl-4">
-                {t(lang, "projectStatus")}
-              </div>
-              <p className="text-xl leading-relaxed font-serif">
-                {t(lang, "heroIntro")}
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="space-y-12 block">
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="aspect-[2/3] sm:aspect-[3/4] md:aspect-[4/5] relative w-full"
-            >
-              <SaltSimulation />
-            </motion.div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="max-w-md space-y-6"
+          >
+            <div className="archive-text text-sm font-bold border-l-2 border-diagonal-red pl-4">
+              {t(lang, "projectStatus")}
+            </div>
+            <p className="text-xl leading-relaxed font-serif">
+              {t(lang, "heroIntro")}
+            </p>
+          </motion.div>
         </div>
       </section>
 
@@ -119,8 +96,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Vacuum Salt Section - diagonal 子项目入口 */}
-      <section id="vacuum-salt" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
+      {/* THE LAB Section - 与 Documents / Atlas 并列的实验/展示板块 */}
+      <section id="lab" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-24 gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -129,43 +106,21 @@ export default function Home() {
             className="space-y-4"
           >
             <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
-              {t(lang, "vacuumSaltLabel")}
+              {t(lang, "labLabel")}
             </div>
             <h2 className="text-6xl font-black tracking-tighter uppercase italic leading-none">
-              {t(lang, "vacuumSaltTitle")}
+              {t(lang, "labTitle")}
             </h2>
           </motion.div>
-          <div className="archive-text text-[10px] space-y-1 opacity-60">
-            <div>SUBPROJECT OF DIAGONAL</div>
-            <div>05 STAGES · INTERACTIVE 3D</div>
+          <div className="max-w-xs space-y-6">
+            <p className="text-sm opacity-50 leading-relaxed italic">
+              {t(lang, "labIntro")}
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* 左：介绍 + 五环节列表 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="space-y-10"
-          >
-            <p className="text-xl leading-relaxed font-serif">{t(lang, "vacuumSaltIntro")}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-black/5 border border-black/5">
-              {vacuumStages.map((s, i) => (
-                <div key={s.id} className="bg-[#FAFAF8] p-5 flex gap-3 items-baseline">
-                  <span className="archive-text text-[10px] text-diagonal-red">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <div className="text-sm font-semibold text-ink-900">{s.zh}</div>
-                    <div className="text-[11px] text-ink-500 font-mono">{s.en}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* 右：可点击预览卡（呼应对角母题与盐标记） */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* 卡片 1：真空制盐 3D 解构 → /vacuum-salt/ */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -173,7 +128,7 @@ export default function Home() {
           >
             <Link
               href="/vacuum-salt/"
-              className="group relative block aspect-[4/5] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
             >
               <div className="diagonal-line opacity-10" />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-8">
@@ -197,19 +152,55 @@ export default function Home() {
                 </div>
               </div>
               <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
-                ENTER →
+                {t(lang, "labEnter")}
               </div>
             </Link>
+            <div className="mt-5 space-y-1.5">
+              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest">
+                {t(lang, "vacuumSaltLabel")}
+              </div>
+              <h3 className="text-2xl font-black tracking-tight">{t(lang, "vacuumSaltTitle")}</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labVacuumDesc")}</p>
+            </div>
           </motion.div>
-        </div>
 
-        <div className="mt-16 flex justify-center">
-          <Link
-            href="/vacuum-salt/"
-            className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all"
+          {/* 卡片 2：盐粒子模拟 → /lab/salt-particle */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
           >
-            {t(lang, "vacuumSaltEnter")}
-          </Link>
+            <Link
+              href="/lab/salt-particle"
+              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#0c0c0e] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "repeating-linear-gradient(0deg, rgba(255,255,255,0.045) 0px, rgba(255,255,255,0.045) 1px, transparent 1px, transparent 4px), radial-gradient(120% 120% at 72% 18%, rgba(179,58,42,0.22), transparent 55%)",
+                }}
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-8">
+                <div className="archive-text text-[11px] text-white/70 tracking-[0.3em]">
+                  SALT · PARTICLE · SIM
+                </div>
+                <div className="archive-text text-[10px] text-white/40">
+                  REAL-TIME CRYSTAL CLOUD
+                </div>
+              </div>
+              <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
+                {t(lang, "labEnter")}
+              </div>
+            </Link>
+            <div className="mt-5 space-y-1.5">
+              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest">
+                INTERACTIVE · 实时模拟
+              </div>
+              <h3 className="text-2xl font-black tracking-tight">{t(lang, "labSaltTitle")}</h3>
+              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltDesc")}</p>
+            </div>
+          </motion.div>
         </div>
       </section>
 

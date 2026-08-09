@@ -31,6 +31,16 @@ export const translations = {
     vacuumSaltEnter: "进入 3D 产线 →",
     vacuumSaltNav: "真空制盐",
 
+    // THE LAB（与 Documents / Atlas 并列的实验/展示板块）
+    labLabel: "交互实验 · 实验场",
+    labTitle: "THE LAB",
+    labIntro:
+      "实验场汇集对角线计划的交互式作品与可视化实验：真空制盐全流程 3D 解构、盐粒子模拟等。每项均可独立进入，作为可把玩的研究对象。",
+    labEnter: "进入 →",
+    labVacuumDesc: "四川自贡井矿盐卤真空制盐全流程 3D 解构，可交互查看五大工艺环节。",
+    labSaltTitle: "盐粒子模拟",
+    labSaltDesc: "上万盐晶粒子的实时模拟，鼠标或触控即可搅动晶体云。",
+
     // Archive
     backToHome: "HOME",
     fullArchiveIndex: "Full Archive Index",
@@ -87,6 +97,18 @@ export const translations = {
       "An interactive 3D deconstruction of the vacuum salt-making process from Zigong's well brine — from deep-well mining and multi-effect evaporation & crystallization, to centrifugal dewatering, drying & screening, and packaging. Enter the pipeline to explore each stage's principles and key parameters.",
     vacuumSaltEnter: "ENTER THE PIPELINE →",
     vacuumSaltNav: "Vacuum Salt",
+
+    // THE LAB（与 Documents / Atlas 并列的实验/展示板块）
+    labLabel: "INTERACTIVE EXPERIMENTS · THE LAB",
+    labTitle: "THE LAB",
+    labIntro:
+      "The Lab gathers Diagonal's interactive works and visualization experiments — the 3D deconstruction of vacuum salt-making, the salt-particle simulation, and more. Each opens independently as a playable object of study.",
+    labEnter: "ENTER →",
+    labVacuumDesc:
+      "An interactive 3D breakdown of Zigong's vacuum salt-making pipeline across five process stages.",
+    labSaltTitle: "Salt Particle Simulation",
+    labSaltDesc:
+      "A real-time simulation of thousands of salt crystals — stir the crystal cloud with mouse or touch.",
 
     // Archive
     backToHome: "HOME",

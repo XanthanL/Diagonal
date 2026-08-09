@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { t } from "@/lib/translations";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 /**
@@ -39,7 +38,7 @@ export function GlobalNav() {
     { href: "/atlas", label: lang === "zh" ? "地图集" : "Atlas" },
     { href: "/artists", label: lang === "zh" ? "艺术家" : "Artists" },
     { href: "/projects/the-salt-of-life", label: lang === "zh" ? "项目" : "Projects" },
-    { href: "/vacuum-salt/", label: t(lang, "vacuumSaltNav") },
+    { href: "/#lab", label: lang === "zh" ? "实验" : "Lab" },
     { href: "/about", label: lang === "zh" ? "关于" : "About" },
   ];
 
