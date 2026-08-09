@@ -64,11 +64,11 @@ body {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-  /* 浅色玻璃面板（暖调，与主站纸白统一） */
+  /* 浅色玻璃面板：发丝黑边，与主站 paper 卡片统一 */
   .panel {
     background: rgba(255, 255, 255, 0.82);
     backdrop-filter: blur(12px) saturate(140%);
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
   .panel-solid {
     background: #ffffff;
@@ -80,12 +80,13 @@ body {
   .ink-soft {
     color: #57534E;
   }
-  /* 标签眉（eyebrow）：对齐主站 archive-text 的等宽大写宽字距处理 */
+  /* 标签眉（eyebrow）：与主站 archive-text 完全一致——等宽、大写、宽字距、墨色半透明 */
   .label-eyebrow {
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     font-size: 10px;
-    color: #6B6661;
+    color: #1A1A1A;
+    opacity: 0.55;
     font-family: var(--font-mono), monospace;
   }
   /* 红色强调竖线：主站品牌色，用于面板/引言左侧标记 */

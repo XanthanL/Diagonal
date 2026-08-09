@@ -142,12 +142,12 @@ function Evaporator({
 }
 
 /** 环节 2：四效蒸发结晶器组 */
-export function EvaporateUnit() {
+export function EvaporateUnit({ onSelect }: { onSelect?: () => void }) {
   const cx = STAGE_X.evaporate;
   const spacing = 2.6;
   // 四效从左到右：Ⅰ(高温) → Ⅳ(低温真空)
   return (
-    <group>
+    <group onClick={(e) => { e.stopPropagation(); onSelect?.(); }}>
       {EFFECTS.map((_, i) => (
         <Evaporator
           key={i}

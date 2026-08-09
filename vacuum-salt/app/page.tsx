@@ -13,42 +13,48 @@ import { RefsPanel } from "@/components/hud/RefsPanel";
 export default function Home() {
   const { lang, toggle } = useLang();
   const playback = usePlayback(stages.length);
-  const [focused, setFocused] = useState(false);
+  // 相机目标环节：点击/播放时飞过去对准，但绝不锁定——飞完用户可自由旋转
+  const [cameraStageId, setCameraStageId] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [introOpen, setIntroOpen] = useState(true);
   const [refsOpen, setRefsOpen] = useState(false);
 
   const stage = stages[playback.stageIndex];
 
-  // 自动播放时进入聚焦；暂停后保留聚焦
+  // 飞到指定环节：同步进度并设定相机目标
+  const flyTo = (i: number) => {
+    playback.goto(i);
+    setCameraStageId(stages[i].id);
+  };
+
+  // 自动播放时相机跟随当前环节（非锁定，可随时手动旋转）
+  const activeCameraId = playback.playing ? stages[playback.stageIndex].id : cameraStageId;
+
   const handleTogglePlay = () => {
-    if (!playback.playing) setFocused(true);
+    if (!playback.playing) setCameraStageId(stages[playback.stageIndex].id);
     playback.togglePlay();
   };
 
-  // 点击导航：聚焦到该环节
-  const handleGoto = (i: number) => {
-    playback.goto(i);
-    setFocused(true);
-    setInfoOpen(false);
-  };
+  const handleGoto = (i: number) => flyTo(i);
 
-  // 上一步 / 下一步：保持聚焦
   const handleNext = () => {
-    playback.next();
-    setFocused(true);
+    const ni = (playback.stageIndex + 1) % stages.length;
+    flyTo(ni);
   };
   const handlePrev = () => {
-    playback.prev();
-    setFocused(true);
+    const pi = (playback.stageIndex - 1 + stages.length) % stages.length;
+    flyTo(pi);
+  };
+
+  // 点击 3D 中的模块 / 板块：移动相机对准，不锁定
+  const handleSelectStage = (id: string) => {
+    const i = stages.findIndex((s) => s.id === id);
+    if (i >= 0) flyTo(i);
   };
 
   const cycleSpeed = () => {
     playback.setSpeed(playback.speed === 1 ? 2 : playback.speed === 2 ? 3 : 1);
   };
-
-  // 自动播放推进时同步聚焦
-  const stageId = focused ? stage.id : null;
 
   return (
     <main className="relative w-screen h-[100dvh] overflow-hidden bg-paper-100">
@@ -60,24 +66,22 @@ export default function Home() {
 
       {/* 一体化 3D 产线 */}
       <div className="absolute inset-0">
-        <SceneLoader focusStageId={stageId} />
+        <SceneLoader cameraStageId={activeCameraId} onSelectStage={handleSelectStage} />
       </div>
 
       {/* 顶部细栏 */}
       <NavBar
         lang={lang}
-        focused={focused}
-        onExitFocus={() => setFocused(false)}
         onToggleLang={toggle}
         onOpenIntro={() => setIntroOpen(true)}
         onOpenRefs={() => setRefsOpen(true)}
+        onOverview={() => setCameraStageId(null)}
       />
 
       {/* 控制台（桌面浮层 / 移动底部抽屉） */}
       <ControlDeck
         stages={stages}
         current={playback.stageIndex}
-        focused={focused}
         playing={playback.playing}
         speed={playback.speed}
         lang={lang}
@@ -86,7 +90,6 @@ export default function Home() {
         onNext={handleNext}
         onPrev={handlePrev}
         onCycleSpeed={cycleSpeed}
-        onToggleFocus={() => setFocused((f) => !f)}
         onOpenInfo={() => setInfoOpen(true)}
       />
 

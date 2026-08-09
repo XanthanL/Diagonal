@@ -7,7 +7,7 @@ import { metalColors } from "../Tag";
 import { STAGE_X } from "./layout";
 
 /** 环节 1：井卤开采与净化（深井 + 净化反应槽 + 过滤器） */
-export function BrineUnit() {
+export function BrineUnit({ onSelect }: { onSelect?: () => void }) {
   const cx = STAGE_X.brine;
   const wellRefs = useRef<THREE.Mesh[]>([]);
   const precipRefs = useRef<THREE.Mesh[]>([]);
@@ -50,7 +50,7 @@ export function BrineUnit() {
   });
 
   return (
-    <group>
+    <group onClick={(e) => { e.stopPropagation(); onSelect?.(); }}>
       {/* 深井区 */}
       <group position={[cx, 0, 0]}>
         {/* 地表板 */}

@@ -7,7 +7,7 @@ import { metalColors } from "../Tag";
 import { STAGE_X } from "./layout";
 
 /** 环节 3：推料离心机 */
-export function CentrifugeUnit() {
+export function CentrifugeUnit({ onSelect }: { onSelect?: () => void }) {
   const cx = STAGE_X.centrifuge;
   const drumRef = useRef<THREE.Group>(null);
   const motherRefs = useRef<THREE.Mesh[]>([]);
@@ -39,7 +39,7 @@ export function CentrifugeUnit() {
   });
 
   return (
-    <group>
+    <group onClick={(e) => { e.stopPropagation(); onSelect?.(); }}>
       <group position={[cx, 0, 0]}>
         {/* 进料管 */}
         <mesh position={[0, 2.2, 0]} castShadow>

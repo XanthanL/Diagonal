@@ -7,7 +7,7 @@ import { metalColors } from "../Tag";
 import { STAGE_X } from "./layout";
 
 /** 环节 5：包装机 + 码垛机械臂 + 货架 */
-export function PackUnit() {
+export function PackUnit({ onSelect }: { onSelect?: () => void }) {
   const cx = STAGE_X.pack;
   const arm1 = useRef<THREE.Group>(null);
   const arm2 = useRef<THREE.Group>(null);
@@ -37,7 +37,7 @@ export function PackUnit() {
   }
 
   return (
-    <group>
+    <group onClick={(e) => { e.stopPropagation(); onSelect?.(); }}>
       {/* 包装机 */}
       <group position={[cx, 0, 0]}>
         <mesh position={[0, 0.4, 0]} castShadow>

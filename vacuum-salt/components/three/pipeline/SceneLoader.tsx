@@ -20,10 +20,16 @@ function LoadingFallback() {
   );
 }
 
-export function SceneLoader({ focusStageId }: { focusStageId: string | null }) {
+export function SceneLoader({
+  cameraStageId,
+  onSelectStage,
+}: {
+  cameraStageId: string | null;
+  onSelectStage: (id: string) => void;
+}) {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <PipelineScene focusStageId={focusStageId} />
+      <PipelineScene cameraStageId={cameraStageId} onSelectStage={onSelectStage} />
     </Suspense>
   );
 }

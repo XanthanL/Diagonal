@@ -7,7 +7,7 @@ import { metalColors } from "../Tag";
 import { STAGE_X } from "./layout";
 
 /** 环节 4：沸腾流化床干燥 + 振动筛 */
-export function DryUnit() {
+export function DryUnit({ onSelect }: { onSelect?: () => void }) {
   const cx = STAGE_X.dry;
   const particleRefs = useRef<THREE.Mesh[]>([]);
   const airRefs = useRef<THREE.Mesh[]>([]);
@@ -65,7 +65,7 @@ export function DryUnit() {
   ];
 
   return (
-    <group>
+    <group onClick={(e) => { e.stopPropagation(); onSelect?.(); }}>
       {/* 流化床 */}
       <group position={[cx, 0, 0]}>
         <mesh position={[0, 0.9, 0]} castShadow>

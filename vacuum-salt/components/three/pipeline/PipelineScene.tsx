@@ -39,16 +39,18 @@ function OverviewFit() {
 }
 
 interface PipelineSceneProps {
-  /** 当前聚焦的环节 id；为 null 时显示全景 */
-  focusStageId: string | null;
+  /** 相机目标环节 id（点击/播放后飞过去对准，但不锁定）；为 null 时显示全景 */
+  cameraStageId: string | null;
+  /** 点击 3D 中的模块 / 板块时回调 */
+  onSelectStage: (id: string) => void;
 }
 
-/** 一体化产线：五环节设备相连 + 流向管路 + 相机聚焦 */
-export function PipelineScene({ focusStageId }: PipelineSceneProps) {
-  const anchor: Anchor = focusStageId
-    ? anchors[focusStageId]
+/** 一体化产线：五环节设备相连 + 流向管路 + 相机飞行 */
+export function PipelineScene({ cameraStageId, onSelectStage }: PipelineSceneProps) {
+  const anchor: Anchor = cameraStageId
+    ? anchors[cameraStageId]
     : { pos: [0, 0.5, 0], distance: 0, height: 0 };
-  const isOverview = !focusStageId;
+  const isOverview = !cameraStageId;
 
   // 分环节编组：位置 + 语义染色
   const stageList = [
@@ -61,11 +63,7 @@ export function PipelineScene({ focusStageId }: PipelineSceneProps) {
 
   return (
     <div className="relative w-full h-full">
-      <SceneShell
-        cameraPosition={overviewCamera}
-        ambient={0.9}
-        enableControls={!focusStageId}
-      >
+      <SceneShell cameraPosition={overviewCamera} ambient={0.9} enableControls>
         {/* 相机：全景自适应 / 聚焦飞行 */}
         {isOverview ? (
           <OverviewFit />
@@ -93,16 +91,17 @@ export function PipelineScene({ focusStageId }: PipelineSceneProps) {
             x={s.x}
             index={i}
             tint={s.tint}
-            active={focusStageId === s.id}
+            active={cameraStageId === s.id}
+            onSelect={() => onSelectStage(s.id)}
           />
         ))}
 
-        {/* 五大环节设备 */}
-        <BrineUnit />
-        <EvaporateUnit />
-        <CentrifugeUnit />
-        <DryUnit />
-        <PackUnit />
+        {/* 五大环节设备（点击模块即飞向该环节） */}
+        <BrineUnit onSelect={() => onSelectStage("brine")} />
+        <EvaporateUnit onSelect={() => onSelectStage("evaporate")} />
+        <CentrifugeUnit onSelect={() => onSelectStage("centrifuge")} />
+        <DryUnit onSelect={() => onSelectStage("dry")} />
+        <PackUnit onSelect={() => onSelectStage("pack")} />
 
         {/* 连接管路：精卤 → 蒸发器 */}
         <FlowTube
@@ -173,9 +172,9 @@ export function PipelineScene({ focusStageId }: PipelineSceneProps) {
 
       {/* 画布外提示（仅桌面显示，移动端由控制抽屉承担引导） */}
       <div className="hidden sm:block absolute top-16 right-3 panel rounded-md px-3 py-1.5 text-[10px] text-ink-600 max-w-[230px] shadow-soft pointer-events-none">
-        {focusStageId
-          ? "聚焦视图 · 用下方控制台切换环节"
-          : "全景视图 · 拖拽旋转 / 点击下方编号聚焦环节"}
+        {cameraStageId
+          ? "已对准该环节 · 仍可拖拽自由旋转 / 缩放"
+          : "全景视图 · 拖拽旋转 / 点击下方编号或设备对准环节"}
       </div>
     </div>
   );

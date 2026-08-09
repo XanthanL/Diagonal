@@ -39,7 +39,7 @@ export function RefsPanel({
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-md border border-line-soft text-ink-500 hover:text-ink-900 hover:border-diagonal-red/50 transition"
+                className="w-8 h-8 rounded-md border border-black/10 text-ink-500 hover:text-ink-900 hover:border-diagonal-red/50 transition"
               >
                 ✕
               </button>
@@ -53,14 +53,20 @@ export function RefsPanel({
               {references.map((r, i) => (
                 <li
                   key={i}
-                  className="flex gap-3 rounded-md bg-paper-100 border border-line-soft p-2.5"
+                  className="flex gap-3 rounded-md bg-paper-100 border border-black/10 p-2.5"
                 >
                   <span className="text-diagonal-red font-mono text-xs shrink-0 mt-0.5">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div className="min-w-0">
-                    <div className="text-[13px] text-ink-800 leading-snug">{r.title}</div>
-                    {r.note && <div className="text-[11px] text-ink-400 mt-0.5">{r.note}</div>}
+                    <div className="text-[13px] text-ink-800 leading-snug">
+                      {lang === "zh" ? r.title : r.titleEn}
+                    </div>
+                    {r.note && (
+                      <div className="text-[11px] text-ink-400 mt-0.5">
+                        {lang === "zh" ? r.note : r.noteEn}
+                      </div>
+                    )}
                   </div>
                 </li>
               ))}
