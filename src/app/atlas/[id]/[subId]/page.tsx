@@ -22,9 +22,7 @@ export async function generateMetadata({ params }: { params: { id: string; subId
     return { title: "Atlas | DIAGONAL" };
   }
 
-  const ogImage = subCollection.cover.startsWith("http")
-    ? subCollection.cover
-    : getAbsoluteUrl(subCollection.cover);
+  const ogImage = getAbsoluteUrl("/images/diagonal-logo.jpg");
   const title = `${subCollection.title} | ${item.title}`;
   const description = item.excerpt;
 

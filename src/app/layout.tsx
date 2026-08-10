@@ -16,7 +16,7 @@ const serifCjk = Noto_Serif_SC({ variable: "--font-serif-cjk", weight: ["400", "
 
 const siteTitle = "DIAGONAL | 对角线计划";
 const siteDescription = "对角线计划 (Diagonal) 是一个从东北到西南、以行为艺术档案与跨学科研究为核心的长期艺术项目。";
-const ogImage = getAbsoluteUrl("/images/og-cover.jpg");
+const ogImage = getAbsoluteUrl("/images/diagonal-logo.jpg");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

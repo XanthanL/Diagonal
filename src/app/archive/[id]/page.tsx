@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return { title: "Document | DIAGONAL" };
   }
 
-  const ogImage = item.thumbnail ? getAbsoluteUrl(item.thumbnail) : undefined;
+  const ogImage = getAbsoluteUrl("/images/diagonal-logo.jpg");
 
   return {
     title: `${item.title} | DIAGONAL`,

@@ -1,7 +1,7 @@
 // 自贡井盐 · 天车（木构井架）3D 解构（中英双语）
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { PROCESS, LEGEND, I18N } from './data.js';
 
 // ---------- 常量与状态 ----------
@@ -28,7 +28,6 @@ let playing = true;
 let autoTour = false;
 let tourTimer = 0;
 let tourIndex = 0;
-let showLabels = true;
 let currentActive = -1;
 let navEls = [];
 let TEX = {};
@@ -201,7 +200,6 @@ function init() {
 
   buildGround();
   buildStations();
-  buildLabels();
   bindUI();
   buildNav();
   applyLang();
@@ -530,30 +528,6 @@ function orientCylinder(mesh, p1, p2) {
   mesh.quaternion.copy(_cylQ);
 }
 
-// 净化罐
-function buildLabels() {
-  PROCESS.forEach((step) => {
-    const el = document.createElement('div');
-    el.className = 'station-label';
-    const obj = new CSS2DObject(el);
-    obj.position.set(step.position[0], 13, step.position[2]);
-    scene.add(obj);
-    step._labelEl = el;
-  });
-  applyLabelsText();
-}
-function applyLabelsText() {
-  PROCESS.forEach((step) => {
-    const el = step._labelEl;
-    if (!el) return;
-    const col = '#' + step.color.toString(16).padStart(6, '0');
-    el.innerHTML = `<span class="badge" style="background:${col}">${step.index}</span>
-      <span class="label-name">${lf(step, 'name')}</span>
-      <span class="label-sub">${lf(step, 'subtitle')}</span>`;
-    el.style.display = showLabels ? 'flex' : 'none';
-  });
-}
-
 // ============================================================
 function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
@@ -628,14 +602,11 @@ function refreshControlsText() {
     if (key === 'tour') ct.textContent = autoTour ? I.touring : I.tour;
     else if (key === 'play') ct.textContent = playing ? I.play : I.playOff;
     else if (key === 'rotate') ct.textContent = controls.autoRotate ? I.rotate : I.rotateOff;
-    else if (key === 'labels') ct.textContent = showLabels ? I.labels : I.labelsOff;
     else ct.textContent = I[key];
   });
 }
 function applyLang() {
   const I = I18N[state.lang];
-  document.getElementById('tb-title').textContent = I.title;
-  document.getElementById('tb-sub').textContent = I.sub;
   document.getElementById('side-title').textContent = I.sideTitle;
   document.getElementById('side-tip').textContent = I.sideTip;
   const legend = document.getElementById('legend');
@@ -646,9 +617,7 @@ function applyLang() {
   document.getElementById('intro-enter').textContent = I.introBtn;
   const langBtn = document.getElementById('btn-lang');
   if (langBtn) langBtn.querySelector('.ct').textContent = state.lang === 'zh' ? 'EN' : '中文';
-  applyLabelsText();
   applyNavText();
-  refreshControlsText();
   if (currentActive >= 0) showInfo(PROCESS[currentActive]);
 }
 function stopTour() {

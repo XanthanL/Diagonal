@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return { title: "Atlas | DIAGONAL" };
   }
 
-  const ogImage = item.cover ? getAbsoluteUrl(item.cover) : undefined;
+  const ogImage = getAbsoluteUrl("/images/diagonal-logo.jpg");
 
   return {
     title: `${item.title} | DIAGONAL`,

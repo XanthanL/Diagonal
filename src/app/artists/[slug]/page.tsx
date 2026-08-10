@@ -32,6 +32,7 @@ export async function generateMetadata({
       siteName: "DIAGONAL",
       locale: "zh_CN",
       type: "profile",
+      images: [{ url: getAbsoluteUrl("/images/diagonal-logo.jpg"), width: 640, height: 640, alt: title }],
     },
   };
 }

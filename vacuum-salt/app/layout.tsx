@@ -5,6 +5,34 @@ export const metadata: Metadata = {
   title: "真空制盐工艺 3D 解构 · 自贡井卤 | DIAGONAL",
   description:
     "对角线计划子项目：以四川自贡井矿盐卤为原料的真空制盐完整工艺流程 3D 解构展示——井卤开采与净化 → 多效蒸发结晶 → 离心脱水 → 干燥筛分 → 包装仓储。科学严谨，风格统一于 DIAGONAL。",
+  openGraph: {
+    title: "真空制盐工艺 3D 解构 · 自贡井卤 | DIAGONAL",
+    description:
+      "对角线计划子项目：以四川自贡井矿盐卤为原料的真空制盐完整工艺流程 3D 解构展示。",
+    url: "https://www.diagonal-art.com/vacuum-salt/",
+    siteName: "DIAGONAL",
+    locale: "zh_CN",
+    type: "website",
+    images: [
+      {
+        url: "https://www.diagonal-art.com/images/diagonal-logo.jpg",
+        width: 1200,
+        height: 630,
+        alt: "DIAGONAL · 真空制盐工艺 3D 解构",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "真空制盐工艺 3D 解构 · 自贡井卤 | DIAGONAL",
+    description:
+      "对角线计划子项目：以四川自贡井矿盐卤为原料的真空制盐完整工艺流程 3D 解构展示。",
+    images: ["https://www.diagonal-art.com/images/diagonal-logo.jpg"],
+  },
+  other: {
+    "itemprop:image": "https://www.diagonal-art.com/images/diagonal-logo.jpg",
+    "og:image:secure_url": "https://www.diagonal-art.com/images/diagonal-logo.jpg",
+  },
 };
 
 // 与 diagonal 主站统一字体系统：Inter / JetBrains Mono / Newsreader + Noto Serif SC

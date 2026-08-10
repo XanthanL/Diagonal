@@ -42,11 +42,13 @@ export async function generateMetadata({
       siteName: "DIAGONAL",
       locale: "zh_CN",
       type: "article",
+      images: [{ url: getAbsoluteUrl("/images/diagonal-logo.jpg"), width: 640, height: 640, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: [getAbsoluteUrl("/images/diagonal-logo.jpg")],
     },
     other: {
       "itemprop:name": title,

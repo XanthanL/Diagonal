@@ -27,11 +27,11 @@ export function NavBar({
       {/* 主站同款纤细半透明模糊栏（对齐 diagonal GlobalNav 的 scrolled 态） */}
       <div className="pointer-events-auto bg-white/80 backdrop-blur-md border-b border-black/[0.06] shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
-          {/* 品牌：DIAGONAL wordmark + 子项目标签（点击打开引言） */}
-          <button
-            onClick={onOpenIntro}
+          {/* 品牌：DIAGONAL wordmark + 子项目标签（点击返回 diagonal 官网首页） */}
+          <a
+            href="https://www.diagonal-art.com/"
             className="flex items-baseline gap-2 group min-w-0"
-            title="自贡井卤起源"
+            title="返回 DIAGONAL 官网首页"
           >
             <span className="archive-text font-bold text-sm tracking-tighter text-ink-900 group-hover:text-diagonal-red transition-colors">
               DIAGONAL
@@ -39,7 +39,7 @@ export function NavBar({
             <span className="archive-text text-[9px] text-ink-400 leading-none hidden sm:inline">
               / VACUUM SALT
             </span>
-          </button>
+          </a>
 
           {/* 全局控制：主站同款 archive-text 无框导航项 */}
           <div className="flex items-center gap-5 shrink-0">

@@ -38,35 +38,40 @@ html, body {
   color: var(--muted);
 }
 
-/* ---------------- 顶部栏 ---------------- */
+/* ---------------- 顶部栏（对齐 vacuum-salt NavBar） ---------------- */
 #topbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 10;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 22px;
-  background: linear-gradient(180deg, rgba(250,250,248,0.94), rgba(250,250,248,0));
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
   pointer-events: none;
 }
-.brand { display: flex; align-items: center; gap: 14px; }
-.brand-mark {
-  position: relative; overflow: hidden;
-  width: 46px; height: 46px; border-radius: 12px;
-  display: grid; place-items: center;
-  font-size: 23px; font-weight: 800; color: var(--ink);
-  background:
-    linear-gradient(125deg, transparent 44%, rgba(179,58,42,0.92) 47%, rgba(179,58,42,0.92) 51%, transparent 54%),
-    #FFFFFF;
-  border: 1px solid var(--line-strong);
-  box-shadow: 0 4px 16px rgba(26,26,26,0.08);
+#topbar .bar-inner {
+  pointer-events: auto;
+  background: rgba(255,255,255,0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
-.brand-text h1 {
-  font-size: 19px; font-weight: 700; letter-spacing: 0.5px;
-  font-family: "Newsreader", "Noto Serif SC", "Songti SC", serif;
+#topbar .bar-row {
+  max-width: 80rem; margin: 0 auto;
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
-.brand-text p {
+.brand {
+  display: flex; align-items: baseline; gap: 8px; min-width: 0;
+  text-decoration: none; cursor: pointer;
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 10.5px; color: var(--muted); margin-top: 3px; letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
+.brand-word {
+  font-weight: 700; font-size: 14px; letter-spacing: -0.02em;
+  text-transform: uppercase; color: var(--ink);
+  transition: color 0.18s ease;
+}
+.brand:hover .brand-word { color: var(--red); }
+.brand-sub {
+  font-size: 9px; color: var(--muted); line-height: 1;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+@media (max-width: 640px) { .brand-sub { display: none; } }
 
 .legend { display: flex; gap: 14px; flex-wrap: wrap; }
 .legend span {
@@ -177,23 +182,6 @@ html, body {
   background: rgba(26,26,26,0.04);
   border: 1px solid var(--line-strong);
 }
-
-/* ---------------- 3D 标签 ---------------- */
-.station-label {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 6px 12px 8px; border-radius: 12px;
-  background: rgba(255,255,255,0.9); border: 1px solid var(--line-strong);
-  backdrop-filter: blur(6px); white-space: nowrap;
-  pointer-events: none; transform: translateY(-50%);
-  box-shadow: 0 6px 18px rgba(26,26,26,0.08);
-}
-.station-label .badge {
-  width: 22px; height: 22px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
-}
-.station-label .label-name { font-size: 15px; font-weight: 700; margin-top: 3px; color: var(--ink); font-family: "Newsreader","Noto Serif SC",serif; }
-.station-label .label-sub { font-family: "JetBrains Mono", monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
 
 /* ---------------- 开场遮罩 ---------------- */
 #intro {
