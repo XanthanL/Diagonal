@@ -45,10 +45,35 @@ interface PipelineSceneProps {
   onSelectStage: (id: string) => void;
   /** 界面语言（3D 内浮标文案跟随） */
   lang?: "zh" | "en";
+  /** 场景首次渲染完成后回调（用于收起加载覆盖层） */
+  onReady?: () => void;
+}
+
+/**
+ * 首帧就绪信号：Canvas 树挂载、渲染循环启动后，等两帧确认首帧已提交，
+ * 再通知外层收起加载覆盖层。放在 Canvas 内才能反映 WebGL 真实就绪时刻。
+ */
+function SceneReadySignal({ onReady }: { onReady: () => void }) {
+  useEffect(() => {
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => onReady());
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [onReady]);
+  return null;
 }
 
 /** 一体化产线：五环节设备相连 + 流向管路 + 相机飞行 */
-export function PipelineScene({ cameraStageId, onSelectStage, lang = "zh" }: PipelineSceneProps) {
+export function PipelineScene({
+  cameraStageId,
+  onSelectStage,
+  lang = "zh",
+  onReady,
+}: PipelineSceneProps) {
   const anchor: Anchor = cameraStageId
     ? anchors[cameraStageId]
     : { pos: [0, 0.5, 0], distance: 0, height: 0 };
@@ -76,6 +101,9 @@ export function PipelineScene({ cameraStageId, onSelectStage, lang = "zh" }: Pip
             height={anchor.height}
           />
         )}
+
+        {/* 首帧就绪信号（Canvas 内） */}
+        {onReady && <SceneReadySignal onReady={onReady} />}
 
         {/* 地面平台（贯穿整条产线） */}
         <mesh position={[PIPELINE.centerX, PLATFORM.y, 0]} receiveShadow>
@@ -125,13 +153,13 @@ export function PipelineScene({ cameraStageId, onSelectStage, lang = "zh" }: Pip
           lang={lang}
         />
 
-        {/* 连接管路：精卤 → Ⅰ效加热室（绕行后侧，避免穿过蒸发器本体） */}
+        {/* 连接管路：精卤 → Ⅰ效加热室（贴剖切面浅绕，全景下可见且直观接入） */}
         <FlowTube
           points={[
             BRINE_OUTLET,
-            [BRINE_OUTLET[0] + 1.6, -1.74, -1.6],
-            [BRINE_OUTLET[0] + 3.2, -1.7, -2.5],
-            [EVAP_BRINE_INLET[0] - 0.3, -1.55, -1.4],
+            [BRINE_OUTLET[0] + 1.7, -1.7, -0.22],
+            [BRINE_OUTLET[0] + 3.1, -1.62, -0.45],
+            [EVAP_BRINE_INLET[0] - 0.35, -1.52, -0.5],
             EVAP_BRINE_INLET,
           ]}
           color={metalColors.brine}
