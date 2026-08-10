@@ -29,7 +29,7 @@ export function RefsPanel({
             exit={{ scale: 0.94, y: 16 }}
             transition={{ type: "spring", stiffness: 240, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
-            className="panel-solid rounded-t-2xl sm:rounded-2xl max-w-2xl w-full p-6 max-h-[86vh] overflow-y-auto shadow-lift"
+            className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-t-2xl sm:rounded-2xl max-w-2xl w-full p-6 max-h-[86vh] overflow-y-auto"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
           >
             <div className="flex items-center justify-between mb-4">

@@ -96,7 +96,7 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
                 e.preventDefault();
                 document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
-              className={`block text-xs leading-relaxed transition-all ${
+              className={`block text-xs leading-relaxed transition-[color,opacity] duration-150 ease-out-strong ${
                 activeId === item.id
                   ? "text-diagonal-red font-bold"
                   : "opacity-50 hover:opacity-90"

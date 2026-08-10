@@ -21,6 +21,8 @@ import { STAGE_X } from "./layout";
  */
 
 const GROUND = -2.4;
+// 真剖面：与环节 2（蒸发）一致（保留 z<=0 半边），从相机侧剖开包装机看充填封口
+const PACK_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
 const X_CONV = -1.6; // 进料输送（左）
 const X_PACKER = 0.0; // 定量包装机（中）
 const X_BELT = 1.0; // 包装输出皮带
@@ -116,9 +118,10 @@ function Conveyor() {
   );
 }
 
-// ---------- 2. 定量包装机（充填 → 落袋） ----------
+// ---------- 2. 定量包装机（空袋成形 → 充填 → 封口 → 落袋） ----------
 function Packer() {
   const bagRef = useRef<THREE.Group>(null);
+  const sealRef = useRef<THREE.Mesh>(null);
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const cyc = (t % CYCLE) / CYCLE;
@@ -126,32 +129,45 @@ function Packer() {
       const vis = cyc < 0.5;
       bagRef.current.visible = vis;
       if (vis) {
-        const fill = THREE.MathUtils.smoothstep(cyc, 0.0, 0.32); // 充填胀大
-        const drop = THREE.MathUtils.smoothstep(cyc, 0.32, 0.5); // 落下到皮带
-        const y = 1.0 - drop * (1.0 - -0.15);
-        bagRef.current.position.set(0, y, 0);
-        bagRef.current.scale.setScalar(0.1 + fill * 0.16);
+        const form = THREE.MathUtils.smoothstep(cyc, 0.0, 0.12); // 空袋成形
+        const fill = THREE.MathUtils.smoothstep(cyc, 0.12, 0.4); // 充填胀大
+        const drop = THREE.MathUtils.smoothstep(cyc, 0.4, 0.5); // 封口后落向皮带
+        const settle = Math.sin(t * 9) * 0.015 * fill; // 充填时轻微沉降抖动
+        bagRef.current.position.set(0, 1.0 - drop * 1.15 + settle, 0);
+        bagRef.current.scale.setScalar(0.06 + form * 0.06 + fill * 0.16);
       }
+    }
+    if (sealRef.current) {
+      // 充填末段（0.42–0.5）：封口夹下压、随袋顶一同落到皮带，完成封口
+      const seal = THREE.MathUtils.smoothstep(cyc, 0.42, 0.5);
+      sealRef.current.visible = seal > 0.01 && cyc < 0.5;
+      const bagY = 1.0 - THREE.MathUtils.smoothstep(cyc, 0.4, 0.5) * 1.15;
+      sealRef.current.position.y = bagY + 0.22;
     }
   });
   return (
     <group position={[X_PACKER, 0, 0]}>
-      {/* 机壳 */}
+      {/* 机壳（真剖面：剖开看充填封口） */}
       <mesh position={[0, 0.45, 0]} castShadow>
         <boxGeometry args={[1.1, 1.5, 0.9]} />
-        <meshStandardMaterial color={metalColors.alloy} metalness={0.45} roughness={0.4} />
+        <meshStandardMaterial color={metalColors.alloy} metalness={0.45} roughness={0.4} clippingPlanes={[PACK_CLIP]} />
       </mesh>
       {/* 料斗（顶部，接收干盐） */}
       <mesh position={[0, 1.4, 0]} castShadow>
         <coneGeometry args={[0.45, 0.6, 20, 1, true]} />
-        <meshStandardMaterial color={metalColors.alloyLight} metalness={0.5} side={THREE.DoubleSide} roughness={0.4} />
+        <meshStandardMaterial color={metalColors.alloyLight} metalness={0.5} side={THREE.DoubleSide} roughness={0.4} clippingPlanes={[PACK_CLIP]} />
       </mesh>
       {/* 下料 spout */}
       <mesh position={[0, -0.25, 0]}>
         <cylinderGeometry args={[0.18, 0.18, 0.5, 16]} />
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.35} />
       </mesh>
-      {/* 充填并落下的盐袋 */}
+      {/* 封口夹（充填末段下压贴袋顶完成封口） */}
+      <mesh ref={sealRef} position={[0, 1.32, 0]} visible={false}>
+        <boxGeometry args={[0.5, 0.14, 0.4]} />
+        <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.4} />
+      </mesh>
+      {/* 空袋成形 → 充填胀大 → 封口落下的盐袋 */}
       <group ref={bagRef} visible={false}>
         <SaltBag />
       </group>
@@ -365,7 +381,7 @@ export function PackUnit({
           <Tag
             position={[X_PACKER, 1.9, 0]}
             label={zh ? "定量包装机" : "Packaging machine"}
-            value={zh ? "称量充填装袋" : "weigh & fill"}
+            value={zh ? "称量充填 · 封口装袋" : "weigh · fill · seal"}
             color={metalColors.alloy}
           />
           <Tag

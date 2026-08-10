@@ -39,6 +39,7 @@ export function usePlayback(stageCount: number) {
   }, [stageCount]);
 
   const togglePlay = useCallback(() => setPlaying((p) => !p), []);
+  const setPlayingState = useCallback((v: boolean) => setPlaying(v), []);
 
   useEffect(() => {
     clear();
@@ -59,5 +60,6 @@ export function usePlayback(stageCount: number) {
     prev,
     goto,
     togglePlay,
+    setPlaying: setPlayingState,
   };
 }

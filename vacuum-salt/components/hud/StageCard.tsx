@@ -25,7 +25,7 @@ export function StageCard({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.28 }}
-        className="panel rounded-xl p-4 shadow-soft w-full"
+        className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-xl p-4 w-full"
       >
         <div className="flex items-baseline justify-between mb-1.5">
           <span className="archive-text text-[9px] text-diagonal-red">

@@ -327,7 +327,7 @@ export function SaltSimulation() {
 
   return (
     <div 
-      className="w-full h-full bg-[#0c0c0e] relative overflow-hidden group shadow-[0_30px_60px_-12px_rgba(0,0,0,0.3)] transition-all duration-700 touch-none border border-white/5"
+      className="w-full h-full bg-[#0c0c0e] relative overflow-hidden group shadow-[0_30px_60px_-12px_rgba(0,0,0,0.3)] touch-none border border-white/5"
       style={{
         clipPath: 'polygon(20% 0%, 100% 0%, 100% 80%, 80% 100%, 0% 100%, 0% 20%)'
       }}

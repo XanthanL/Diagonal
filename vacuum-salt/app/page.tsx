@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { stages } from "@/lib/data";
 import { useLang } from "@/lib/useLang";
 import { usePlayback } from "@/lib/usePlayback";
@@ -25,6 +25,10 @@ export default function Home() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [introOpen, setIntroOpen] = useState(true);
   const [refsOpen, setRefsOpen] = useState(false);
+  // 引导式自动巡游
+  const [tour, setTour] = useState(false);
+  const tourRef = useRef(false);
+  const tourAdvances = useRef(0);
 
   const stage = stages[playback.stageIndex];
 
@@ -41,6 +45,32 @@ export default function Home() {
     if (!playback.playing) setCameraStageId(stages[playback.stageIndex].id);
     playback.togglePlay();
   };
+
+  // 引导式巡游：开启即开始自动播放，飞掠五个环节；走完一轮自动收尾
+  const handleToggleTour = () => {
+    const willTour = !tour;
+    setTour(willTour);
+    tourRef.current = willTour;
+    if (willTour) {
+      setCameraStageId(stages[playback.stageIndex].id);
+      if (!playback.playing) playback.togglePlay();
+      tourAdvances.current = 0;
+    } else if (playback.playing) {
+      playback.togglePlay();
+    }
+  };
+
+  // 巡游走完一轮（访问全部环节）后自动停止；只在真实切换环节时计数，
+  // 用 tourRef 屏蔽 tour/playing 变化引发的无效计数
+  useEffect(() => {
+    if (!tourRef.current) return;
+    tourAdvances.current += 1;
+    if (tourAdvances.current >= stages.length) {
+      tourRef.current = false;
+      setTour(false);
+      if (playback.playing) playback.togglePlay();
+    }
+  }, [playback.stageIndex]);
 
   const handleGoto = (i: number) => flyTo(i);
 
@@ -98,6 +128,8 @@ export default function Home() {
         onPrev={handlePrev}
         onCycleSpeed={cycleSpeed}
         onOpenInfo={() => setInfoOpen(true)}
+        tour={tour}
+        onToggleTour={handleToggleTour}
       />
 
       {/* 抽屉与弹层：全部延迟到客户端挂载后渲染。

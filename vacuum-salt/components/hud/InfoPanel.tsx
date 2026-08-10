@@ -42,8 +42,8 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
             transition={{ type: "spring", stiffness: 260, damping: 30 }}
             className={
               isDesktop
-                ? "absolute top-0 right-0 h-full w-[400px] max-w-[92vw] panel z-30 overflow-y-auto shadow-lift border-l border-black/10"
-                : "absolute inset-x-0 bottom-0 max-h-[82vh] panel-solid z-40 overflow-y-auto shadow-lift rounded-t-2xl border-t border-black/10"
+                ? "absolute top-0 right-0 h-full w-[400px] max-w-[92vw] bg-white/80 backdrop-blur-md border-l border-black/[0.06] shadow-sm z-30 overflow-y-auto"
+                : "absolute inset-x-0 bottom-0 max-h-[82vh] bg-white/80 backdrop-blur-md border-t border-black/[0.06] shadow-sm z-40 overflow-y-auto rounded-t-2xl"
             }
             style={!isDesktop ? { paddingBottom: "env(safe-area-inset-bottom)" } : undefined}
           >
@@ -54,7 +54,7 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
               </div>
             )}
 
-            <div className="sticky top-0 panel border-b border-black/10 px-4 py-3 flex items-center justify-between bg-white/90 z-10">
+            <div className="sticky top-0 border-b border-black/[0.06] px-4 py-3 flex items-center justify-between bg-white/90 backdrop-blur-md z-10">
               <div className="accent-line pl-3">
                 <div className="label-eyebrow">
                   STAGE {String(stage.index + 1).padStart(2, "0")} / 05
@@ -190,7 +190,7 @@ export function IntroPanel({ lang, open, onClose }: { lang: Lang; open: boolean;
             exit={{ scale: 0.96, y: 16 }}
             transition={{ type: "spring", stiffness: 240, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
-            className="panel-solid rounded-t-2xl sm:rounded-2xl max-w-2xl w-full p-6 md:p-8 max-h-[86vh] overflow-y-auto shadow-lift"
+            className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-t-2xl sm:rounded-2xl max-w-2xl w-full p-6 md:p-8 max-h-[86vh] overflow-y-auto"
             style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
           >
             <div className="flex items-start justify-between mb-4">

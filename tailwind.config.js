@@ -5,8 +5,20 @@ module.exports = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  future: {
+    // 让所有 hover: 变体自动包裹 @media (hover: hover)
+    // 触屏点击后 hover 态会「粘住」不消失，这一行全站根治
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
+      // 动效曲线令牌：浏览器内置 ease-out 太弱，统一用强曲线
+      transitionTimingFunction: {
+        // 进入 / 退出 / 按压：强 ease-out
+        "out-strong": "cubic-bezier(0.23, 1, 0.32, 1)",
+        // 屏幕内位移 / 形变：强 ease-in-out
+        "inout-strong": "cubic-bezier(0.77, 0, 0.175, 1)",
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

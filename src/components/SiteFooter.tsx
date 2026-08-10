@@ -35,7 +35,7 @@ export function SiteFooter() {
           <div className="opacity-40 pt-2">
             <Link
               href={getLocalizedUrl("/colophon")}
-              className="hover:opacity-100 hover:text-diagonal-red transition-all"
+              className="hover:opacity-100 hover:text-diagonal-red transition-[opacity,color] duration-200 ease-out-strong"
             >
               COLOPHON · SITE BY XANTHANL
             </Link>

@@ -12,7 +12,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
   return (
     <Link href={`/archive/${item.id}`}>
       <div
-        className="group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full transition-transform duration-300 hover:-translate-y-1"
+        className="press-card group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full"
       >
         <div className="archive-text text-[9px] mb-4 flex justify-between opacity-50">
           <span>{item.id} // {localized.location.code}</span>
@@ -23,19 +23,23 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
           <div className="absolute inset-0 opacity-10 diagonal-line z-10 pointer-events-none"></div>
 
           {item.thumbnail ? (
-            <img
-              src={getAssetPath(item.thumbnail)}
-              srcSet={getLocalSrcSet(item.thumbnail) || undefined}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              alt={localized.title}
-              loading="lazy"
-              decoding="async"
-              onLoad={() => setImgLoaded(true)}
-              onError={srcSetFallback}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.03] group-hover:brightness-105 ${
-                imgLoaded ? "img-loaded" : "img-loading"
-              }`}
-            />
+            /* 缩放交给外层 wrapper，img 只负责加载淡入。
+               此前两套 transition 写在同一元素上会互相覆盖。 */
+            <div className="absolute inset-0 transition-transform duration-300 ease-out-strong group-hover:scale-[1.03]">
+              <img
+                src={getAssetPath(item.thumbnail)}
+                srcSet={getLocalSrcSet(item.thumbnail) || undefined}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                alt={localized.title}
+                loading="lazy"
+                decoding="async"
+                onLoad={() => setImgLoaded(true)}
+                onError={srcSetFallback}
+                className={`w-full h-full object-cover ${
+                  imgLoaded ? "img-loaded" : "img-loading"
+                }`}
+              />
+            </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center space-y-3">
@@ -47,9 +51,10 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
             </div>
           )}
 
-          {/* 悬浮时底部红线强调 */}
+          {/* 悬浮时底部红线扫过：用 scaleX 而非 width，
+              width 每帧触发 layout+paint，scaleX 走 GPU 合成层 */}
           <div
-            className="absolute bottom-0 left-0 h-[2px] bg-diagonal-red w-0 group-hover:w-full transition-all duration-500 z-20"
+            className="absolute bottom-0 left-0 h-[2px] w-full bg-diagonal-red origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out-strong z-20"
           />
         </div>
 

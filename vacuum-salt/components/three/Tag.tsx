@@ -16,7 +16,7 @@ export function Tag({ position, label, value, color = "#3b86ad", children }: Tag
   return (
     <Html position={position} center distanceFactor={14} zIndexRange={[20, 0]}>
       <div
-        className="panel rounded-md px-2.5 py-1.5 text-[11px] leading-tight whitespace-nowrap select-none shadow-soft"
+        className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-md px-2.5 py-1.5 text-[11px] leading-tight whitespace-nowrap select-none"
         style={{ borderColor: `${color}40` }}
       >
         <div className="flex items-center gap-1.5">

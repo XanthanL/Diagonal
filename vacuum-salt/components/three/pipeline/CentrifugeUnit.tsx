@@ -36,8 +36,9 @@ export const CENTRIFUGE_INLET: [number, number, number] = [STAGE_X.centrifuge + 
 /** 湿盐出口（世界坐标）——供 PipelineScene 接「湿盐 → 干燥床」管道 */
 export const CENTRIFUGE_WET_OUTLET: [number, number, number] = [STAGE_X.centrifuge + X_BOWL, -0.6, 0];
 
-// 半剖（剖切面朝相机 +z），与环节 1/2 一致
-const CUT: [number, number] = [Math.PI / 2, Math.PI];
+// 真剖面：与环节 2（蒸发）一致，用世界空间裁剪面（保留 z<=0 半边）从相机侧干净剖开，
+// 内部转鼓 / 筛网 / 盐饼 / 母液完整可见；盐饼、母液、颗粒不加裁剪，保持实体。
+const CENT_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
 
 // ---------- 1. 水力旋流器（预增浓） ----------
 const H_BODY_TOP = 1.2;
@@ -91,7 +92,7 @@ function Hydrocyclone() {
 
       {/* 柱体（半剖） */}
       <mesh position={[0, (H_BODY_TOP + H_BODY_BOT) / 2, 0]} castShadow>
-        <cylinderGeometry args={[H_R, H_R, H_BODY_TOP - H_BODY_BOT, 28, 1, true, CUT[0], CUT[1]]} />
+        <cylinderGeometry args={[H_R, H_R, H_BODY_TOP - H_BODY_BOT, 28, 1, true]} />
         <meshStandardMaterial
           color={metalColors.alloy}
           metalness={0.5}
@@ -99,11 +100,12 @@ function Hydrocyclone() {
           transparent
           opacity={0.4}
           side={THREE.DoubleSide}
+          clippingPlanes={[CENT_CLIP]}
         />
       </mesh>
       {/* 锥体（半剖，底流收口） */}
       <mesh position={[0, (H_BODY_BOT + H_CONE_BOT) / 2, 0]} castShadow>
-        <cylinderGeometry args={[H_R, 0.14, H_BODY_BOT - H_CONE_BOT, 28, 1, true, CUT[0], CUT[1]]} />
+        <cylinderGeometry args={[H_R, 0.14, H_BODY_BOT - H_CONE_BOT, 28, 1, true]} />
         <meshStandardMaterial
           color={metalColors.alloyLight}
           metalness={0.45}
@@ -111,6 +113,7 @@ function Hydrocyclone() {
           transparent
           opacity={0.45}
           side={THREE.DoubleSide}
+          clippingPlanes={[CENT_CLIP]}
         />
       </mesh>
 
@@ -255,30 +258,32 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
       {/* 旋转部分（转鼓 + 篮体 + 筛网 + 颗粒） */}
       <group ref={drumRef}>
         {/* 篮体外壳（半剖） */}
-        <mesh position={[0, (B_SKIRT_TOP + B_BOT) / 2, 0]} castShadow>
-          <cylinderGeometry args={[B_R, B_R, B_SKIRT_TOP - B_BOT, 36, 1, true, CUT[0], CUT[1]]} />
-          <meshStandardMaterial
-            color={metalColors.alloy}
-            metalness={0.5}
-            roughness={0.3}
-            transparent
-            opacity={0.32}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+      <mesh position={[0, (B_SKIRT_TOP + B_BOT) / 2, 0]} castShadow>
+        <cylinderGeometry args={[B_R, B_R, B_SKIRT_TOP - B_BOT, 36, 1, true]} />
+        <meshStandardMaterial
+          color={metalColors.alloy}
+          metalness={0.5}
+          roughness={0.3}
+          transparent
+          opacity={0.32}
+          side={THREE.DoubleSide}
+          clippingPlanes={[CENT_CLIP]}
+        />
+      </mesh>
         {/* 筛网（滤网，线框表达孔隙） */}
-        <mesh position={[0, (B_SKIRT_TOP + B_BOT) / 2, 0]}>
-          <cylinderGeometry args={[B_SCREEN_R, B_SCREEN_R, B_SKIRT_TOP - B_BOT, 24, 1, true, CUT[0], CUT[1]]} />
-          <meshStandardMaterial
-            color={metalColors.alloyDark}
-            metalness={0.6}
-            roughness={0.4}
-            wireframe
-            transparent
-            opacity={0.28}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+      <mesh position={[0, (B_SKIRT_TOP + B_BOT) / 2, 0]}>
+        <cylinderGeometry args={[B_SCREEN_R, B_SCREEN_R, B_SKIRT_TOP - B_BOT, 24, 1, true]} />
+        <meshStandardMaterial
+          color={metalColors.alloyDark}
+          metalness={0.6}
+          roughness={0.4}
+          wireframe
+          transparent
+          opacity={0.28}
+          side={THREE.DoubleSide}
+          clippingPlanes={[CENT_CLIP]}
+        />
+      </mesh>
         {/* 顶部法兰环 */}
         <mesh position={[0, B_SKIRT_TOP, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[B_R, 0.05, 10, 40]} />
@@ -290,21 +295,22 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
           <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.35} />
         </mesh>
         <mesh position={[0, B_SKIRT_TOP, 0]}>
-          <coneGeometry args={[0.34, 0.4, 20, 1, true, CUT[0], CUT[1]]} />
-          <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.4} side={THREE.DoubleSide} />
+          <coneGeometry args={[0.34, 0.4, 20, 1, true]} />
+          <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.4} side={THREE.DoubleSide} clippingPlanes={[CENT_CLIP]} />
         </mesh>
         {/* 排料锥（湿盐出口） */}
-        <mesh position={[0, (B_BOT + B_DISCH_BOT) / 2, 0]}>
-          <cylinderGeometry args={[B_R, 0.16, B_BOT - B_DISCH_BOT, 36, 1, true, CUT[0], CUT[1]]} />
-          <meshStandardMaterial
-            color={metalColors.alloy}
-            metalness={0.45}
-            roughness={0.4}
-            transparent
-            opacity={0.4}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+      <mesh position={[0, (B_BOT + B_DISCH_BOT) / 2, 0]}>
+        <cylinderGeometry args={[B_R, 0.16, B_BOT - B_DISCH_BOT, 36, 1, true]} />
+        <meshStandardMaterial
+          color={metalColors.alloy}
+          metalness={0.45}
+          roughness={0.4}
+          transparent
+          opacity={0.4}
+          side={THREE.DoubleSide}
+          clippingPlanes={[CENT_CLIP]}
+        />
+      </mesh>
 
         {/* 盐饼（挂壁） */}
         {cakes.map((_, i) => (
@@ -347,7 +353,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
 
       {/* 母液底盘（收集滤液） */}
       <mesh position={[0, (PAN_TOP + PAN_BOT) / 2, 0]} castShadow>
-        <cylinderGeometry args={[PAN_R, PAN_R, PAN_TOP - PAN_BOT, 36, 1, true, CUT[0], CUT[1]]} />
+        <cylinderGeometry args={[PAN_R, PAN_R, PAN_TOP - PAN_BOT, 36, 1, true]} />
         <meshStandardMaterial
           color={metalColors.alloyMid}
           metalness={0.4}
@@ -355,11 +361,12 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
           transparent
           opacity={0.5}
           side={THREE.DoubleSide}
+          clippingPlanes={[CENT_CLIP]}
         />
       </mesh>
       <mesh position={[0, PAN_BOT, 0]}>
         <cylinderGeometry args={[PAN_R, PAN_R, 0.06, 36]} />
-        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.4} roughness={0.7} />
+        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.4} roughness={0.7} clippingPlanes={[CENT_CLIP]} />
       </mesh>
 
       {/* 湿盐卸出颗粒 */}
@@ -381,7 +388,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
         <Tag
           position={[0, B_SKIRT_TOP + 1.0, 0]}
           label={zh ? "离心分离" : "Centrifugal separation"}
-          value={zh ? "固液分离 · 含水率 3~5%" : "solid–liquid · moisture 3–5%"}
+          value={zh ? "固液分离 · 含水率 3~5% · ~1000 r/min" : "solid–liquid · moisture 3–5% · ~1000 rpm"}
           color={metalColors.salt}
         />
       )}

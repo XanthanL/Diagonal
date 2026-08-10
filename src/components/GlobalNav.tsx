@@ -44,7 +44,7 @@ export function GlobalNav() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-[60] transition-all duration-300 ${
+      className={`fixed top-0 left-0 w-full z-[60] transition-[background-color,box-shadow,color] duration-300 ease-out-strong ${
         scrolled
           ? "bg-white/80 backdrop-blur-md shadow-sm text-[#1A1A1A]"
           : "mix-blend-difference text-white"
@@ -75,7 +75,7 @@ export function GlobalNav() {
         {/* 移动端菜单按钮 */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden archive-text text-xs"
+          className="press md:hidden archive-text text-xs"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
         >
@@ -92,7 +92,7 @@ export function GlobalNav() {
         />
       )}
       <nav
-        className={`md:hidden fixed top-[56px] left-0 w-full z-[60] bg-black text-white px-6 py-5 space-y-3 border-t border-white/10 transition-all duration-200 ease-out ${
+        className={`md:hidden fixed top-[56px] left-0 w-full z-[60] bg-black text-white px-6 py-5 space-y-3 border-t border-white/10 transition-[transform,opacity] duration-200 ease-out-strong ${
           mobileOpen ? "translate-y-0 opacity-100" : "-translate-y-2 opacity-0 pointer-events-none"
         }`}
       >

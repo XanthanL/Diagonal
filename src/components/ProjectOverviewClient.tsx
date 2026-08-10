@@ -108,7 +108,7 @@ export function ProjectOverviewClient({ project, groups }: ProjectOverviewClient
               <Link
                 key={slug}
                 href={getLocalizedUrl(`/projects/${slug}`)}
-                className="archive-text text-xs px-4 py-2 border border-black/20 hover:border-black hover:bg-black hover:text-white transition-all"
+                className="press archive-text text-xs px-4 py-2 border border-black/20 hover:border-black hover:bg-black hover:text-white"
               >
                 {PROJECT_TITLES[slug].zh} / {PROJECT_TITLES[slug].en}
               </Link>

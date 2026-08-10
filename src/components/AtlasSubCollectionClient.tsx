@@ -43,7 +43,7 @@ export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; sub
                   alt={img.caption || `${subCollection.title}_${(index + 1).toString().padStart(3, '0')}`}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-auto transition-all duration-1000"
+                  className="w-full h-auto"
                 />
               </div>
               <p className="archive-text text-[12px] opacity-40 uppercase tracking-widest pl-2">

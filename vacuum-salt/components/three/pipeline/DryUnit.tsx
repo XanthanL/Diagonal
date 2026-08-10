@@ -22,6 +22,8 @@ import { STAGE_X } from "./layout";
  */
 
 const GROUND = -2.4;
+// 真剖面：与环节 2（蒸发）一致（保留 z<=0 半边），从相机侧干净剖开流化床
+const DRY_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
 const X_BED = 0; // 沸腾流化床（中）
 const X_FAN = -1.2; // 鼓风机 + 加热器（左下）
 const X_SCREEN = 2.7; // 振动筛（右）
@@ -190,12 +192,25 @@ function FluidBed({ lang }: { lang: "zh" | "en" }) {
           opacity={0.16}
           side={THREE.DoubleSide}
           depthWrite={false}
+          clippingPlanes={[DRY_CLIP]}
         />
       </mesh>
       {/* 气体分布板 */}
       <mesh position={[0, DIST_Y, 0]}>
         <boxGeometry args={[BED_W - 0.2, 0.06, BED_D - 0.2]} />
-        <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.5} />
+        <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.5} clippingPlanes={[DRY_CLIP]} />
+      </mesh>
+      {/* 热风室（分布板下方 amber 发光，直观表达加热区：底部热 → 顶部凉） */}
+      <mesh position={[0, DIST_Y - 0.38, 0]}>
+        <boxGeometry args={[BED_W - 0.2, 0.5, BED_D - 0.2]} />
+        <meshStandardMaterial
+          color={metalColors.amber}
+          emissive={metalColors.amber}
+          emissiveIntensity={0.4}
+          transparent
+          opacity={0.22}
+          depthWrite={false}
+        />
       </mesh>
       {/* 湿盐进料口（左下壁，接外部管道，位于分布板上方） */}
       <mesh position={[-BED_W / 2, DIST_Y + 0.35, 0]}>
@@ -562,7 +577,7 @@ export function DryUnit({
           <Tag
             position={[X_BED, BED_TOP + 0.9, 0]}
             label={zh ? "沸腾流化床" : "Fluidized bed"}
-            value={zh ? "流态化干燥 · 含水率<0.3%" : "fluidized · moisture <0.3%"}
+            value={zh ? "流态化干燥 · 进风 140℃ · 含水率<0.3%" : "fluidized · inlet 140℃ · moisture <0.3%"}
             color={metalColors.salt}
           />
           <Tag

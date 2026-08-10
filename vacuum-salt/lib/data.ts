@@ -54,6 +54,8 @@ export const stages: StageData[] = [
     inputEn: "Subsurface rock-salt deposit / natural brine",
     output: "精卤（NaCl 295~310 g/L，Ca²⁺≤10 ppm，Mg²⁺≤5 ppm）",
     outputEn: "Purified brine (NaCl 295–310 g/L, Ca²⁺≤10 ppm, Mg²⁺≤5 ppm)",
+    tour: "我们从千米深井汲取天然卤水，先以石灰—纯碱法净化除钙镁，为后续蒸发结晶护航。",
+    tourEn: "We draw natural brine from a kilometer-deep well, then purify it with the lime–soda ash method to remove Ca²⁺/Mg²⁺, protecting the evaporation & crystallization ahead.",
     accent: "steel",
     principle: [
       "自贡井卤分黑卤、黄卤两类，均来自三叠系深层蒸发岩系，主要成分为 NaCl 水溶液，伴生 Ca²⁺、Mg²⁺、SO₄²⁻ 及钾、溴、碘、锂等。",
@@ -101,6 +103,8 @@ export const stages: StageData[] = [
     inputEn: "Purified brine (NaCl 295–310 g/L)",
     output: "盐浆（固液混合，含固率约 20%~30%）",
     outputEn: "Salt slurry (solid–liquid mix, solids ~20–30%)",
+    tour: "真空泵抽走末效空气形成低压，沸点骤降；二次蒸汽逐效回用，卤水在末效高真空下低温沸腾结晶。",
+    tourEn: "A vacuum pump draws air from the last effect, lowering the boiling point; secondary steam is reused effect-by-effect, and brine crystallizes at low temperature under high vacuum in the last effect.",
     accent: "steel",
     principle: [
       "真空制盐的核心物理原理：液体在低压环境下沸点显著降低。用真空泵抽出末效蒸发罐内空气形成低压，使卤水在低温下即可沸腾蒸发。",
@@ -147,6 +151,8 @@ export const stages: StageData[] = [
     inputEn: "Salt slurry (solids ~20–30%)",
     output: "湿盐（含水率约 3%~5%）",
     outputEn: "Wet salt (moisture ~3–5%)",
+    tour: "离心力将盐浆固液分离，湿盐含水率降至 3%~5%，为干燥环节减负。",
+    tourEn: "Centrifugal force separates the slurry into solids and liquid; wet-salt moisture falls to 3–5%, easing the drying step.",
     accent: "steel",
     principle: [
       "蒸发结晶排出的盐浆为固液混合物，需先经水力旋流器增浓，再进入离心机脱水。",
@@ -184,6 +190,8 @@ export const stages: StageData[] = [
     inputEn: "Wet salt (moisture ~3–5%)",
     output: "成品干盐（含水率 <0.3%）",
     outputEn: "Finished dry salt (moisture <0.3%)",
+    tour: "沸腾流化床低温干燥保留晶体形态，振动筛按粒度分级出成品干盐。",
+    tourEn: "A fluidized bed dries at low temperature, preserving crystal shape; a vibrating screen grades the dry salt by particle size.",
     accent: "ember",
     principle: [
       "干燥原理——流态化技术：热空气自下而上穿过分布板，使湿盐颗粒悬浮呈流化状态，气固接触面积大、传热传质强烈，可在较低温度下快速干燥，并较好保持晶体形态。",
@@ -223,6 +231,8 @@ export const stages: StageData[] = [
     inputEn: "Finished dry salt (moisture <0.3%)",
     output: "食用盐 / 工业盐成品（入库）",
     outputEn: "Edible / industrial salt product (into storage)",
+    tour: "定量包装、自动码垛，分区仓储守护每一粒盐的品质与安全。",
+    tourEn: "Metered packaging and auto-palletizing, with zoned storage guarding the quality and safety of every grain of salt.",
     accent: "ok",
     principle: [
       "干燥筛分后的成品盐经输送（皮带/气力）进入包装线，按规格进行自动定量包装（如 400g/500g/1kg 小包装，或 25kg/50kg/吨袋大包装）。",

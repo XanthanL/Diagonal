@@ -180,7 +180,7 @@ export default function ColophonPage() {
                     {lang === "zh" ? work.zh : work.en}
                   </p>
                 </div>
-                <span className="archive-text text-[10px] opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0">
+                <span className="archive-text text-[10px] opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-[opacity,transform] duration-200 ease-out-strong shrink-0">
                   ↗
                 </span>
               </a>

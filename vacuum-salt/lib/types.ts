@@ -70,6 +70,10 @@ export interface StageData {
   output: string;
   /** 物料出口（英文） */
   outputEn: string;
+  /** 引导式巡游讲解词（中文） */
+  tour?: string;
+  /** 引导式巡游讲解词（英文） */
+  tourEn?: string;
   /** 配色主题（对应 tailwind 色） */
   accent: "steel" | "ember" | "ok" | "warn" | "salt";
 }

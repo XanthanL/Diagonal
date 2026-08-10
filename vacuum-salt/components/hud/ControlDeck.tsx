@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Lang } from "@/lib/useLang";
 import type { StageData } from "@/lib/types";
 import { StageCard } from "./StageCard";
+import { VacuumPanel } from "./VacuumPanel";
 
 interface ControlDeckProps {
   stages: StageData[];
@@ -18,6 +19,9 @@ interface ControlDeckProps {
   onPrev: () => void;
   onCycleSpeed: () => void;
   onOpenInfo: () => void;
+  /** 引导式巡游开关 */
+  tour: boolean;
+  onToggleTour: () => void;
 }
 
 /** 播放控制（上一步 / 播放暂停 / 下一步 / 倍速） */
@@ -130,6 +134,63 @@ function Stepper({
   );
 }
 
+/** 引导式巡游字幕（顶部居中）：当前环节讲解词 + 进度条，自管 rAF 动画避免整树重渲染 */
+function TourCaption({
+  stage,
+  lang,
+  playing,
+  speed,
+}: {
+  stage: StageData;
+  lang: Lang;
+  playing: boolean;
+  speed: 1 | 2 | 3;
+}) {
+  const zh = lang === "zh";
+  const [p, setP] = useState(0);
+  const startRef = useRef(0);
+
+  useEffect(() => {
+    startRef.current = performance.now();
+    setP(0);
+    if (!playing) return;
+    let raf = 0;
+    const dur = 8000 / speed;
+    const tick = () => {
+      const el = performance.now() - startRef.current;
+      setP(Math.min(1, el / dur));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [stage.index, playing, speed]);
+
+  const narration = zh ? stage.tour ?? stage.tagline : stage.tourEn ?? stage.taglineEn;
+
+  return (
+    <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 w-[min(92vw,580px)] pointer-events-none">
+      <div className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-2 text-[10px] text-ink-400 font-mono mb-1">
+          <span className="text-diagonal-red">{zh ? "引导式巡游中" : "GUIDED TOUR"}</span>
+          <span>
+            {String(stage.index + 1).padStart(2, "0")} / 05
+          </span>
+        </div>
+        <div className="font-serif text-base font-bold text-ink-900 leading-tight">
+          {zh ? stage.name : stage.nameEn}
+        </div>
+        <div className="text-[12px] text-ink-600 mt-0.5 leading-relaxed">{narration}</div>
+        <div className="mt-2 h-1 rounded-full bg-black/10 overflow-hidden">
+          <div
+            className="h-full bg-diagonal-red rounded-full"
+            style={{ width: `${p * 100}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * 控制台：
  * - 桌面：左侧垂直居中的环节摘要卡 + 底部居中的「步骤条 + 播放」胶囊。
@@ -149,9 +210,13 @@ export function ControlDeck(props: ControlDeckProps) {
     onPrev,
     onCycleSpeed,
     onOpenInfo,
+    tour,
+    onToggleTour,
   } = props;
   const [expanded, setExpanded] = useState(false);
   const stage = stages[current];
+  const showVacuum = stages[current]?.id === "evaporate";
+  const zh = lang === "zh";
 
   return (
     <>
@@ -165,11 +230,30 @@ export function ControlDeck(props: ControlDeckProps) {
             onOpenInfo={onOpenInfo}
           />
         </div>
+
+        {/* 真空梯度面板：环节 2 聚焦时在右侧浮现 */}
+        {showVacuum && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[264px] max-w-[40vw] pointer-events-auto">
+            <VacuumPanel lang={lang} />
+          </div>
+        )}
+
         {/* 底部中央：步骤条 + 播放 */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
-          <div className="panel rounded-full pl-2 pr-1.5 py-1.5 flex items-center gap-2 shadow-lift">
+          <div className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-full pl-2 pr-1.5 py-1.5 flex items-center gap-2">
             <Stepper stages={stages} current={current} lang={lang} onGoto={onGoto} />
             <div className="w-px h-6 bg-black/15" />
+            <button
+              onClick={onToggleTour}
+              className={`px-2.5 h-9 rounded-full text-[11px] font-mono border transition ${
+                tour
+                  ? "bg-diagonal-red text-white border-diagonal-red"
+                  : "bg-white text-ink-700 border-black/10 hover:border-diagonal-red/50 hover:text-diagonal-red"
+              }`}
+              title={zh ? "引导式巡游" : "Guided tour"}
+            >
+              {tour ? (zh ? "退出" : "Exit") : zh ? "导览" : "Tour"}
+            </button>
             <Playback
               playing={playing}
               speed={speed}
@@ -185,7 +269,7 @@ export function ControlDeck(props: ControlDeckProps) {
       {/* ===== 移动端：底部抽屉 ===== */}
       <div className="md:hidden absolute inset-x-0 bottom-0 z-30 pointer-events-none">
         <div
-          className="pointer-events-auto panel border-t border-black/10 rounded-t-2xl shadow-lift"
+          className="pointer-events-auto bg-white/80 backdrop-blur-md border-t border-black/[0.06] shadow-sm rounded-t-2xl"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           {/* 收起态（常显一行） */}
@@ -259,12 +343,28 @@ export function ControlDeck(props: ControlDeckProps) {
 
                   <Stepper stages={stages} current={current} lang={lang} onGoto={onGoto} />
 
+                  {showVacuum && (
+                    <div className="pointer-events-auto">
+                      <VacuumPanel lang={lang} />
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <button
                       onClick={onOpenInfo}
                       className="flex-1 py-2 rounded-md bg-paper-200 text-ink-700 border border-black/10 hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40 transition text-[11px] font-mono"
                     >
                       {lang === "zh" ? "原理 / 参数 →" : "Principle / Parameters →"}
+                    </button>
+                    <button
+                      onClick={onToggleTour}
+                      className={`px-3 py-2 rounded-md border text-[11px] font-mono transition ${
+                        tour
+                          ? "bg-diagonal-red text-white border-diagonal-red"
+                          : "bg-paper-200 text-ink-700 border border-black/10 hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40"
+                      }`}
+                    >
+                      {tour ? (zh ? "结束巡游" : "End tour") : zh ? "开始巡游" : "Start tour"}
                     </button>
                   </div>
 
@@ -287,6 +387,11 @@ export function ControlDeck(props: ControlDeckProps) {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* 引导式巡游字幕（桌面 / 移动通用） */}
+      {tour && (
+        <TourCaption stage={stage} lang={lang} playing={playing} speed={speed} />
+      )}
     </>
   );
 }

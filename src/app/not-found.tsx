@@ -32,13 +32,13 @@ export default function NotFound() {
         <div className="flex gap-4 justify-center md:justify-start">
           <Link
             href="/"
-            className="archive-text text-xs px-6 py-3 border border-black bg-black text-white hover:bg-white hover:text-black transition-all"
+            className="press archive-text text-xs px-6 py-3 border border-black bg-black text-white hover:bg-white hover:text-black"
           >
             返回首页 →
           </Link>
           <Link
             href="/archive"
-            className="archive-text text-xs px-6 py-3 border border-black/20 hover:border-black transition-all"
+            className="press archive-text text-xs px-6 py-3 border border-black/20 hover:border-black"
           >
             浏览档案
           </Link>

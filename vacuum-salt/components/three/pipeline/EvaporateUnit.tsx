@@ -448,6 +448,55 @@ function Condenser({ x, z }: { x: number; z: number }) {
   );
 }
 
+/**
+ * 冷凝器真空表（3D 仪表盘）：半圆刻度 + 指针，
+ * 指针指向末效真空度（≈88%），与 HUD 真空梯度面板呼应。
+ */
+function VacuumGauge({ x, y, z }: { x: number; y: number; z: number }) {
+  const needleRef = useRef<THREE.Mesh>(null);
+  const R = 0.5;
+  // 半圆刻度：0%（左，min）→ 100%（右，max），自顶扫过
+  const fraction = 0.88; // 末效真空度 ≈ 88%
+  const angle = Math.PI * (1 - fraction); // fraction0→π(左), 1→0(右)
+
+  useFrame((state) => {
+    if (needleRef.current) {
+      const wob = Math.sin(state.clock.elapsedTime * 1.4) * 0.03;
+      needleRef.current.rotation.z = angle + wob;
+    }
+  });
+
+  return (
+    <group position={[x, y, z]}>
+      {/* 表盘底 */}
+      <mesh>
+        <circleGeometry args={[R + 0.09, 36]} />
+        <meshStandardMaterial color="#0c1622" opacity={0.82} transparent depthWrite={false} />
+      </mesh>
+      {/* 刻度弧（顶半圆，左 min → 右 max） */}
+      <mesh>
+        <torusGeometry args={[R, 0.035, 10, 48, Math.PI]} />
+        <meshStandardMaterial color={metalColors.alloyLight} metalness={0.4} roughness={0.5} />
+      </mesh>
+      {/* 真空区着色弧（左 0% → 当前 fraction） */}
+      <mesh rotation={[0, 0, Math.PI]}>
+        <torusGeometry args={[R, 0.035, 10, 48, Math.PI * fraction]} />
+        <meshStandardMaterial color={metalColors.brine} emissive={metalColors.brine} emissiveIntensity={0.5} />
+      </mesh>
+      {/* 指针 */}
+      <mesh ref={needleRef} position={[0, 0, 0.04]}>
+        <boxGeometry args={[R - 0.06, 0.035, 0.02]} />
+        <meshStandardMaterial color={metalColors.salt} emissive={"#ef6f5b"} emissiveIntensity={0.6} />
+      </mesh>
+      {/* 轴心 */}
+      <mesh position={[0, 0, 0.05]}>
+        <circleGeometry args={[0.07, 16]} />
+        <meshStandardMaterial color={metalColors.brineDeep} />
+      </mesh>
+    </group>
+  );
+}
+
 /** 环节 2：四效蒸发结晶器组 + 冷凝器 + 逐效回用管路 */
 export function EvaporateUnit({
   onSelect,
@@ -462,6 +511,15 @@ export function EvaporateUnit({
   const zh = lang === "zh";
   const condLocalX = localEffectX(3) + 1.9; // 冷凝器在 Ⅳ效右侧
   const condZ = -1.4; // 置于后排，避免与盐浆管路（z=0）冲突
+
+  // 低压冷色晕染（呼吸式微脉动，暗示末效真空区）
+  const tintRef = useRef<THREE.Mesh>(null);
+  useFrame((state) => {
+    if (tintRef.current) {
+      const m = tintRef.current.material as THREE.MeshStandardMaterial;
+      m.opacity = 0.06 + (Math.sin(state.clock.elapsedTime * 1.2) * 0.5 + 0.5) * 0.05;
+    }
+  });
 
   // 连接四效支座的基座裙条（强化"一组设备"整体感）
   const skirtX0 = localEffectX(0) - 1.0;
@@ -479,6 +537,19 @@ export function EvaporateUnit({
       <mesh position={[(skirtX0 + skirtX1) / 2, GROUND + 0.03, 0]} castShadow>
         <boxGeometry args={[skirtX1 - skirtX0, 0.12, 1.5]} />
         <meshStandardMaterial color={metalColors.alloyMid} metalness={0.3} roughness={0.85} />
+      </mesh>
+
+      {/* 低压冷色晕染：覆盖 Ⅳ效 + 冷凝器，直观表达「末效高真空」区域 */}
+      <mesh ref={tintRef} position={[(localEffectX(3) + condLocalX) / 2, 0.35, -0.95]}>
+        <boxGeometry args={[condLocalX - localEffectX(3) + 1.9, 3.7, 0.5]} />
+        <meshStandardMaterial
+          color={metalColors.brineLight}
+          emissive={metalColors.brineLight}
+          emissiveIntensity={0.35}
+          transparent
+          opacity={0.07}
+          depthWrite={false}
+        />
       </mesh>
 
       {/* 四效蒸发器 */}
@@ -574,7 +645,7 @@ export function EvaporateUnit({
           <Tag
             position={[condLocalX, 2.3, -1.4]}
             label={zh ? "混合冷凝器 · 真空泵" : "Condenser · vacuum pump"}
-            value={zh ? "维持末效真空" : "holds last-effect vacuum"}
+            value={zh ? "末效真空 ≈88%" : "last-effect vacuum ≈88%"}
             color={metalColors.brine}
           />
           <Tag
@@ -583,6 +654,15 @@ export function EvaporateUnit({
             value={zh ? "产盐浆 → 离心" : "salt slurry → centrifuge"}
             color={metalColors.salt}
           />
+          {/* 高真空区总览浮标（悬于四效组之上） */}
+          <Tag
+            position={[(localEffectX(0) + condLocalX) / 2, STEAM_TOP + 1.9, 0]}
+            label={zh ? "高真空结晶区" : "HIGH-VACUUM ZONE"}
+            value={zh ? "末效 0.012 MPa · 卤水低温沸腾结晶" : "last 0.012 MPa · low-temp boiling"}
+            color={metalColors.brine}
+          />
+          {/* 冷凝器真空表（3D 仪表盘） */}
+          <VacuumGauge x={condLocalX} y={2.5} z={-0.55} />
         </>
       )}
     </group>

@@ -6,12 +6,52 @@
   .archive-text {
     @apply uppercase tracking-widest font-mono;
   }
+
+  /* —— 按压反馈 ——
+     全站此前没有任何 :active 态，点击时界面「毫无回应」。
+     :active 在触屏上是真实按压，不需要 hover 门控。 */
+  .press {
+    transition:
+      transform 160ms var(--ease-out),
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease,
+      opacity 200ms ease;
+  }
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  /* 大面积卡片：hover 上浮 + 按压回缩。
+     两者必须写在同一条 transform 链里，否则 :active 会整条覆盖 :hover，
+     按下瞬间卡片会「掉回原位」——这正是很多站点点击手感发飘的原因。
+     --lift 可按卡片体量覆盖。 */
+  .press-card {
+    --lift: -4px;
+    transition:
+      transform 200ms var(--ease-out),
+      border-color 200ms var(--ease-out);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .press-card:hover {
+      transform: translateY(var(--lift));
+    }
+  }
+  .press-card:active {
+    transform: translateY(var(--lift)) scale(0.99);
+  }
 }
 
 :root {
   --background: #FAFAF8;
   --foreground: #1A1A1A;
   --surface-dark: #0c0c0e;
+
+  /* —— 动效曲线令牌 —— */
+  /* 浏览器内置 ease-out 太弱，UI 动效统一用这三条 */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* 进入 / 退出 / 按压 */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* 屏幕内位移、形变 */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* 抽屉 / 面板 */
 }
 
 body {
@@ -87,13 +127,29 @@ body {
   animation: fadeIn 0.15s ease-out forwards;
 }
 
-/* reduced-motion: 禁用所有 CSS animation */
+/* reduced-motion: 去掉位移类动画，但保留「界面有回应」的反馈 */
 @media (prefers-reduced-motion: reduce) {
   .animate-scrollBob,
   .animate-atlasProgress,
   .animate-fadeIn,
   #main-content {
     animation: none;
+  }
+
+  /* 按压：丢掉缩放与位移，换成透明度反馈（更温和，而非归零）。
+     顺序要紧：:hover 必须写在 :active 之前，
+     否则同优先级下 hover 会覆盖掉按压反馈。 */
+  .press,
+  .press-card {
+    transition: opacity 160ms var(--ease-out);
+  }
+  .press-card:hover {
+    transform: none;
+  }
+  .press:active,
+  .press-card:active {
+    transform: none;
+    opacity: 0.68;
   }
 }
 
@@ -148,8 +204,11 @@ body {
   background-size: 0% 1px;
   transition: background-size 0.3s ease;
 }
-.link-animated:hover {
-  background-size: 100% 1px;
+/* 触屏点击后 hover 会粘住，下划线会一直留着——加门控 */
+@media (hover: hover) and (pointer: fine) {
+  .link-animated:hover {
+    background-size: 100% 1px;
+  }
 }
 
 /* —— 中文正文衬线体 —— */

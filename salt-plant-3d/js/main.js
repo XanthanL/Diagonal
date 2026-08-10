@@ -19,6 +19,9 @@ const WOOD = 0x8C755A;         // 陈年杉木主色（灰暖木，做旧）
 const WOOD_DARK = 0x5A4836;    // 陈年杉木暗部（阴影 / 老木）
 const WOOD_LIGHT = 0xA39276;   // 陈年杉木亮部（受光面）
 const BAMBOO = 0xA9AC82;       // 竹篾色（浅黄绿灰）：绳索与捆绑环，区别于木构
+const BAMBOO_PALE = 0xBFBD98;  // 新篾（略亮）：竹笆编织面，与陈年篾箍拉开层次
+const IRON = 0x6B6259;         // 做旧铁箍（暗铁灰）：关键节点锁紧
+const THATCH = 0x9A8455;       // 茅草屋面（盐工寮棚）
 
 let scene, camera, renderer, labelRenderer, controls, clock;
 let stationGroups = [];
@@ -83,37 +86,143 @@ function makeFloorTexture() {
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(22, 12); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
+function makeStoneTexture() {
+  const s = 512, c = cv(s), x = c.getContext('2d');
+  x.fillStyle = '#9b968c'; x.fillRect(0, 0, s, s);
+  // 石材颗粒（深浅斑点）
+  for (let i = 0; i < 5200; i++) {
+    const a = Math.random() * 0.12;
+    x.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(40,38,34,${a})`;
+    x.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  }
+  // 石缝（暗色不规则裂纹）
+  x.strokeStyle = 'rgba(50,47,42,0.45)'; x.lineWidth = 2;
+  for (let i = 0; i < 60; i++) {
+    let px = Math.random() * s, py = Math.random() * s;
+    x.beginPath(); x.moveTo(px, py);
+    const seg = 2 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < seg; k++) { px += (Math.random() - 0.5) * 70; py += (Math.random() - 0.5) * 50; x.lineTo(px, py); }
+    x.stroke();
+  }
+  // 石面起伏（大块明暗）
+  for (let i = 0; i < 22; i++) {
+    const mx = Math.random() * s, my = Math.random() * s, mr = 30 + Math.random() * 90;
+    const rg = x.createRadialGradient(mx, my, 0, mx, my, mr);
+    rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.12)');
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = rg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// 做旧熟铁：暗铁底 + 锈斑 + 麻点腐蚀 + 锻打横纹（天车铁箍多为手工锻打的箍圈）
+function makeRustTexture() {
+  const s = 256, c = cv(s), x = c.getContext('2d');
+  x.fillStyle = '#4c453d'; x.fillRect(0, 0, s, s);
+  // 锻打横纹
+  x.strokeStyle = 'rgba(22,19,16,0.28)'; x.lineWidth = 1;
+  for (let i = 0; i < s; i += 8) { x.beginPath(); x.moveTo(0, i + Math.random() * 3); x.lineTo(s, i + Math.random() * 3); x.stroke(); }
+  // 锈斑（橙褐团块）
+  for (let i = 0; i < 74; i++) {
+    const mx = Math.random() * s, my = Math.random() * s, mr = 5 + Math.random() * 32;
+    const rg = x.createRadialGradient(mx, my, 0, mx, my, mr);
+    rg.addColorStop(0, `rgba(${(138 + Math.random() * 62) | 0},${(72 + Math.random() * 38) | 0},34,${0.16 + Math.random() * 0.38})`);
+    rg.addColorStop(1, 'rgba(122,62,28,0)');
+    x.fillStyle = rg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
+  }
+  // 麻点腐蚀 + 高光棱
+  for (let i = 0; i < 2400; i++) {
+    x.fillStyle = Math.random() > 0.55 ? `rgba(26,22,18,${Math.random() * 0.4})` : `rgba(198,156,102,${Math.random() * 0.16})`;
+    x.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 1); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// 茅草屋面：横向草秆密排 + 压草竹条 + 雨渍霉斑（盐工寮棚顶）
+function makeThatchTexture() {
+  const s = 512, c = cv(s), x = c.getContext('2d');
+  x.fillStyle = '#9a8455'; x.fillRect(0, 0, s, s);
+  for (let i = 0; i < 2400; i++) {
+    const y = Math.random() * s, sx = Math.random() * s, len = 18 + Math.random() * 66;
+    x.strokeStyle = (Math.random() > 0.55 ? 'rgba(72,56,30,' : 'rgba(208,188,142,') + (0.07 + Math.random() * 0.2) + ')';
+    x.lineWidth = 1 + Math.random() * 2;
+    x.beginPath(); x.moveTo(sx, y); x.lineTo(sx + len, y + (Math.random() - 0.5) * 3); x.stroke();
+  }
+  x.strokeStyle = 'rgba(58,46,24,0.42)'; x.lineWidth = 5;
+  for (let i = 0; i <= s; i += 112) { x.beginPath(); x.moveTo(0, i); x.lineTo(s, i); x.stroke(); }
+  for (let i = 0; i < 30; i++) {
+    const mx = Math.random() * s, my = Math.random() * s, mr = 12 + Math.random() * 48;
+    const rg = x.createRadialGradient(mx, my, 0, mx, my, mr);
+    rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(58,50,28,0.15)' : 'rgba(118,122,86,0.13)');
+    rg.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = rg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
 function makeWoodTexture() {
   const s = 512, c = cv(s), x = c.getContext('2d');
   // 陈年杉木底色（灰暖、低饱和）
   x.fillStyle = '#8c755a'; x.fillRect(0, 0, s, s);
-  // 竖向木纹（带轻微波动，灰调）
-  for (let i = 0; i < 240; i++) {
+  // 竖向木纹（带波动，灰调，深浅交错）
+  for (let i = 0; i < 320; i++) {
     const gx = Math.random() * s, w = 1 + Math.random() * 3;
-    x.strokeStyle = (Math.random() > 0.5 ? 'rgba(50,42,32,' : 'rgba(175,160,135,') + (0.04 + Math.random() * 0.10) + ')';
+    const dark = Math.random() > 0.5;
+    x.strokeStyle = (dark ? 'rgba(48,38,26,' : 'rgba(178,163,138,') + (0.04 + Math.random() * 0.11) + ')';
     x.lineWidth = w;
     x.beginPath(); x.moveTo(gx, 0);
-    for (let y = 0; y <= s; y += 16) x.lineTo(gx + Math.sin(y * 0.03 + gx) * 2, y);
+    for (let y = 0; y <= s; y += 14) x.lineTo(gx + Math.sin(y * 0.035 + gx) * 2.4, y);
     x.stroke();
   }
+  // 雨蚀竖向浅纹（风日吹晒后泛白）
+  for (let i = 0; i < 90; i++) {
+    const gx = Math.random() * s;
+    x.strokeStyle = `rgba(214,205,186,${0.03 + Math.random() * 0.05})`;
+    x.lineWidth = 1 + Math.random() * 2;
+    x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx + (Math.random() - 0.5) * 4, s); x.stroke();
+  }
   // 木板接缝（横向）
-  x.strokeStyle = 'rgba(50,32,16,0.5)'; x.lineWidth = 3;
+  x.strokeStyle = 'rgba(46,30,14,0.5)'; x.lineWidth = 3;
   for (let i = 0; i <= s; i += 128) { x.beginPath(); x.moveTo(0, i); x.lineTo(s, i); x.stroke(); }
-  // 木节
-  for (let i = 0; i < 14; i++) {
-    const kx = Math.random() * s, ky = Math.random() * s, r = 4 + Math.random() * 8;
-    const rg = x.createRadialGradient(kx, ky, 0, kx, ky, r);
-    rg.addColorStop(0, 'rgba(60,38,18,0.6)'); rg.addColorStop(1, 'rgba(60,38,18,0)');
-    x.fillStyle = rg; x.beginPath(); x.arc(kx, ky, r, 0, Math.PI * 2); x.fill();
+  // 木节（同心年轮）
+  for (let i = 0; i < 16; i++) {
+    const kx = Math.random() * s, ky = Math.random() * s, r = 4 + Math.random() * 9;
+    for (let rr = r; rr > 1; rr -= 2) {
+      const rg = x.createRadialGradient(kx, ky, 0, kx, ky, rr);
+      rg.addColorStop(0, 'rgba(58,36,16,0.5)'); rg.addColorStop(1, 'rgba(58,36,16,0)');
+      x.fillStyle = rg; x.beginPath(); x.arc(kx, ky, rr, 0, Math.PI * 2); x.fill();
+    }
   }
-  // 风化噪点：深色霉斑 + 浅色泛白（陈年杉木经风日晒的银灰质感）
-  for (let i = 0; i < 2200; i++) {
-    x.fillStyle = `rgba(40,30,18,${Math.random() * 0.06})`;
+  // 干裂纹（细黑折线）
+  x.strokeStyle = 'rgba(38,26,14,0.35)'; x.lineWidth = 1;
+  for (let i = 0; i < 40; i++) {
+    let px = Math.random() * s, py = Math.random() * s;
+    x.beginPath(); x.moveTo(px, py);
+    const seg = 3 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < seg; k++) { px += (Math.random() - 0.5) * 30; py += (Math.random() - 0.5) * 22; x.lineTo(px, py); }
+    x.stroke();
+  }
+  // 风化噪点：霉斑（深）+ 泛白（浅），陈年杉木银灰质感
+  for (let i = 0; i < 2600; i++) {
+    x.fillStyle = `rgba(38,28,16,${Math.random() * 0.06})`;
     x.fillRect(Math.random() * s, Math.random() * s, 1, 1);
   }
-  for (let i = 0; i < 1400; i++) {
-    x.fillStyle = `rgba(205,196,178,${Math.random() * 0.05})`;
+  for (let i = 0; i < 1500; i++) {
+    x.fillStyle = `rgba(208,199,181,${Math.random() * 0.05})`;
     x.fillRect(Math.random() * s, Math.random() * s, 1, 1);
+  }
+  // 近地潮气青苔斑（绿灰，自贡盐场近井湿润）
+  for (let i = 0; i < 26; i++) {
+    const mx = Math.random() * s, my = s * (0.55 + Math.random() * 0.45), mr = 8 + Math.random() * 26;
+    const rg = x.createRadialGradient(mx, my, 0, mx, my, mr);
+    rg.addColorStop(0, 'rgba(96,104,78,0.10)'); rg.addColorStop(1, 'rgba(96,104,78,0)');
+    x.fillStyle = rg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
   }
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 3); t.colorSpace = THREE.SRGBColorSpace;
@@ -144,6 +253,227 @@ function glowMat(color) {
 }
 function woodTex(color, rough = 0.85) {
   return new THREE.MeshStandardMaterial({ map: TEX.wood, color, roughness: rough, metalness: 0.0 });
+}
+// 逐构件色调/粗糙度扰动（做旧：让每根木构、每块石料略有差異，避免塑料感）
+function vTint(map, color, rough) {
+  const c = new THREE.Color(color), hsl = {}; c.getHSL(hsl);
+  hsl.l = Math.min(1, Math.max(0.05, hsl.l * (0.85 + Math.random() * 0.3)));
+  hsl.s = Math.min(1, hsl.s * (0.9 + Math.random() * 0.2));
+  c.setHSL(hsl.h, hsl.s, hsl.l);
+  return new THREE.MeshStandardMaterial({
+    map,
+    color: c,
+    roughness: Math.min(1, Math.max(0.3, rough + (Math.random() - 0.5) * 0.14)),
+    metalness: 0.0,
+  });
+}
+// 材质池：同类构件复用有限数量的做旧变体，既保留「逐根木头不一样」的手工感，
+// 又让后续几何合并能把成百上千根细木压缩到个位数 draw call。
+const _matPool = new Map();
+function poolMat(key, map, color, rough, n = 7) {
+  let arr = _matPool.get(key);
+  if (!arr) { arr = []; for (let i = 0; i < n; i++) arr.push(vTint(map, color, rough)); _matPool.set(key, arr); }
+  return arr[(Math.random() * arr.length) | 0];
+}
+function vWood(color, rough) { return poolMat(`w${color}_${rough}`, TEX.wood, color, rough); }
+function vStone(color, rough) { return poolMat(`s${color}_${rough}`, TEX.stone, color, rough); }
+function vBamboo(color = BAMBOO_PALE, rough = 0.9) { return poolMat(`b${color}_${rough}`, TEX.wood, color, rough, 5); }
+function stoneTex(color, rough = 0.95) {
+  return new THREE.MeshStandardMaterial({ map: TEX.stone, color, roughness: rough, metalness: 0.0 });
+}
+// 共享材质（铁 / 篾 / 茅草）——节点数量大，必须共享才能合并
+let _ironM = null, _bambooM = null, _thatchM = null;
+function ironS() {
+  if (!_ironM) _ironM = new THREE.MeshStandardMaterial({ map: TEX.rust, color: IRON, roughness: 0.72, metalness: 0.58 });
+  return _ironM;
+}
+function bambooS() {
+  if (!_bambooM) _bambooM = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  return _bambooM;
+}
+function thatchS() {
+  if (!_thatchM) _thatchM = new THREE.MeshStandardMaterial({ map: TEX.thatch, color: THATCH, roughness: 1.0, metalness: 0.0 });
+  return _thatchM;
+}
+
+// ---------- 几何缓存 ----------
+const _geoCache = new Map();
+const r2 = (v) => Math.round(v * 100) / 100;
+function cachedGeo(key, make) {
+  let gg = _geoCache.get(key);
+  if (!gg) { gg = make(); _geoCache.set(key, gg); }
+  return gg;
+}
+function windGeoC(radius, length, turns, tubeR) {
+  return cachedGeo(`w${radius}|${length}|${turns}|${tubeR}`, () => helixWindGeo(radius, length, turns, tubeR));
+}
+function hoopGeoC(radius, tubeR, seg = 16) {
+  return cachedGeo(`h${radius}|${tubeR}|${seg}`, () => new THREE.TorusGeometry(radius, tubeR, 6, seg));
+}
+function unitCylG() {
+  return cachedGeo('unitCyl', () => new THREE.CylinderGeometry(0.94, 1, 1, 7));
+}
+
+// ---------- 静态几何合并（自实现，避免额外 vendor 依赖） ----------
+// 天车改成「束柱」之后，单根柱子由数根杉木 + 十数道篾箍构成，网格数量会暴涨到上千。
+// 这里把所有静态构件按材质合并成一个个大 BufferGeometry，draw call 回落到个位数。
+function mergeGeos(list) {
+  let vCount = 0, iCount = 0;
+  for (const g of list) {
+    vCount += g.attributes.position.count;
+    iCount += g.index ? g.index.count : g.attributes.position.count;
+  }
+  const pos = new Float32Array(vCount * 3);
+  const nor = new Float32Array(vCount * 3);
+  const uv = new Float32Array(vCount * 2);
+  const idx = vCount > 65535 ? new Uint32Array(iCount) : new Uint16Array(iCount);
+  let vo = 0, io = 0;
+  for (const g of list) {
+    const p = g.attributes.position, n = g.attributes.normal, u = g.attributes.uv;
+    pos.set(p.array, vo * 3);
+    if (n) nor.set(n.array, vo * 3);
+    if (u) uv.set(u.array, vo * 2);
+    if (g.index) { const a = g.index.array; for (let i = 0; i < a.length; i++) idx[io + i] = a[i] + vo; io += a.length; }
+    else { for (let i = 0; i < p.count; i++) idx[io + i] = vo + i; io += p.count; }
+    vo += p.count;
+  }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  out.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  out.setIndex(new THREE.BufferAttribute(idx, 1));
+  out.computeBoundingSphere();
+  return out;
+}
+const _bin = new Map();
+const _emitM = new THREE.Matrix4();
+// 把一棵（未入场的）临时对象树按材质收编进合并桶
+function emit(obj, base) {
+  obj.updateMatrixWorld(true);
+  obj.traverse((o) => {
+    if (!o.isMesh) return;
+    _emitM.copy(o.matrixWorld);
+    if (base) _emitM.premultiply(base);
+    let arr = _bin.get(o.material);
+    if (!arr) { arr = []; _bin.set(o.material, arr); }
+    arr.push(o.geometry.clone().applyMatrix4(_emitM));
+  });
+}
+function flushBin(parent) {
+  _bin.forEach((arr, mat) => {
+    const merged = mergeGeos(arr);
+    arr.forEach((a) => a.dispose());
+    const m = new THREE.Mesh(merged, mat);
+    m.castShadow = true; m.receiveShadow = true;
+    parent.add(m);
+  });
+  _bin.clear();
+}
+// 竹篾缠绕：沿螺旋线生成的篾绳管（默认绕 Y 轴），用于木构节点的藤篾捆扎
+class HelixCurve extends THREE.Curve {
+  constructor(radius, length, turns) { super(); this.radius = radius; this.length = length; this.turns = turns; }
+  getPoint(t, target = new THREE.Vector3()) {
+    const a = t * this.turns * Math.PI * 2;
+    const y = (t - 0.5) * this.length;
+    return target.set(Math.cos(a) * this.radius, y, Math.sin(a) * this.radius);
+  }
+}
+function helixWindGeo(radius, length, turns, tubeR) {
+  return new THREE.TubeGeometry(new HelixCurve(radius, length, turns), Math.max(12, Math.ceil(turns * 12)), tubeR, 5, false);
+}
+function addWind(parent, pos, axis, geo, mat) {
+  const m = new THREE.Mesh(geo, mat);
+  if (axis === 'x') m.rotation.z = Math.PI / 2;
+  else if (axis === 'z') m.rotation.x = Math.PI / 2;
+  m.position.copy(pos);
+  m.castShadow = true;
+  parent.add(m);
+  return m;
+}
+
+// ============================================================
+// 束柱（自贡天车的核心构造）
+// ------------------------------------------------------------
+// 天车高十余丈，山里根本找不到那么长的整木——所以每一根「柱」都不是一根树，
+// 而是若干根杉木并排靠拢、接头彼此错开（错缝搭接），外面用竹篾一道道密缠成箍，
+// 关键节点再套上手工锻打的铁箍锁死，整体受力像一束筷子而非一根筷子。
+// 越往高处荷载越小，并束的根数递减、木料也更细，这正是天车「收分」轮廓的由来。
+// ============================================================
+function trunkMesh(ox, oz, y0, y1, rad, color, rough) {
+  const h = y1 - y0;
+  const m = new THREE.Mesh(unitCylG(), vWood(color, rough));
+  m.scale.set(rad, h, rad);                       // 共享单位圆柱，靠缩放得到粗细/长短
+  m.position.set(ox, (y0 + y1) / 2, oz);
+  m.rotation.y = Math.random() * Math.PI;         // 转一下，木纹不重复
+  m.castShadow = true;
+  return m;
+}
+
+function bundleStrut(p1, p2, opt = {}) {
+  const {
+    count = 4,          // 并束根数
+    rad = 0.08,         // 单根杉木半径
+    spread = 0.1,       // 并束半径（各根离轴心的距离）
+    color = WOOD,
+    rough = 0.86,
+    bindStep = 0.9,     // 竹篾箍间距
+    ironEvery = 3,      // 每隔几道箍换成铁箍（0 = 全竹篾，无铁）
+    splice = true,      // 是否错缝搭接
+  } = opt;
+
+  const grp = new THREE.Group();
+  const dir = new THREE.Vector3().subVectors(p2, p1);
+  const len = dir.length();
+  if (len < 1e-4) return grp;
+
+  // —— 并束排布：3~4 根围成三角/方阵；≥5 根时中间填一根芯木；1 根即独木 ——
+  const hasCore = count >= 5 || count === 1;
+  const ringN = hasCore ? count - 1 : count;
+  const phase = Math.random() * Math.PI * 2;
+  for (let i = 0; i < count; i++) {
+    let ox = 0, oz = 0;
+    if (!(hasCore && i === 0)) {
+      const k = hasCore ? i - 1 : i;
+      const a = (k / Math.max(1, ringN)) * Math.PI * 2 + phase;
+      const rr = spread * (0.88 + Math.random() * 0.24);
+      ox = Math.cos(a) * rr; oz = Math.sin(a) * rr;
+    }
+    const rt = rad * (0.82 + Math.random() * 0.4);
+    if (splice && count > 2 && len > 1.6 && Math.random() < 0.6) {
+      // 错缝搭接：这一根由两截短木对接，接缝高度随机错开，不与邻根同层
+      const cut = 0.32 + Math.random() * 0.34;
+      const yc = -len / 2 + len * cut;
+      grp.add(trunkMesh(ox, oz, -len / 2 - 0.02, yc + 0.07, rt, color, rough));
+      grp.add(trunkMesh(ox, oz, yc - 0.07, len / 2 + 0.02, rt * 0.96, color, rough));
+    } else {
+      grp.add(trunkMesh(ox, oz, -len / 2 - 0.02, len / 2 + 0.02, rt, color, rough));
+    }
+  }
+
+  // —— 竹篾密缠成箍；每隔几道换手工锻打铁箍（做旧）——
+  const bindR = (count > 1 ? spread : 0) + rad * 1.12;
+  const n = Math.max(2, Math.round(len / bindStep));
+  const wg = windGeoC(r2(bindR), 0.3, 2.5, 0.028);
+  const ig = hoopGeoC(r2(bindR + 0.015), 0.038, 14);
+  for (let i = 0; i <= n; i++) {
+    const y = -len / 2 + (len / n) * i;
+    if (ironEvery > 0 && i % ironEvery === 0) {
+      const h = new THREE.Mesh(ig, ironS());
+      h.rotation.x = Math.PI / 2;
+      h.position.set(0, y, 0);
+      h.rotation.z = Math.random() * Math.PI;
+      grp.add(h);
+    } else {
+      const w = new THREE.Mesh(wg, bambooS());
+      w.position.set(0, y, 0);
+      w.rotation.y = Math.random() * Math.PI;
+      grp.add(w);
+    }
+  }
+
+  grp.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+  grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  return grp;
 }
 
 // ============================================================
@@ -197,6 +527,9 @@ function init() {
   TEX.metal = makeMetalTexture();
   TEX.floor = makeFloorTexture();
   TEX.wood = makeWoodTexture();
+  TEX.stone = makeStoneTexture();
+  TEX.rust = makeRustTexture();
+  TEX.thatch = makeThatchTexture();
 
   buildGround();
   buildStations();
@@ -264,9 +597,26 @@ function buildWell(g) {
   buildDerrick(g, -0.6, 0.2, 15, 2.1, 6, wood, woodDark, true);
   buildDerrick(g, 1.9, -0.5, 11, 1.6, 5, woodLight, woodDark, false);
 
-  // 井口（石/木箍）
-  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.95, 1.0, 16), woodDark);
-  collar.position.set(0.4, 1.1, 0); collar.castShadow = true; g.add(collar);
+  // 井口石箍（自贡盐井以石圈箍井，防潮固壁）
+  const stoneBase = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.32, 26), stoneTex(0x97928a, 0.96));
+  stoneBase.position.set(0.4, 0.56, 0); stoneBase.castShadow = true; stoneBase.receiveShadow = true; g.add(stoneBase);
+  const collarN = 14;
+  for (let i = 0; i < collarN; i++) {
+    const a = (i / collarN) * Math.PI * 2;
+    const blk = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.95, 0.34), vStone(0x8f8a80, 0.96));
+    const R = 0.82;
+    blk.position.set(0.4 + Math.cos(a) * R, 1.12, Math.sin(a) * R);
+    blk.rotation.y = -a + (Math.random() - 0.5) * 0.12;
+    const sc = 0.9 + Math.random() * 0.22;
+    blk.scale.set(sc, 0.92 + Math.random() * 0.18, sc);
+    blk.castShadow = true; blk.receiveShadow = true; g.add(blk);
+  }
+  // 井口石压顶（一圈略宽的石环）
+  const cap = new THREE.Mesh(new THREE.TorusGeometry(0.86, 0.09, 8, 28), stoneTex(0x8a857c, 0.95));
+  cap.rotation.x = Math.PI / 2; cap.position.set(0.4, 1.62, 0); g.add(cap);
+  // 井口锻铁箍（压住石圈、护住井唇，长年卤水浸润锈色深重）
+  const wellIron = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.055, 8, 26), ironS());
+  wellIron.rotation.x = Math.PI / 2; wellIron.position.set(0.4, 1.7, 0); g.add(wellIron);
   // 顿钻钻杆（入井）
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 6, 10), woodTex(0x473A2B, 0.9));
   stem.position.set(0.4, -1.6, 0); g.add(stem);
@@ -277,7 +627,7 @@ function buildWell(g) {
     const bodyB = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.5, 1.3, 18), woodTex(0x7E6748, 0.9));
     bodyB.position.y = 0.65; bodyB.castShadow = true; barrel.add(bodyB);
     [0.25, 0.95].forEach((yy) => {
-      const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.05, 8, 20), metalTex(ALLOY_DARK, 0.6, 0.5));
+      const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.05, 8, 20), ironS()); // 做旧铁箍
       hoop.rotation.x = Math.PI / 2; hoop.position.y = yy; barrel.add(hoop);
     });
     barrel.position.set(bx, 0.45, bz); g.add(barrel);
@@ -297,12 +647,17 @@ function buildWell(g) {
   const bucket = new THREE.Group();
   const bucketBody = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.34, 1.05, 18), woodTex(0x7E6748, 0.95));
   bucketBody.position.y = 0; bucketBody.castShadow = true; bucket.add(bucketBody);
-  const bucketLid = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.12, 18), metalTex(ALLOY_DARK, 0.6, 0.5));
+  const bucketLid = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.12, 18), ironS());
   bucketLid.position.y = 0.58; bucket.add(bucketLid);
   const bucketTip = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.42, 18), woodTex(0x6E5A42, 0.95));
   bucketTip.position.y = -0.73; bucketTip.rotation.x = Math.PI; bucket.add(bucketTip);
-  const bucketEar = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 18), metalTex(ALLOY_DARK, 0.6, 0.5));
+  const bucketEar = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.045, 8, 18), ironS());
   bucketEar.position.y = 0.66; bucket.add(bucketEar);
+  // 桶身两道铁箍（汲卤筒以竹为身、以铁箍紧口）
+  [-0.3, 0.28].forEach((yy) => {
+    const bh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.035, 8, 18), ironS());
+    bh.rotation.x = Math.PI / 2; bh.position.y = yy; bucket.add(bh);
+  });
   bucket.position.set(0.4, 3.4, 0); g.add(bucket);
   // 提卤绳：天辊锚点 → 桶顶，随桶升降而伸缩
   const liftRope = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1, 6), liftRopeMat);
@@ -314,36 +669,62 @@ function buildWell(g) {
     bucketX: 0.4, bucketZ: 0,
     prevY: 3.4,
   };
+
+  // 井台周边聚落：盐工寮棚（草顶竹笆）+ 竹笆屏（挡风遮泥）
+  // 位置避开风篾地桩，落在拉索圈之外，构成「井—车—棚」的作业场
+  buildShed(g, 7.6, 4.8);
+  buildScreen(g, -8.6, 3.0, 3.4, 1.5);
+  buildScreen(g, 5.6, -6.6, 3.0, 1.35);
+
+  // 静态构件统一合并：束柱/篾箍/铁箍/竹笆共上千个小网格 → 个位数 draw call
+  flushBin(g);
 }
 
-// 单座天车：四面收分木井架 + 交叉斜撑 + 顶部天车轮 + 底部大车（绞盘木轮）+ 麻绳
+// 单座天车：四面收分木井架（束柱）+ 交叉斜撑 + 顶部天辊 + 风篾拉索
+// 静态构件统一收进 stat 临时树，最后按材质合并，避免束柱带来的网格爆炸。
 function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMain) {
   const topHalf = baseHalf * 0.32;
+  const stat = new THREE.Group();
   const frames = [];
   for (let i = 0; i <= levels; i++) {
     const t = i / levels;
     frames.push({ half: baseHalf * (1 - t) + topHalf * t, y: (H / levels) * i });
   }
   const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
-  // 立柱：连接相邻两层角点
+
+  // ---- 立柱：束柱。并束根数由下而上递减（底段最粗，顶段收为两根） ----
+  const nBase = isMain ? 6 : 4;     // 底段并束根数
+  const radBase = isMain ? 0.085 : 0.072;
+  const sprBase = isMain ? 0.115 : 0.095;
+  const denom = Math.max(1, levels - 1);
   for (let i = 0; i < levels; i++) {
     const a = frames[i], b = frames[i + 1];
+    const t0 = i / denom;
+    const cnt = Math.max(2, Math.round(nBase - (nBase - 2) * t0));
+    const rad = radBase * (1 - t0 * 0.34);
+    const spread = sprBase * (1 - t0 * 0.55);
     corners.forEach(([sx, sz]) => {
       const p1 = new THREE.Vector3(cx + a.half * sx, a.y, cz + a.half * sz);
       const p2 = new THREE.Vector3(cx + b.half * sx, b.y, cz + b.half * sz);
-      g.add(strut(p1, p2, 0.2, woodMat));
+      stat.add(bundleStrut(p1, p2, {
+        count: cnt, rad, spread,
+        color: WOOD, rough: 0.86,
+        bindStep: 0.72 + t0 * 0.5,
+        ironEvery: isMain ? 3 : 4,
+      }));
     });
   }
-  // 水平箍梁 + 交叉斜撑
+
+  // ---- 水平箍梁（双木并束的横箍）+ 交叉斜撑 ----
   for (let i = 0; i < levels; i++) {
     const a = frames[i], b = frames[i + 1];
     [['x', -1], ['x', 1], ['z', -1], ['z', 1]].forEach(([axis, sign]) => {
       if (axis === 'x') {
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(a.half * 2 + 0.1, 0.14, 0.14), woodDarkMat);
-        bar.position.set(cx, a.y, cz + a.half * sign); g.add(bar);
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(a.half * 2 + 0.1, 0.14, 0.14), vWood(WOOD_DARK, 0.9));
+        bar.position.set(cx, a.y, cz + a.half * sign); stat.add(bar);
       } else {
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, a.half * 2 + 0.1), woodDarkMat);
-        bar.position.set(cx + a.half * sign, a.y, cz); g.add(bar);
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, a.half * 2 + 0.1), vWood(WOOD_DARK, 0.9));
+        bar.position.set(cx + a.half * sign, a.y, cz); stat.add(bar);
       }
     });
     const faces = [
@@ -358,60 +739,89 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
       const p2 = new THREE.Vector3(cx + b.half * f.ex, b.y, cz + b.half * f.ez);
       const p3 = new THREE.Vector3(cx + a.half * f.ex, a.y, cz + a.half * f.ez);
       const p4 = new THREE.Vector3(cx + b.half * f.sx, b.y, cz + b.half * f.sz);
-      g.add(strut(p1, p2, 0.12, woodDarkMat));
-      g.add(strut(p3, p4, 0.12, woodDarkMat));
+      // 下段斜撑也并两根（受力大），上段单根
+      const braceCnt = i < levels / 2 ? 2 : 1;
+      const bo = { count: braceCnt, rad: 0.05, spread: 0.05, color: WOOD_DARK, rough: 0.9, bindStep: 1.7, ironEvery: 0, splice: false };
+      stat.add(bundleStrut(p1, p2, bo));
+      stat.add(bundleStrut(p3, p4, bo));
     });
   }
-  // 竹篾捆绑环：每层四角以竹篾环捆扎木构（自贡天车全靠竹篾，不用铁钉）
-  const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+
+  // ---- 节点铁箍：层框与束柱交汇处，用手工锻打的铁箍锁紧，上下再各缠一道竹篾 ----
   frames.forEach((f, idx) => {
-    if (idx === 0) return; // 跳过地面层，避免埋入木地台
+    if (idx === 0) return; // 地面层埋在木地台里，省略
+    const tf = idx / levels;
+    const nodeR = (sprBase * (1 - tf * 0.55) + radBase * (1 - tf * 0.34)) * 1.3 + 0.02;
+    const wgeo = windGeoC(r2(nodeR - 0.025), 0.26, 2, 0.03);
     corners.forEach(([sx, sz]) => {
-      const r = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.06, 6, 18), bindMat);
-      r.rotation.x = Math.PI / 2;
-      r.position.set(cx + f.half * sx, f.y, cz + f.half * sz);
-      g.add(r);
+      const px = cx + f.half * sx, pz = cz + f.half * sz;
+      const hoop = new THREE.Mesh(hoopGeoC(r2(nodeR), 0.05, 18), ironS());
+      hoop.rotation.x = Math.PI / 2; hoop.rotation.z = Math.random() * Math.PI;
+      hoop.position.set(px, f.y, pz); hoop.castShadow = true; stat.add(hoop);
+      addWind(stat, new THREE.Vector3(px, f.y + 0.24, pz), 'y', wgeo, bambooS());
+      addWind(stat, new THREE.Vector3(px, f.y - 0.24, pz), 'y', wgeo, bambooS());
     });
   });
-  // 踏阶（三角木楔）：四根立柱均设攀爬木楔踏脚（兼竹篾捆扎处的木楔）
+
+  // ---- 础石：束柱落地处的石墩（自贡盐场以石为础，隔潮防朽） ----
+  corners.forEach(([sx, sz]) => {
+    const f = frames[0];
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.34, 0.62), vStone(0x928d84, 0.96));
+    plinth.position.set(cx + f.half * sx, 0.86, cz + f.half * sz);
+    plinth.rotation.y = (Math.random() - 0.5) * 0.2;
+    plinth.castShadow = true; plinth.receiveShadow = true; stat.add(plinth);
+  });
+
+  // ---- 踏阶（三角木楔）：四根束柱均设攀爬踏脚 ----
   for (let i = 1; i < levels; i++) {
     const f = frames[i], yy = f.y;
     corners.forEach(([sx, sz]) => {
       const st = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.26), woodDarkMat);
       st.position.set(cx + f.half * sx, yy, cz + f.half * sz * 1.08);
       st.rotation.x = -0.32;
-      g.add(st);
+      stat.add(st);
     });
   }
-  // 顶部天车轮（天辊，带槽定滑轮，缓慢自转）
+
+  // ---- 顶部天辊（带槽定滑轮，随提卤绳联动） ----
   const topY = H + 0.3;
   const wheel = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.22, 12, 28), woodTex(WOOD_LIGHT, 0.8));
   wheel.position.set(cx, topY, cz); wheel.castShadow = true; g.add(wheel);
   for (let i = 0; i < 6; i++) {
     const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.3, 0.12), woodDarkMat);
-    spoke.position.set(cx, topY, cz); spoke.rotation.z = (i / 6) * Math.PI * 2; g.add(spoke);
+    spoke.position.set(cx, topY, cz); spoke.rotation.z = (i / 6) * Math.PI * 2; stat.add(spoke);
   }
+  // 天辊轴端铁箍（受力最集中处）
+  [-1, 1].forEach((s) => {
+    const cap = new THREE.Mesh(hoopGeoC(0.26, 0.05, 14), ironS());
+    cap.rotation.x = Math.PI / 2; cap.position.set(cx, topY, cz + s * 0.3); stat.add(cap);
+  });
   if (isMain) g.userData.skyRoller = wheel; else g.userData.spin.push({ mesh: wheel, axis: 'z', speed: 0.8 });
   const crown = new THREE.Mesh(new THREE.BoxGeometry(topHalf * 2 + 0.4, 0.5, topHalf * 2 + 0.4), woodMat);
-  crown.position.set(cx, topY + 0.45, cz); g.add(crown);
+  crown.position.set(cx, topY + 0.45, cz); stat.add(crown);
 
   // 悬吊篾绳材质（风篾拉索复用）；天辊→汲卤筒的提卤主绳改由采卤站统一生成（见 buildWell）
   const ropeMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
 
-  // 风篾（放射状拉索 + 地桩）：自贡天车最标志性的防风结构，自井架上部向外伞状放射
+  // ---- 风篾（放射状拉索 + 地桩）：天车最标志性的防风结构 ----
   const windY = H * 0.78;
   const ringR = topHalf + 0.25;
   const windRing = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.09, 8, 20), woodDarkMat);
-  windRing.rotation.x = Math.PI / 2; windRing.position.set(cx, windY, cz); g.add(windRing);
+  windRing.rotation.x = Math.PI / 2; windRing.position.set(cx, windY, cz); stat.add(windRing);
   const R = baseHalf * 2.6, N = 12;
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2;
     const ax = cx + Math.cos(a) * ringR, az = cz + Math.sin(a) * ringR;
     const px = cx + Math.cos(a) * R, pz = cz + Math.sin(a) * R;
-    g.add(strut(new THREE.Vector3(ax, windY, az), new THREE.Vector3(px, 0.7, pz), 0.06, ropeMat));
+    stat.add(strut(new THREE.Vector3(ax, windY, az), new THREE.Vector3(px, 0.7, pz), 0.06, ropeMat));
     const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.9, 8), woodDarkMat);
-    peg.position.set(px, 0.25, pz); peg.castShadow = true; g.add(peg);
+    peg.position.set(px, 0.25, pz); peg.castShadow = true; stat.add(peg);
+    // 地桩铁箍（防劈裂）
+    const pc = new THREE.Mesh(hoopGeoC(0.15, 0.03, 12), ironS());
+    pc.rotation.x = Math.PI / 2; pc.position.set(px, 0.62, pz); stat.add(pc);
   }
+
+  emit(stat); // 合并入桶，由 buildWell 末尾统一 flush
 }
 
 // 立式大车（提卤巨轮）：轮面朝 z，绕水平轴(z)旋转；底杠支撑轮轴两端
@@ -432,19 +842,22 @@ function buildCart(g, x, z) {
   // 绕绳（篾绳盘于轮缘）
   const ropeRing = new THREE.Mesh(new THREE.TorusGeometry(R, 0.05, 8, 32), new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 }));
   ropeRing.position.y = R; cart.add(ropeRing);
-  // 底杠（支撑轮轴两端）
+  // 底杠（支撑轮轴两端）：同样是并束木柱，束身竹篾成箍、隔道铁箍
   [-1, 1].forEach((s) => {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.34, R + 0.5, 0.34), woodMat);
-    post.position.set(0, (R + 0.5) / 2, s * 0.6); post.castShadow = true; cart.add(post);
+    const b = bundleStrut(
+      new THREE.Vector3(x, 0, z + s * 0.6),
+      new THREE.Vector3(x, R + 0.5, z + s * 0.6),
+      { count: 3, rad: 0.09, spread: 0.088, color: WOOD, rough: 0.9, bindStep: 0.62, ironEvery: 3, splice: false }
+    );
+    emit(b);
   });
-  // 竹篾捆绑：轴碗处 + 立柱顶（藤篾捆扎，不用铁钉，呼应天车工艺）
+  // 轴碗竹篾 + 轴端铁箍
   const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  const cartWindGeo = helixWindGeo(0.24, 0.5, 3, 0.04);
   [-1, 1].forEach((s) => {
-    const topRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.05, 6, 16), bindMat);
-    topRing.rotation.x = Math.PI / 2;
-    topRing.position.set(0, R + 0.4, s * 0.6); cart.add(topRing);
-    const axRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.05, 6, 16), bindMat);
-    axRing.position.set(0, R, s * 0.4); cart.add(axRing); // 轴端缠绕（默认朝向即绕 z 轴）
+    addWind(cart, new THREE.Vector3(0, R, s * 0.4), 'z', cartWindGeo, bindMat);
+    const ic = new THREE.Mesh(hoopGeoC(0.22, 0.04, 14), ironS());
+    ic.rotation.x = Math.PI / 2; ic.position.set(0, R, s * 0.52); cart.add(ic);
   });
   g.add(cart);
   g.userData.cartWheel = wheel; // 由提卤绳联动驱动（见 animate）
@@ -459,6 +872,9 @@ function buildGroundRoller(g, x, z) {
     const sp = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.0, 0.09), woodDark);
     sp.position.set(x, 1.0, z); sp.rotation.z = (i / 4) * Math.PI * 2; g.add(sp);
   }
+  // 竹篾缠绕：轴端篾绳捆扎
+  const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  addWind(g, new THREE.Vector3(x, 1.0, z), 'z', helixWindGeo(0.2, 0.45, 3, 0.04), bindMat);
   g.userData.groundRoller = roller; // 由提卤绳联动驱动（见 animate）
 }
 
@@ -467,11 +883,15 @@ function buildDuijia(g, x, z) {
   const woodMat = woodTex(WOOD, 0.9);
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const H = 4.2, base = 0.7;
-  [[-1.2, 0], [1.2, 0]].forEach(([sx]) => {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.3, H, 0.3), woodMat);
-    post.position.set(x + sx, base + H / 2, z); post.castShadow = true; g.add(post);
+  // 门形架的两根立柱：并束木柱（碓头反复冲击，靠束柱与铁箍分散冲击力）
+  [-1.2, 1.2].forEach((sx) => {
+    emit(bundleStrut(
+      new THREE.Vector3(x + sx, base * 0.2, z),
+      new THREE.Vector3(x + sx, base + H, z),
+      { count: 3, rad: 0.082, spread: 0.08, color: WOOD, rough: 0.9, bindStep: 0.7, ironEvery: 3, splice: false }
+    ));
   });
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.3, 0.3), woodDark);
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.3, 0.3), vWood(WOOD_DARK, 0.9));
   beam.position.set(x, base + H, z); g.add(beam);
   const pivotY = base + H - 0.4;
   // 花辊轴（固定，铰接杠杆）
@@ -484,25 +904,141 @@ function buildDuijia(g, x, z) {
   pivot.add(lever); // 局部坐标 (0,0,0)
   const head = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 1.4, 12), woodDark);
   head.position.set(-1.3, -1.0, 0); head.castShadow = true; pivot.add(head);
+  // 碓头铁箍 + 铁靴（冲击端包铁，做旧锈重）
+  [-0.45, -1.55].forEach((yy) => {
+    const hb = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.055, 8, 16), ironS());
+    hb.rotation.x = Math.PI / 2; hb.position.set(-1.3, yy, 0); pivot.add(hb);
+  });
+  const shoe = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.34, 0.4, 12), ironS());
+  shoe.position.set(-1.3, -1.85, 0); shoe.castShadow = true; pivot.add(shoe);
   const drill = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.0, 10), woodTex(0x473A2B, 0.9));
   drill.position.set(-1.3, -2.8, 0); pivot.add(drill);
   const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.5), woodTex(WOOD_LIGHT, 0.8));
   pedal.position.set(1.3, -0.1, 0); pivot.add(pedal);
   g.add(pivot);
   g.userData.duijiaPivot = pivot; // 由 animate 驱动（冲击节奏）
-  // 竹篾捆绑：门形架穿斗节点 + 花辊轴端 + 碓头连接（藤篾捆扎，不用铁钉）
+  // 竹篾缠绕：门形架穿斗节点 + 花辊轴端 + 碓头连接（螺旋篾绳捆扎，不用铁钉）
   const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  const djWindGeo = helixWindGeo(0.26, 0.5, 3, 0.04);
   [-1, 1].forEach((s) => {
-    const postRing = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.05, 6, 16), bindMat);
-    postRing.rotation.x = Math.PI / 2;
-    postRing.position.set(x + s * 1.2, base + H - 0.15, z); g.add(postRing);
-    const hubRing = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.05, 6, 16), bindMat);
-    hubRing.rotation.y = Math.PI / 2; // 绕 x 轴（花辊轴）缠绕
-    hubRing.position.set(x + s * 1.1, pivotY, z); g.add(hubRing);
+    addWind(g, new THREE.Vector3(x + s * 1.2, base + H - 0.15, z), 'y', djWindGeo, bindMat);
+    addWind(g, new THREE.Vector3(x + s * 1.1, pivotY, z), 'x', djWindGeo, bindMat);
   });
-  const headRing = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.05, 6, 16), bindMat);
-  headRing.rotation.x = Math.PI / 2;
-  headRing.position.set(x - 1.3, pivotY - 0.3, z); g.add(headRing);
+  addWind(g, new THREE.Vector3(x - 1.3, pivotY - 0.3, z), 'y', helixWindGeo(0.3, 0.5, 3, 0.04), bindMat);
+}
+
+// ============================================================
+// 竹笆：竹条编织的席面（寮棚墙、井台屏、晾架都用它）
+// 竖篾一前一后错开摆放，模拟经纬互压的编织关系
+// ============================================================
+function bambooPanel(w, h) {
+  const p = new THREE.Group();
+  const nV = Math.max(4, Math.round(w / 0.13));
+  for (let i = 0; i < nV; i++) {
+    const px = -w / 2 + (w / nV) * (i + 0.5);
+    const sl = new THREE.Mesh(new THREE.BoxGeometry(0.052, h * (0.93 + Math.random() * 0.11), 0.028), vBamboo(BAMBOO_PALE, 0.9));
+    sl.position.set(px, h / 2, i % 2 ? 0.021 : -0.021);
+    sl.rotation.z = (Math.random() - 0.5) * 0.022;
+    sl.castShadow = true; p.add(sl);
+  }
+  const nH = Math.max(2, Math.round(h / 0.52));
+  for (let j = 0; j <= nH; j++) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(w + 0.06, 0.045, 0.064), vBamboo(BAMBOO, 0.92));
+    rail.position.set(0, 0.07 + (h - 0.14) * (j / nH), 0); p.add(rail);
+  }
+  return p;
+}
+
+// 井台外缘的竹笆屏：挡风遮泥，兼晾晒篾绳
+function buildScreen(g, x, z, w = 3.2, h = 1.5) {
+  const p = new THREE.Group();
+  p.position.set(x, 0, z);
+  p.rotation.y = Math.atan2(x, z);   // 屏面朝向井口
+  [-1, 0, 1].forEach((k) => {
+    const px = k * w / 2;
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, h + 0.34, 7), vWood(WOOD_DARK, 0.9));
+    post.position.set(px, (h + 0.34) / 2 - 0.14, 0); post.castShadow = true; p.add(post);
+    const cap = new THREE.Mesh(hoopGeoC(0.1, 0.022, 10), ironS()); // 桩头铁箍
+    cap.rotation.x = Math.PI / 2; cap.position.set(px, h + 0.11, 0); p.add(cap);
+  });
+  const panel = bambooPanel(w - 0.06, h);
+  panel.position.y = 0.05; p.add(panel);
+  emit(p);
+}
+
+// ============================================================
+// 盐工寮棚：井台旁的草顶竹笆工棚
+// 盐工歇脚、存卤、放篾绳与工具之处；单坡草顶前高后低，三面竹笆一面敞开朝井
+// ============================================================
+function buildShed(g, x, z) {
+  const s = new THREE.Group();
+  s.position.set(x, 0, z);
+  s.rotation.y = Math.atan2(x, z);   // 敞开的一面（局部 -z）朝井口
+  const W = 3.6, D = 2.8, Hf = 2.5, Hb = 1.95;
+
+  // 角柱：同样是小束柱（三根并束、竹篾捆扎），呼应天车的营造逻辑
+  [[-1, -1, Hf], [1, -1, Hf], [1, 1, Hb], [-1, 1, Hb]].forEach(([sx, sz, h]) => {
+    s.add(bundleStrut(
+      new THREE.Vector3(sx * W / 2, 0, sz * D / 2),
+      new THREE.Vector3(sx * W / 2, h, sz * D / 2),
+      { count: 3, rad: 0.055, spread: 0.055, color: WOOD_DARK, rough: 0.9, bindStep: 0.68, ironEvery: 0, splice: false }
+    ));
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.34), vStone(0x8f8a80, 0.96));
+    pl.position.set(sx * W / 2, 0.09, sz * D / 2); pl.receiveShadow = true; s.add(pl);
+  });
+
+  // 前后檐檩
+  [[-1, Hf], [1, Hb]].forEach(([sz, h]) => {
+    const purlin = new THREE.Mesh(new THREE.BoxGeometry(W + 0.5, 0.12, 0.12), vWood(WOOD, 0.9));
+    purlin.position.set(0, h, sz * D / 2); s.add(purlin);
+  });
+
+  // 单坡草顶 + 压草竹条 + 脊木
+  const slope = Math.atan2(Hf - Hb, D);
+  const roofLen = D / Math.cos(slope) + 0.9;
+  const roofGrp = new THREE.Group();
+  roofGrp.position.set(0, (Hf + Hb) / 2 + 0.12, 0);
+  roofGrp.rotation.x = slope;
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(W + 0.7, 0.16, roofLen), thatchS());
+  roof.castShadow = true; roof.receiveShadow = true; roofGrp.add(roof);
+  for (let i = -2; i <= 2; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(W + 0.78, 0.055, 0.07), vBamboo(BAMBOO_PALE, 0.9));
+    b.position.set(0, 0.1, i * (roofLen / 5.4)); roofGrp.add(b);
+  }
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(W + 0.82, 0.11, 0.15), vWood(WOOD_DARK, 0.9));
+  ridge.position.set(0, 0.13, -roofLen / 2 + 0.2); roofGrp.add(ridge);
+  s.add(roofGrp);
+
+  // 三面竹笆围护（朝井的一面敞开）
+  const back = bambooPanel(W - 0.12, Hb - 0.14);
+  back.position.set(0, 0.04, D / 2 - 0.05); s.add(back);
+  [-1, 1].forEach((sx) => {
+    const side = bambooPanel(D - 0.12, Hb - 0.3);
+    side.position.set(sx * (W / 2 - 0.05), 0.04, 0);
+    side.rotation.y = Math.PI / 2; s.add(side);
+  });
+
+  // 棚下：陶卤缸（盛卤）+ 矮凳 + 盘起的篾绳
+  const vat = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.32, 0.76, 16), vStone(0x6e6257, 0.9));
+  vat.position.set(-0.95, 0.38, 0.4); vat.castShadow = true; s.add(vat);
+  const rim = new THREE.Mesh(hoopGeoC(0.43, 0.05, 16), vStone(0x655a50, 0.9));
+  rim.rotation.x = Math.PI / 2; rim.position.set(-0.95, 0.74, 0.4); s.add(rim);
+  const brine = new THREE.Mesh(new THREE.CircleGeometry(0.39, 18),
+    new THREE.MeshStandardMaterial({ color: 0x2F6F8F, roughness: 0.22, metalness: 0.05 }));
+  brine.rotation.x = -Math.PI / 2; brine.position.set(-0.95, 0.7, 0.4); s.add(brine);
+
+  const stool = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.08, 0.34), vWood(WOOD_LIGHT, 0.9));
+  stool.position.set(0.9, 0.42, 0.55); stool.castShadow = true; s.add(stool);
+  [[-0.2, -0.12], [0.2, -0.12], [-0.2, 0.12], [0.2, 0.12]].forEach(([lx, lz]) => {
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.042, 0.42, 6), vWood(WOOD_DARK, 0.9));
+    leg.position.set(0.9 + lx, 0.21, 0.55 + lz); s.add(leg);
+  });
+  for (let i = 0; i < 3; i++) {
+    const coil = new THREE.Mesh(hoopGeoC(r2(0.3 - i * 0.05), 0.05, 16), bambooS());
+    coil.rotation.x = Math.PI / 2; coil.position.set(0.95, 0.06 + i * 0.09, -0.55); s.add(coil);
+  }
+
+  emit(s);
 }
 
 // 两点之间的木杆 / 斜撑（按方向自动朝向）

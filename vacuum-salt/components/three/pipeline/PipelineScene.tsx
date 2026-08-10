@@ -207,7 +207,7 @@ export function PipelineScene({
       </SceneShell>
 
       {/* 画布外提示（仅桌面显示，移动端由控制抽屉承担引导） */}
-      <div className="hidden sm:block absolute top-16 right-3 panel rounded-md px-3 py-1.5 text-[10px] text-ink-600 max-w-[230px] shadow-soft pointer-events-none">
+      <div className="hidden sm:block absolute top-16 right-3 bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-md px-3 py-1.5 text-[10px] text-ink-600 max-w-[230px] pointer-events-none">
         {cameraStageId
           ? "已对准该环节 · 仍可拖拽自由旋转 / 缩放"
           : "全景视图 · 拖拽旋转 / 点击下方编号或设备对准环节"}

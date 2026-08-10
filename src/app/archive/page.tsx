@@ -7,6 +7,9 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { ArchiveCard } from "@/components/ArchiveCard";
 
+// 与 CSS 的 --ease-out 同一条曲线
+const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+
 const types = ["Performance", "Video", "Document", "Installation"];
 const regions = ["Southwest", "Northeast", "Transition"] as const;
 const projects = ["the-salt-of-life", "diagonal-talks", "research-notes", "other"] as const;
@@ -18,8 +21,9 @@ const projectLabels: Record<string, { zh: string; en: string }> = {
   "other": { zh: "其他", en: "Other" },
 };
 
+// .press 提供按压回缩 + 颜色过渡（取代 transition-all）
 const filterChipClass = (active: boolean) =>
-  `archive-text text-[10px] px-3 py-1 border transition-all ${
+  `press archive-text text-[10px] px-3 py-1 border ${
     active
       ? "border-black bg-black text-white"
       : "border-black/20 hover:border-black"
@@ -68,16 +72,17 @@ export default function ArchiveIndexPage() {
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20">
         <header className="mb-24 space-y-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, transform: "translateY(12px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            transition={{ duration: 0.45, ease: EASE_OUT }}
             className="archive-text text-xs text-diagonal-red font-bold tracking-[0.3em] border-l-2 border-diagonal-red pl-4"
           >
             {t(lang, "totalArchiveAccess")}
           </motion.div>
           <motion.h1
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
+            initial={{ opacity: 0, transform: "translateX(-20px)" }}
+            animate={{ opacity: 1, transform: "translateX(0px)" }}
+            transition={{ delay: 0.08, duration: 0.55, ease: EASE_OUT }}
             className="font-serif text-7xl md:text-9xl font-black tracking-tighter leading-none"
             dangerouslySetInnerHTML={{ __html: t(lang, "archiveTitle") }}
           />
@@ -95,7 +100,7 @@ export default function ArchiveIndexPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder={lang === "zh" ? "搜索关键词…" : "Search…"}
             aria-label={lang === "zh" ? "搜索档案" : "Search archives"}
-            className="w-full max-w-md px-4 py-3 border border-black/20 focus:border-black outline-none archive-text text-sm bg-transparent"
+            className="w-full max-w-md px-4 py-3 border border-black/20 focus:border-black outline-none archive-text text-sm bg-transparent transition-colors duration-200 ease-out-strong"
           />
 
           {/* 类型筛选 */}
@@ -202,9 +207,13 @@ export default function ArchiveIndexPage() {
             {filtered.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(index * 0.05, 0.3) }}
+                initial={{ opacity: 0, transform: "translateY(12px)" }}
+                animate={{ opacity: 1, transform: "translateY(0px)" }}
+                transition={{
+                  duration: 0.45,
+                  ease: EASE_OUT,
+                  delay: Math.min(index * 0.05, 0.3),
+                }}
                 className={index % 2 !== 0 ? "lg:mt-24" : ""}
               >
                 <ArchiveCard item={item} />
@@ -212,11 +221,17 @@ export default function ArchiveIndexPage() {
             ))}
           </div>
         ) : (
-          <div className="py-40 text-center">
+          /* 空状态属于「少见」层级，是允许放一点动效预算的地方 */
+          <motion.div
+            initial={{ opacity: 0, transform: "translateY(8px)" }}
+            animate={{ opacity: 1, transform: "translateY(0px)" }}
+            transition={{ duration: 0.35, ease: EASE_OUT }}
+            className="py-40 text-center"
+          >
             <div className="archive-text text-sm opacity-40">
               {lang === "zh" ? "无匹配结果" : "NO MATCHING RESULTS"}
             </div>
-          </div>
+          </motion.div>
         )}
       </section>
     </div>

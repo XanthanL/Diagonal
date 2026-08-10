@@ -61,7 +61,7 @@ export function ArtistsIndexClient() {
             <a
               key={letter}
               href={`#letter-${letter}`}
-              className="archive-text text-sm font-bold w-8 h-8 flex items-center justify-center border border-black/20 hover:border-black hover:bg-black hover:text-white transition-all"
+              className="press archive-text text-sm font-bold w-8 h-8 flex items-center justify-center border border-black/20 hover:border-black hover:bg-black hover:text-white"
             >
               {letter}
             </a>

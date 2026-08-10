@@ -1,7 +1,6 @@
 import { AtlasItem, getLocalizedAtlasItem } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { getAssetPath, getLocalSrcSet, srcSetFallback } from "@/lib/path";
 
@@ -11,9 +10,11 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
 
   return (
     <Link href={`/atlas/${item.id}`}>
-      <motion.div
-        whileHover={{ y: -10 }}
-        className="group relative cursor-pointer"
+      {/* hover 上浮 + 按压回缩由 .press-card 统一接管（CSS，无 JS 开销）
+          封面体量大，抬升给到 6px */}
+      <div
+        className="press-card group relative cursor-pointer"
+        style={{ "--lift": "-6px" } as React.CSSProperties}
       >
         {/* 档案封面主体 */}
         <div className="aspect-[4/5] bg-neutral-900 relative overflow-hidden border border-white/10 group-hover:border-white/30 transition-colors shadow-2xl">
@@ -22,7 +23,7 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
 
           {/* 封面图片 - 原色呈现 */}
           {item.cover ? (
-            <div className="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out scale-105 group-hover:scale-100">
+            <div className="absolute inset-0 w-full h-full transition-transform duration-300 ease-out-strong scale-105 group-hover:scale-100">
               <img
                 src={getAssetPath(item.cover)}
                 srcSet={getLocalSrcSet(item.cover) || undefined}
@@ -51,7 +52,7 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
           </div>
 
           {/* 底部交互提示 */}
-          <div className="absolute bottom-0 left-0 w-full p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="absolute bottom-0 left-0 w-full p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-[transform,opacity] duration-200 ease-out-strong bg-gradient-to-t from-black/80 to-transparent">
             <span className="archive-text text-[9px] text-diagonal-red font-bold tracking-widest">
               {t(lang, "openAtlas")}
             </span>
@@ -72,7 +73,7 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
             {localized.title}
           </h3>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

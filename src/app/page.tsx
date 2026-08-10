@@ -11,6 +11,16 @@ import { DiagonalSlash } from "@/components/DiagonalSlash";
 import { VacuumSaltCover } from "@/components/VacuumSaltCover";
 import { SaltPlantCover } from "@/components/SaltPlantCover";
 
+// 与 CSS 的 --ease-out 同一条曲线，避免 JS 与 CSS 两套手感
+const EASE_OUT = [0.23, 1, 0.32, 1] as const;
+
+// 组进入：装饰性，必须够快且不阻塞交互
+const groupItem = {
+  initial: { opacity: 0, transform: "translateY(12px)" },
+  whileInView: { opacity: 1, transform: "translateY(0px)" },
+  viewport: { once: true, margin: "-80px" },
+};
+
 export default function Home() {
   const { lang } = useI18n();
 
@@ -19,9 +29,9 @@ export default function Home() {
       {/* 视觉核心：巨大的对角斜线装饰（仅覆盖 Hero 区域） */}
       <div className="absolute top-0 left-0 w-full h-screen pointer-events-none z-0">
         <motion.div
-          initial={{ opacity: 0, scaleY: 0 }}
+          initial={{ opacity: 0, scaleY: 0.6 }}
           animate={{ opacity: 0.05, scaleY: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 0.9, ease: EASE_OUT }}
           className="absolute inset-0 bg-gradient-to-br from-transparent via-black to-transparent transform skew-y-12"
         />
       </div>
@@ -30,9 +40,9 @@ export default function Home() {
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-32">
         <div className="max-w-4xl space-y-14">
           <motion.h1
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            initial={{ opacity: 0, transform: "translateX(-20px)" }}
+            animate={{ opacity: 1, transform: "translateX(0px)" }}
+            transition={{ delay: 0.15, duration: 0.55, ease: EASE_OUT }}
             className="font-serif font-black leading-[0.8] tracking-tighter relative"
           >
             {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠 */}
@@ -49,7 +59,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.4, duration: 0.5, ease: EASE_OUT }}
             className="max-w-md space-y-6"
           >
             <div className="archive-text text-sm font-bold border-l-2 border-diagonal-red pl-4">
@@ -66,9 +76,8 @@ export default function Home() {
       <section id="archive" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-24 gap-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            {...groupItem}
+            transition={{ duration: 0.5, ease: EASE_OUT }}
             className="space-y-4"
           >
             <h2 className="text-6xl font-black tracking-tighter uppercase italic">{t(lang, "documentsTitle")}</h2>
@@ -82,17 +91,19 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
           {archiveData.slice(0, 4).map((item, index) => (
-            <div
+            <motion.div
               key={item.id}
+              {...groupItem}
+              transition={{ duration: 0.45, ease: EASE_OUT, delay: index * 0.06 }}
               className={index % 2 !== 0 ? "lg:mt-24" : ""}
             >
               <ArchiveCard item={item} />
-            </div>
+            </motion.div>
           ))}
         </div>
 
         <div className="mt-40 pt-12 border-t border-black flex justify-center">
-          <Link href="/archive" className="archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white transition-all">
+          <Link href="/archive" className="press archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white">
             {t(lang, "loadFullIndex")}
           </Link>
         </div>
@@ -117,9 +128,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              initial={{ opacity: 0, transform: "translateX(-20px)" }}
+              whileInView={{ opacity: 1, transform: "translateX(0px)" }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.5, ease: EASE_OUT }}
               className="space-y-8"
             >
               <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
@@ -141,10 +153,14 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-24">
-            {atlasData.map((item) => (
-              <div key={item.id}>
+            {atlasData.map((item, index) => (
+              <motion.div
+                key={item.id}
+                {...groupItem}
+                transition={{ duration: 0.45, ease: EASE_OUT, delay: Math.min(index * 0.06, 0.24) }}
+              >
                 <AtlasCover item={item} />
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -160,9 +176,8 @@ export default function Home() {
       <section id="lab" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-black/5">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-14 gap-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            {...groupItem}
+            transition={{ duration: 0.5, ease: EASE_OUT }}
             className="space-y-3"
           >
             <div className="archive-text text-[10px] text-black/40 font-bold tracking-widest border-l border-black/20 pl-4">
@@ -183,13 +198,12 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 卡片 1：真空制盐 3D 解构 → /vacuum-salt/ */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            {...groupItem}
+            transition={{ duration: 0.45, ease: EASE_OUT }}
           >
             <Link
               href="/vacuum-salt/"
-              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40"
             >
               <VacuumSaltCover />
               <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
@@ -210,13 +224,12 @@ export default function Home() {
 
           {/* 卡片 2：盐粒子模拟 → /lab/salt-particle */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            {...groupItem}
+            transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.06 }}
           >
             <Link
               href="/lab/salt-particle"
-              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#0c0c0e] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-[#0c0c0e] overflow-hidden hover:border-diagonal-red/40"
             >
               <div
                 className="absolute inset-0"
@@ -248,13 +261,12 @@ export default function Home() {
 
           {/* 卡片 3：天车 3D 解构 → /salt-plant-3d/ */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            {...groupItem}
+            transition={{ duration: 0.45, ease: EASE_OUT, delay: 0.12 }}
           >
             <Link
               href="/salt-plant-3d/index.html"
-              className="group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40 transition-colors"
+              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40"
             >
               <SaltPlantCover />
               <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
