@@ -74,6 +74,10 @@ export interface StageData {
   tour?: string;
   /** 引导式巡游讲解词（英文） */
   tourEn?: string;
+  /** 核心看点（一句话提炼，中文；信息面板置顶强调） */
+  coreHighlight: string;
+  /** 核心看点（英文） */
+  coreHighlightEn: string;
   /** 配色主题（对应 tailwind 色） */
   accent: "steel" | "ember" | "ok" | "warn" | "salt";
 }
@@ -85,4 +89,20 @@ export interface ReferenceItem {
   url?: string;
   note: string;
   noteEn: string;
+}
+
+/** 全产线概览指标（概览态展示） */
+export interface KpiItem {
+  /** 指标名（中文） */
+  label: string;
+  /** 指标名（英文） */
+  labelEn: string;
+  /** 数值 */
+  value: string;
+  /** 单位 */
+  unit?: string;
+  /** 说明（中文） */
+  note?: string;
+  /** 说明（英文） */
+  noteEn?: string;
 }

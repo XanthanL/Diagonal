@@ -40,7 +40,7 @@ html, body {
 
 /* ---------------- 顶部栏（对齐 vacuum-salt NavBar） ---------------- */
 #topbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 40;
   pointer-events: none;
 }
 #topbar .bar-inner {
@@ -81,10 +81,46 @@ html, body {
 }
 .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1px var(--line); }
 
+/* 顶栏右侧控件组（仿 vacuum-salt：总览 / ⓘ / 中英药丸） */
+.bar-right { display: flex; align-items: center; gap: 18px; }
+.top-ctrls { display: flex; align-items: center; gap: 14px; }
+.btn-top {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-500); background: none; border: none; cursor: pointer;
+  padding: 0; transition: color 0.18s ease;
+}
+.btn-top:hover { color: var(--red); }
+.btn-info { font-size: 13px; line-height: 1; }
+
+/* 中英双语药丸开关 */
+.lang-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+.lang-track {
+  position: relative; width: 30px; height: 16px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: rgba(26,26,26,0.05);
+  display: flex; align-items: center; padding: 0 2px;
+}
+.lang-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--red); transition: margin 0.22s ease;
+}
+.lang-pill[data-lang="en"] .lang-dot { margin-left: auto; }
+.lang-pill .ct {
+  font-size: 11px; font-weight: 700; color: var(--ink-500);
+  min-width: 1.5rem; text-align: left; letter-spacing: 0.04em;
+  transition: color 0.18s ease;
+}
+.lang-pill:hover .ct { color: var(--red); }
+
 /* ---------------- 左侧导航 ---------------- */
 #sidebar {
   position: fixed; top: 84px; left: 18px; z-index: 10;
   width: 232px;
+  max-height: calc(100vh - 110px); overflow-y: auto;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -121,28 +157,93 @@ html, body {
   font-size: 11px; color: var(--muted); line-height: 1.6;
 }
 
-/* ---------------- 右侧详情 ---------------- */
+/* ---------------- 右侧详情（可折叠抽屉：默认仅显示头部，点击展开） ---------------- */
 #infopanel {
   position: fixed; top: 84px; right: 18px; z-index: 10;
-  width: 320px; max-height: calc(100vh - 170px); overflow-y: auto;
+  width: 320px; max-height: calc(100vh - 170px);
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 18px;
+  padding: 14px 18px;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 30px rgba(26,26,26,0.06);
   opacity: 0; transform: translateX(20px);
-  transition: all 0.35s ease; pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+  display: flex; flex-direction: column;
+  overflow: hidden; /* 折叠时由 .ip-body 高度控制 */
 }
 #infopanel.show { opacity: 1; transform: translateX(0); pointer-events: auto; }
-.ip-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
-.ip-color { width: 4px; align-self: stretch; border-radius: 4px; min-height: 46px; background: var(--red); }
+
+/* 头部：横向排布，点击 / 键盘 / 拖拽皆可触发折叠 */
+.ip-head {
+  display: flex; gap: 12px; align-items: flex-start;
+  cursor: pointer;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none; /* 头部只做拖拽/点击，不让浏览器横插滚动 */
+  outline: none;
+  padding: 4px 0;
+  border-radius: 8px;
+  transition: background 0.16s ease;
+}
+.ip-head:hover { background: rgba(26,26,26,0.03); }
+.ip-head:focus-visible { background: rgba(179,58,42,0.06); box-shadow: 0 0 0 2px rgba(179,58,42,0.35); }
+.ip-head-text { flex: 1; min-width: 0; }
+.ip-color { width: 4px; align-self: stretch; border-radius: 4px; min-height: 46px; background: var(--red); flex: none; }
 .ip-index {
   font-family: "JetBrains Mono", monospace;
   font-size: 10px; color: var(--muted); letter-spacing: 0.22em; text-transform: uppercase;
 }
 .ip-head h2 { font-size: 20px; font-weight: 700; margin: 2px 0; font-family: "Newsreader","Noto Serif SC",serif; }
 .ip-sub { font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--red); letter-spacing: 0.06em; }
+.ip-sub:empty { display: none; }
+
+/* 折叠 / 展开按钮：胶囊 + 雪佛龙 */
+.ip-toggle {
+  flex: none;
+  display: flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 5px 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(26,26,26,0.03);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.1em;
+  color: var(--ink-500);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+.ip-toggle:hover { color: var(--red); border-color: rgba(179,58,42,0.4); background: var(--red-soft); }
+.ip-toggle-hint { display: inline-block; }
+.ip-chevron { transition: transform 0.32s var(--ease-out); }
+#infopanel.expanded .ip-toggle { color: var(--red); border-color: rgba(179,58,42,0.45); background: var(--red-soft); }
+#infopanel.expanded .ip-chevron { transform: rotate(180deg); }
+#infopanel.expanded .ip-toggle-hint { display: none; }
+
+/* 抽屉主体：默认折叠（max-height 0），展开时放量 */
+.ip-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-top: 0;
+  transition:
+    max-height 0.42s var(--ease-out),
+    opacity 0.28s ease,
+    margin-top 0.42s var(--ease-out);
+  -webkit-overflow-scrolling: touch;
+}
+#infopanel.expanded {
+  overflow-y: auto; /* 展开后允许内部滚动 */
+}
+#infopanel.expanded .ip-body {
+  max-height: 1800px; /* 足够大；面板本身 max-height 会接管滚动 */
+  opacity: 1;
+  margin-top: 6px;
+}
+
+/* 拖拽中的过渡：跟随手指，没有动效 */
+#infopanel.dragging { transition: none; }
+#infopanel.dragging .ip-body { transition: none; }
+#infopanel.dragging .ip-chevron { transition: none; }
 
 .ip-block { margin-bottom: 14px; }
 .ip-block h3 {
@@ -226,8 +327,53 @@ html, body {
 #infopanel::-webkit-scrollbar { width: 6px; }
 #infopanel::-webkit-scrollbar-thumb { background: rgba(26,26,26,0.25); border-radius: 3px; }
 
+/* ---------------- 响应式：竖屏 / 手机端 ----------------
+   窄屏下把左侧「构件导览」挪到底部，变为始终可见的横向滚动导航条，
+   避免桌面横屏才有、竖屏/手机端消失的问题；详情面板改为底部抽屉。
+   顶栏的「总览 / ⓘ / 中英切换」保持可达。 */
 @media (max-width: 860px) {
-  #sidebar { display: none; }
-  #infopanel { width: min(320px, calc(100vw - 36px)); }
   .legend { display: none; }
+  .bar-right { gap: 12px; }
+
+  /* 左侧导航 → 底部横向导览条（常驻、可横滑） */
+  #sidebar {
+    top: auto; bottom: 0; left: 0; right: 0;
+    width: auto; max-height: none;
+    display: flex; flex-direction: row; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    box-shadow: 0 -8px 30px rgba(26, 26, 26, 0.10);
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  #sidebar::-webkit-scrollbar { display: none; }
+  .side-title, .side-tip { display: none; }
+  #nav-list { flex-direction: row; gap: 8px; flex: none; }
+  .nav-item {
+    flex: none; white-space: nowrap;
+    padding: 8px 12px; font-size: 13px;
+  }
+
+  /* 详情面板 → 底部抽屉（浮在导览条之上，可上下滚动） */
+  #infopanel {
+    top: auto; bottom: 70px; left: 12px; right: 12px;
+    width: auto; max-height: calc(52vh - 32px);
+    border-radius: 16px 16px 0 0;
+    padding: 12px 14px;
+    transform: translateY(20px);
+  }
+  #infopanel.show { transform: translateY(0); }
+  #infopanel.expanded .ip-body { max-height: 1400px; }
+}
+
+@media (max-width: 480px) {
+  .bar-row { padding: 10px 14px; }
+  .top-ctrls { gap: 10px; }
+  .btn-top { font-size: 12px; }
+  .lang-pill .ct { min-width: 1.2rem; }
+  .nav-item { padding: 7px 10px; font-size: 12px; }
+  #infopanel { max-height: calc(58vh - 32px); }
+  #infopanel.expanded .ip-body { max-height: 1400px; }
 }

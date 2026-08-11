@@ -109,22 +109,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Atlas Section - 多步渐变过渡带 + DARK THEME */}
-      <div
-        className="relative z-10 h-80"
-        style={{
-          background: `linear-gradient(to bottom,
-            #FAFAF8 0%,
-            #F0EFEC 15%,
-            #D4D2CE 30%,
-            #8A8885 50%,
-            #4A4845 70%,
-            #2A2928 85%,
-            #1a1a1a 100%
-          )`
-        }}
-      />
-      <section id="atlas" className="relative z-10 bg-[#1a1a1a] text-white py-40">
+      {/* Atlas Section - 统一浅色，与全站视觉一致（暗室焦点改为纸面展墙） */}
+      <section id="atlas" className="relative z-10 bg-background py-40 border-t-2 border-diagonal-red">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
             <motion.div
@@ -146,7 +132,7 @@ export default function Home() {
                 {t(lang, "atlasIntro")}
               </p>
               {/* 红色进度条装饰（CSS animation，不占主线程） */}
-              <div className="w-full h-px bg-white/20 relative overflow-hidden">
+              <div className="w-full h-px bg-black/10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-diagonal-red w-1/4 animate-atlasProgress" />
               </div>
             </div>
@@ -167,12 +153,6 @@ export default function Home() {
       </section>
 
       {/* THE LAB Section - 实验性质，置于 Atlas 之后、页面末尾的低调版块 */}
-      <div
-        className="relative z-10 h-40"
-        style={{
-          background: `linear-gradient(to bottom, #1a1a1a 0%, #2A2928 15%, #4A4845 30%, #8A8885 50%, #D4D2CE 70%, #F0EFEC 85%, #FAFAF8 100%)`,
-        }}
-      />
       <section id="lab" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-black/5">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-14 gap-6">
           <motion.div
@@ -195,7 +175,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* 卡片 1：真空制盐 3D 解构 → /vacuum-salt/ */}
           <motion.div
             {...groupItem}
@@ -203,7 +183,7 @@ export default function Home() {
           >
             <Link
               href="/vacuum-salt/"
-              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40"
+              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-diagonal-warmGray overflow-hidden hover:border-diagonal-red/40"
             >
               <VacuumSaltCover />
               <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
@@ -218,7 +198,7 @@ export default function Home() {
                 {t(lang, "vacuumSaltLabel")}
               </div>
               <h3 className="text-xl font-bold tracking-tight">{t(lang, "vacuumSaltTitle")}</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labVacuumDesc")}</p>
+              <p className="text-sm text-black/60 leading-relaxed">{t(lang, "labVacuumDesc")}</p>
             </div>
           </motion.div>
 
@@ -229,7 +209,7 @@ export default function Home() {
           >
             <Link
               href="/lab/salt-particle"
-              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-[#0c0c0e] overflow-hidden hover:border-diagonal-red/40"
+              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-diagonal-surface overflow-hidden hover:border-diagonal-red/40"
             >
               <div
                 className="absolute inset-0"
@@ -239,12 +219,12 @@ export default function Home() {
                 }}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-8">
-                <div className="archive-text text-[11px] text-white/70 tracking-[0.3em]">
-                  SALT · PARTICLE · SIM
-                </div>
-                <div className="archive-text text-[10px] text-white/40">
+                <div className="archive-text text-[10px] text-white/40 tracking-[0.3em]">
                   REAL-TIME CRYSTAL CLOUD
                 </div>
+              </div>
+              <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
+                SALT · PARTICLE · SIM
               </div>
               <div className="absolute bottom-4 right-4 archive-text text-[10px] text-diagonal-red opacity-0 group-hover:opacity-100 transition-opacity">
                 {t(lang, "labEnter")}
@@ -255,7 +235,7 @@ export default function Home() {
                 INTERACTIVE · 实时模拟
               </div>
               <h3 className="text-xl font-bold tracking-tight">{t(lang, "labSaltTitle")}</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltDesc")}</p>
+              <p className="text-sm text-black/60 leading-relaxed">{t(lang, "labSaltDesc")}</p>
             </div>
           </motion.div>
 
@@ -266,7 +246,7 @@ export default function Home() {
           >
             <Link
               href="/salt-plant-3d/index.html"
-              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-[#FAFAF8] overflow-hidden hover:border-diagonal-red/40"
+              className="press-card group relative block aspect-[16/10] w-full border border-black/10 bg-diagonal-warmGray overflow-hidden hover:border-diagonal-red/40"
             >
               <SaltPlantCover />
               <div className="absolute bottom-3 left-4 archive-text text-[10px] text-diagonal-red/80 tracking-[0.25em]">
@@ -281,7 +261,7 @@ export default function Home() {
                 {t(lang, "labSaltPlantLabel")}
               </div>
               <h3 className="text-xl font-bold tracking-tight">{t(lang, "labSaltPlantTitle")}</h3>
-              <p className="text-sm text-ink-500 leading-relaxed">{t(lang, "labSaltPlantDesc")}</p>
+              <p className="text-sm text-black/60 leading-relaxed">{t(lang, "labSaltPlantDesc")}</p>
             </div>
           </motion.div>
         </div>

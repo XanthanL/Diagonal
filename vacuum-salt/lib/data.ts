@@ -1,4 +1,4 @@
-import type { StageData, ReferenceItem } from "./types";
+import type { StageData, ReferenceItem, KpiItem } from "./types";
 
 /**
  * 自贡井卤真空制盐工艺数据
@@ -56,6 +56,9 @@ export const stages: StageData[] = [
     outputEn: "Purified brine (NaCl 295–310 g/L, Ca²⁺≤10 ppm, Mg²⁺≤5 ppm)",
     tour: "我们从千米深井汲取天然卤水，先以石灰—纯碱法净化除钙镁，为后续蒸发结晶护航。",
     tourEn: "We draw natural brine from a kilometer-deep well, then purify it with the lime–soda ash method to remove Ca²⁺/Mg²⁺, protecting the evaporation & crystallization ahead.",
+    coreHighlight: "石灰—纯碱法净化：先除镁、再除钙，给蒸发器“洗澡”防结垢。",
+    coreHighlightEn:
+      "Lime–soda ash purification removes Mg²⁺ then Ca²⁺, keeping the evaporator scale-free.",
     accent: "steel",
     principle: [
       "自贡井卤分黑卤、黄卤两类，均来自三叠系深层蒸发岩系，主要成分为 NaCl 水溶液，伴生 Ca²⁺、Mg²⁺、SO₄²⁻ 及钾、溴、碘、锂等。",
@@ -105,6 +108,9 @@ export const stages: StageData[] = [
     outputEn: "Salt slurry (solid–liquid mix, solids ~20–30%)",
     tour: "真空泵抽走末效空气形成低压，沸点骤降；二次蒸汽逐效回用，卤水在末效高真空下低温沸腾结晶。",
     tourEn: "A vacuum pump draws air from the last effect, lowering the boiling point; secondary steam is reused effect-by-effect, and brine crystallizes at low temperature under high vacuum in the last effect.",
+    coreHighlight: "真空让卤水在低温下沸腾：抽走末效空气、沸点骤降，二次蒸汽逐效回用节能结晶。",
+    coreHighlightEn:
+      "Vacuum lets brine boil at low temperature: pumping out last-effect air drops the boiling point; reused secondary steam saves energy.",
     accent: "steel",
     principle: [
       "真空制盐的核心物理原理：液体在低压环境下沸点显著降低。用真空泵抽出末效蒸发罐内空气形成低压，使卤水在低温下即可沸腾蒸发。",
@@ -153,6 +159,9 @@ export const stages: StageData[] = [
     outputEn: "Wet salt (moisture ~3–5%)",
     tour: "离心力将盐浆固液分离，湿盐含水率降至 3%~5%，为干燥环节减负。",
     tourEn: "Centrifugal force separates the slurry into solids and liquid; wet-salt moisture falls to 3–5%, easing the drying step.",
+    coreHighlight: "离心力把盐“甩”出来：转鼓高速旋转，盐贴壁、母液穿网而走，湿盐含水率降到 3~5%。",
+    coreHighlightEn:
+      "Centrifugal force throws the salt out: the spinning bowl holds solids on the wall while mother liquor passes through, dropping moisture to 3–5%.",
     accent: "steel",
     principle: [
       "蒸发结晶排出的盐浆为固液混合物，需先经水力旋流器增浓，再进入离心机脱水。",
@@ -192,6 +201,9 @@ export const stages: StageData[] = [
     outputEn: "Finished dry salt (moisture <0.3%)",
     tour: "沸腾流化床低温干燥保留晶体形态，振动筛按粒度分级出成品干盐。",
     tourEn: "A fluidized bed dries at low temperature, preserving crystal shape; a vibrating screen grades the dry salt by particle size.",
+    coreHighlight: "流化床低温干燥保形：热风托起盐粒悬浮沸腾，高效脱水且晶体不碎。",
+    coreHighlightEn:
+      "Fluidized-bed low-temperature drying preserves shape: hot air suspends the grains, drying fast without breaking crystals.",
     accent: "ember",
     principle: [
       "干燥原理——流态化技术：热空气自下而上穿过分布板，使湿盐颗粒悬浮呈流化状态，气固接触面积大、传热传质强烈，可在较低温度下快速干燥，并较好保持晶体形态。",
@@ -233,6 +245,9 @@ export const stages: StageData[] = [
     outputEn: "Edible / industrial salt product (into storage)",
     tour: "定量包装、自动码垛，分区仓储守护每一粒盐的品质与安全。",
     tourEn: "Metered packaging and auto-palletizing, with zoned storage guarding the quality and safety of every grain of salt.",
+    coreHighlight: "定量包装 + 自动码垛：每袋精准称量，机械臂整齐码放，分区仓储防结块。",
+    coreHighlightEn:
+      "Metered packaging and auto-palletizing: precise dosing per bag, robot stacks neatly, zoned storage prevents caking.",
     accent: "ok",
     principle: [
       "干燥筛分后的成品盐经输送（皮带/气力）进入包装线，按规格进行自动定量包装（如 400g/500g/1kg 小包装，或 25kg/50kg/吨袋大包装）。",
@@ -257,6 +272,14 @@ export const stages: StageData[] = [
       { id: "warehouse", name: "立体仓储", nameEn: "Warehouse", desc: "分区存放食用盐/工业盐，控制环境防结块。", descEn: "Zoned storage of edible/industrial salt, environment-controlled against caking.", material: "钢货架" },
     ],
   },
+];
+
+// 全产线概览指标（概览态左下角展示，数值均来自上方环节数据/行业资料）
+export const plantKpi: KpiItem[] = [
+  { label: "产品 NaCl 纯度", labelEn: "NaCl purity", value: "≥99.1", unit: "%", note: "三次洗涤精制", noteEn: "Triple-washed refining" },
+  { label: "末效真空度", labelEn: "Last-effect vacuum", value: "≈88", unit: "%", note: "高真空低温结晶", noteEn: "High-vacuum low-temp crystallization" },
+  { label: "四效蒸汽耗", labelEn: "4-effect steam use", value: "0.3~0.4", unit: "t/t", note: "二次蒸汽逐效回用", noteEn: "Reused secondary steam" },
+  { label: "井矿盐占比", labelEn: "Well-salt share", value: "≈87", unit: "%", note: "全国食盐结构", noteEn: "China edible-salt mix" },
 ];
 
 // 参考资料

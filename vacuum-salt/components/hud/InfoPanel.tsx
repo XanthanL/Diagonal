@@ -73,6 +73,14 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
             </div>
 
             <div className="px-4 py-4 space-y-5">
+              {/* 核心看点：一句话提炼，置顶强调，扫读即抓重点 */}
+              <div className="rounded-lg bg-diagonal-red/[0.06] border border-diagonal-red/25 px-3 py-2.5">
+                <div className="label-eyebrow text-diagonal-red mb-1">核心看点 · KEY TAKEAWAY</div>
+                <p className="text-[13px] leading-relaxed text-ink-900 font-medium">
+                  {lang === "zh" ? stage.coreHighlight : stage.coreHighlightEn}
+                </p>
+              </div>
+
               {/* 物料流向 */}
               <div className="space-y-1.5">
                 <div className="label-eyebrow">物料 · MATERIAL FLOW</div>

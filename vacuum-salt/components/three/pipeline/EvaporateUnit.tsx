@@ -96,6 +96,7 @@ function Evaporator({
   const glowRef = useRef<THREE.Mesh>(null);
   const steamRef = useRef<THREE.Mesh>(null);
   const boilRef = useRef<THREE.Mesh>(null);
+  const surfaceRef = useRef<THREE.Mesh>(null);
 
   // 周边列管位置（环形均布）
   const tubePos = useMemo(
@@ -191,6 +192,11 @@ function Evaporator({
     if (boilRef.current) {
       (boilRef.current.material as THREE.MeshStandardMaterial).opacity =
         (0.06 + Math.sin(t * 2.2 + index) * 0.03) * boil;
+    }
+    // 沸腾液面：轻微起伏 + 脉动，直观表达“卤水在低温下翻腾沸腾”
+    if (surfaceRef.current) {
+      surfaceRef.current.position.y = LIQ_TOP - 0.15 + Math.sin(t * 3 + index) * 0.05;
+      surfaceRef.current.scale.setScalar(1 + Math.sin(t * 4 + index) * 0.015);
     }
   });
 
@@ -296,6 +302,19 @@ function Evaporator({
           roughness={0.1}
         />
       </mesh>
+      {/* 沸腾液面（轻微起伏，暗示卤水翻腾沸腾） */}
+      <mesh ref={surfaceRef} position={[0, LIQ_TOP - 0.15, 0]}>
+        <cylinderGeometry args={[CHAMBER_R - 0.08, CHAMBER_R - 0.08, 0.05, 40]} />
+        <meshStandardMaterial
+          color={metalColors.brineLight}
+          emissive={metalColors.brineLight}
+          emissiveIntensity={0.35}
+          transparent
+          opacity={0.5}
+          roughness={0.15}
+          depthWrite={false}
+        />
+      </mesh>
       {/* 温度梯度色环（Ⅰ效热 → Ⅳ效冷） */}
       <mesh position={[0, CHAMBER_CY + CHAMBER_H / 2 + 0.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[CHAMBER_R + 0.02, 0.05, 10, 48]} />
@@ -380,16 +399,35 @@ function Evaporator({
 
 /** 混合冷凝器 + 真空泵（维持末效真空） */
 function Condenser({ x, z }: { x: number; z: number }) {
-  const sprayRef = useRef<THREE.Mesh>(null);
-  useFrame((state) => {
-    if (sprayRef.current) {
-      (sprayRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
-        0.3 + Math.sin(state.clock.elapsedTime * 1.8) * 0.12;
-    }
-  });
   const COND_R = 0.7;
   const COND_H = 2.6;
   const COND_CY = 0.2;
+  const sprayRef = useRef<THREE.Mesh>(null);
+  const dropRefs = useRef<THREE.Mesh[]>([]);
+  const drops = useMemo(
+    () =>
+      Array.from({ length: 12 }).map(() => ({
+        x: (Math.random() - 0.5) * COND_R * 1.3,
+        z: (Math.random() - 0.5) * COND_R * 1.3,
+        phase: Math.random(),
+        speed: 0.7 + Math.random() * 0.6,
+      })),
+    [COND_R]
+  );
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (sprayRef.current) {
+      (sprayRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
+        0.3 + Math.sin(t * 1.8) * 0.12;
+    }
+    // 喷淋冷却水滴：自上而下循环下落，直观表达“冷凝换热”
+    dropRefs.current.forEach((m, i) => {
+      if (!m) return;
+      const d = drops[i];
+      const u = (t * d.speed + d.phase) % 1;
+      m.position.set(d.x, COND_CY + COND_H / 2 - u * COND_H, d.z);
+    });
+  });
   return (
     <group position={[x, 0, z]}>
       {/* 支座 */}
@@ -429,6 +467,13 @@ function Condenser({ x, z }: { x: number; z: number }) {
           depthWrite={false}
         />
       </mesh>
+      {/* 喷淋冷却水滴：自上而下循环下落，表达“冷凝换热” */}
+      {drops.map((_, i) => (
+        <mesh key={i} ref={(el) => { if (el) dropRefs.current[i] = el; }}>
+          <sphereGeometry args={[0.05, 8, 6]} />
+          <meshStandardMaterial color={metalColors.brineLight} transparent opacity={0.6} roughness={0.2} />
+        </mesh>
+      ))}
       {/* 顶部二次蒸汽进口 */}
       <mesh position={[0, COND_CY + COND_H / 2, 0]}>
         <cylinderGeometry args={[0.18, 0.18, 0.35, 16]} />

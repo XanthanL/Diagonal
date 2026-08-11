@@ -4,6 +4,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { PROCESS, LEGEND, I18N } from './data.js';
 
+// 自检钩子（仅 ?selftest 时启用）：捕获运行时错误，便于无头浏览器断言验收
+const SELFTEST = (typeof location !== 'undefined') && new URLSearchParams(location.search).has('selftest');
+window.__errs = [];
+function __recordErr(m) {
+  window.__errs.push(m);
+  const d = document.getElementById('diag');
+  if (d) d.textContent = 'ERR:' + m;
+}
+window.addEventListener('error', (e) => __recordErr(String(e.message || (e.error && e.error.message) || e)));
+window.addEventListener('unhandledrejection', (e) => __recordErr('promise:' + (e.reason && e.reason.message ? e.reason.message : e.reason)));
+
 // ---------- 常量与状态 ----------
 const BG = 0xFAFAF8;
 const GROUND_Y = 0;
@@ -25,7 +36,15 @@ const THATCH = 0x9A8455;       // 茅草屋面（盐工寮棚）
 
 let scene, camera, renderer, labelRenderer, controls, clock;
 let stationGroups = [];
-let baseRings = [];
+// 聚焦分区：每个 PROCESS 构件对应一个 part group，便于「聚焦加描边+提亮 / 其余压暗」
+const PART_ORDER = ['cols', 'top', 'cart', 'ground', 'duijia', 'well', 'bailer', 'shed'];
+const FOCUS_MAP = [null, ['cols'], ['top'], ['cart'], ['ground'], ['duijia'], ['bailer'], ['shed']];
+const PART = {};
+const PART_OUTLINES = {};
+let outlineMat = null;   // 聚焦描边：清晰金边
+let haloMat = null;      // 聚焦光晕：更宽、半透明的淡金，营造“发光”感
+const OUTLINE_GOLD = 0xE3C57E; // 淡金（浅色发光边），取代原品牌红描边
+const DIM = 0.6;        // 非聚焦构件压暗系数（轻微压暗）
 let tween = null;
 let playing = true;
 let autoTour = false;
@@ -247,9 +266,6 @@ function makeEnvTexture(renderer) {
 // ---------- 材质工具 ----------
 function metalTex(color, rough = 0.5, met = 0.7) {
   return new THREE.MeshStandardMaterial({ map: TEX.metal, color, roughness: rough, metalness: met });
-}
-function glowMat(color) {
-  return new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.55, roughness: 0.4, metalness: 0.2 });
 }
 function woodTex(color, rough = 0.85) {
   return new THREE.MeshStandardMaterial({ map: TEX.wood, color, roughness: rough, metalness: 0.0 });
@@ -533,9 +549,12 @@ function init() {
 
   buildGround();
   buildStations();
+  initParts();
   bindUI();
   buildNav();
   applyLang();
+  applyFocus(0); // 基线：无聚焦、无压暗、无描边
+  if (SELFTEST) runSelfTest();
 
   clock = new THREE.Clock();
   window.addEventListener('resize', onResize);
@@ -562,24 +581,24 @@ function buildGround() {
 }
 
 // ============================================================
-// 站台
+// 模型构建：整座天车 compound 是「一套物理模型」，只构建一次，置于原点。
+// PROCESS 的 8 个条目是「构件导览」——仅用于相机聚焦（cam/target）与双语详情，
+// 不再各自实体化，否则整座模型会被重复构建、叠在原点造成重叠卡位。
 // ============================================================
 function buildStations() {
-  PROCESS.forEach((step) => {
-    const g = new THREE.Group();
-    g.position.set(step.position[0], 0, step.position[2]);
-    g.userData = { step, spin: [], vibrate: null, conveyor: null };
+  const g = new THREE.Group();
+  g.position.set(0, 0, 0);
+  g.userData = { step: PROCESS[0], spin: [], vibrate: null, conveyor: null };
 
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(4.7, 0.2, 12, 48), glowMat(step.color));
-    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; g.add(ring); baseRings.push(ring);
+  // 每个构件一个独立 group，便于聚焦时单独描边/提亮/压暗
+  PART_ORDER.forEach((name) => { PART[name] = new THREE.Group(); g.add(PART[name]); });
 
-    const pad = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.7, 0.4, 32), metalTex(ALLOY_DARK, 0.8, 0.4));
-    pad.position.y = 0.2; pad.castShadow = true; pad.receiveShadow = true; g.add(pad);
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.7, 0.4, 32), metalTex(ALLOY_DARK, 0.8, 0.4));
+  pad.position.y = 0.2; pad.castShadow = true; pad.receiveShadow = true; PART.well.add(pad);
 
-    buildWell(g);
-    scene.add(g);
-    stationGroups.push(g);
-  });
+  buildWell(g);
+  scene.add(g);
+  stationGroups.push(g);
 }
 
 // 采卤井
@@ -588,18 +607,19 @@ function buildWell(g) {
   const wood = woodTex(WOOD, 0.85);
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const woodLight = woodTex(WOOD_LIGHT, 0.8);
+  const P = { cols: PART.cols, top: PART.top };
 
-  // 木地台（盖住通用金属底座，强化古朴基座；半径小于聚焦光环以保持指示一致）
+  // 木地台（盖住通用金属底座，强化古朴基座）
   const deck = new THREE.Mesh(new THREE.CylinderGeometry(4.0, 4.3, 0.5, 32), woodTex(0x6E5A42, 0.95));
-  deck.position.y = 0.45; deck.castShadow = true; deck.receiveShadow = true; g.add(deck);
+  deck.position.y = 0.45; deck.castShadow = true; deck.receiveShadow = true; PART.well.add(deck);
 
   // 主天车（高，正对井口，驱动提卤）+ 副天车（略矮），呼应自贡旧时「天车林立、盐井成群」之景
-  buildDerrick(g, -0.6, 0.2, 15, 2.1, 6, wood, woodDark, true);
-  buildDerrick(g, 1.9, -0.5, 11, 1.6, 5, woodLight, woodDark, false);
+  buildDerrick(g, P, -0.6, 0.2, 15, 2.1, 6, wood, woodDark, true);
+  buildDerrick(g, P, 1.9, -0.5, 11, 1.6, 5, woodLight, woodDark, false);
 
   // 井口石箍（自贡盐井以石圈箍井，防潮固壁）
   const stoneBase = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.32, 26), stoneTex(0x97928a, 0.96));
-  stoneBase.position.set(0.4, 0.56, 0); stoneBase.castShadow = true; stoneBase.receiveShadow = true; g.add(stoneBase);
+  stoneBase.position.set(0.4, 0.56, 0); stoneBase.castShadow = true; stoneBase.receiveShadow = true; PART.well.add(stoneBase);
   const collarN = 14;
   for (let i = 0; i < collarN; i++) {
     const a = (i / collarN) * Math.PI * 2;
@@ -609,17 +629,17 @@ function buildWell(g) {
     blk.rotation.y = -a + (Math.random() - 0.5) * 0.12;
     const sc = 0.9 + Math.random() * 0.22;
     blk.scale.set(sc, 0.92 + Math.random() * 0.18, sc);
-    blk.castShadow = true; blk.receiveShadow = true; g.add(blk);
+    blk.castShadow = true; blk.receiveShadow = true; PART.well.add(blk);
   }
   // 井口石压顶（一圈略宽的石环）
   const cap = new THREE.Mesh(new THREE.TorusGeometry(0.86, 0.09, 8, 28), stoneTex(0x8a857c, 0.95));
-  cap.rotation.x = Math.PI / 2; cap.position.set(0.4, 1.62, 0); g.add(cap);
+  cap.rotation.x = Math.PI / 2; cap.position.set(0.4, 1.62, 0); PART.well.add(cap);
   // 井口锻铁箍（压住石圈、护住井唇，长年卤水浸润锈色深重）
   const wellIron = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.055, 8, 26), ironS());
-  wellIron.rotation.x = Math.PI / 2; wellIron.position.set(0.4, 1.7, 0); g.add(wellIron);
+  wellIron.rotation.x = Math.PI / 2; wellIron.position.set(0.4, 1.7, 0); PART.well.add(wellIron);
   // 顿钻钻杆（入井）
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 6, 10), woodTex(0x473A2B, 0.9));
-  stem.position.set(0.4, -1.6, 0); g.add(stem);
+  stem.position.set(0.4, -1.6, 0); PART.well.add(stem);
 
   // 传统木卤桶（heritage 点缀）
   [[-3.0, 1.7], [2.7, 2.3], [-2.3, -2.5]].forEach(([bx, bz]) => {
@@ -630,17 +650,17 @@ function buildWell(g) {
       const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.05, 8, 20), ironS()); // 做旧铁箍
       hoop.rotation.x = Math.PI / 2; hoop.position.y = yy; barrel.add(hoop);
     });
-    barrel.position.set(bx, 0.45, bz); g.add(barrel);
+    barrel.position.set(bx, 0.45, bz); PART.well.add(barrel);
   });
 
   // 立式大车（提卤巨轮）+ 地辊（转向定滑轮）+ 碓架（冲击式顿钻踩架）
-  buildCart(g, -3.8, 1.4);
-  buildGroundRoller(g, -1.9, 2.1);
-  buildDuijia(g, 3.0, -1.6);
+  buildCart(g, PART.cart, -3.8, 1.4);
+  buildGroundRoller(g, PART.ground, -1.9, 2.1);
+  buildDuijia(g, PART.duijia, 3.0, -1.6);
   // 提卤绳链：天辊 → 地辊（转向）→ 大车（绕绳）
   const linkMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
-  g.add(strut(new THREE.Vector3(-0.6, 15.3, 0.2), new THREE.Vector3(-1.9, 1.0, 2.1), 0.05, linkMat));
-  g.add(strut(new THREE.Vector3(-1.9, 1.0, 2.1), new THREE.Vector3(-3.8, 3.0, 1.4), 0.05, linkMat));
+  PART.well.add(strut(new THREE.Vector3(-0.6, 15.3, 0.2), new THREE.Vector3(-1.9, 1.0, 2.1), 0.05, linkMat));
+  PART.well.add(strut(new THREE.Vector3(-1.9, 1.0, 2.1), new THREE.Vector3(-3.8, 3.0, 1.4), 0.05, linkMat));
 
   // 汲卤筒（楠竹/镔铁提卤桶）+ 提卤绳（随大车收放上下，联动天辊/地辊）
   const liftRopeMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
@@ -658,10 +678,10 @@ function buildWell(g) {
     const bh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.035, 8, 18), ironS());
     bh.rotation.x = Math.PI / 2; bh.position.y = yy; bucket.add(bh);
   });
-  bucket.position.set(0.4, 3.4, 0); g.add(bucket);
+  bucket.position.set(0.4, 3.4, 0); PART.bailer.add(bucket);
   // 提卤绳：天辊锚点 → 桶顶，随桶升降而伸缩
   const liftRope = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1, 6), liftRopeMat);
-  g.add(liftRope);
+  PART.bailer.add(liftRope);
   g.userData.wellAnim = {
     bucket, liftRope,
     top: 3.4, bottom: 1.3, period: 8.0,
@@ -672,19 +692,17 @@ function buildWell(g) {
 
   // 井台周边聚落：盐工寮棚（草顶竹笆）+ 竹笆屏（挡风遮泥）
   // 位置避开风篾地桩，落在拉索圈之外，构成「井—车—棚」的作业场
-  buildShed(g, 7.6, 4.8);
-  buildScreen(g, -8.6, 3.0, 3.4, 1.5);
-  buildScreen(g, 5.6, -6.6, 3.0, 1.35);
-
-  // 静态构件统一合并：束柱/篾箍/铁箍/竹笆共上千个小网格 → 个位数 draw call
-  flushBin(g);
+  buildShed(g, PART.shed, 7.6, 4.8);
+  buildScreen(g, PART.shed, -8.6, 3.0, 3.4, 1.5);
+  buildScreen(g, PART.shed, 5.6, -6.6, 3.0, 1.35);
 }
 
 // 单座天车：四面收分木井架（束柱）+ 交叉斜撑 + 顶部天辊 + 风篾拉索
 // 静态构件统一收进 stat 临时树，最后按材质合并，避免束柱带来的网格爆炸。
-function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMain) {
+function buildDerrick(g, P, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMain) {
   const topHalf = baseHalf * 0.32;
-  const stat = new THREE.Group();
+  const statC = new THREE.Group();   // 束柱/斜撑/节点箍/础石/踏阶/顶冠 → cols（构件 1·束柱）
+  const statT = new THREE.Group();   // 天辊轮/辐/轴箍/风篾/地桩 → top（构件 2·天辊·风篾）
   const frames = [];
   for (let i = 0; i <= levels; i++) {
     const t = i / levels;
@@ -706,7 +724,7 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
     corners.forEach(([sx, sz]) => {
       const p1 = new THREE.Vector3(cx + a.half * sx, a.y, cz + a.half * sz);
       const p2 = new THREE.Vector3(cx + b.half * sx, b.y, cz + b.half * sz);
-      stat.add(bundleStrut(p1, p2, {
+      statC.add(bundleStrut(p1, p2, {
         count: cnt, rad, spread,
         color: WOOD, rough: 0.86,
         bindStep: 0.72 + t0 * 0.5,
@@ -721,10 +739,10 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
     [['x', -1], ['x', 1], ['z', -1], ['z', 1]].forEach(([axis, sign]) => {
       if (axis === 'x') {
         const bar = new THREE.Mesh(new THREE.BoxGeometry(a.half * 2 + 0.1, 0.14, 0.14), vWood(WOOD_DARK, 0.9));
-        bar.position.set(cx, a.y, cz + a.half * sign); stat.add(bar);
+        bar.position.set(cx, a.y, cz + a.half * sign); statC.add(bar);
       } else {
         const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, a.half * 2 + 0.1), vWood(WOOD_DARK, 0.9));
-        bar.position.set(cx + a.half * sign, a.y, cz); stat.add(bar);
+        bar.position.set(cx + a.half * sign, a.y, cz); statC.add(bar);
       }
     });
     const faces = [
@@ -742,8 +760,8 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
       // 下段斜撑也并两根（受力大），上段单根
       const braceCnt = i < levels / 2 ? 2 : 1;
       const bo = { count: braceCnt, rad: 0.05, spread: 0.05, color: WOOD_DARK, rough: 0.9, bindStep: 1.7, ironEvery: 0, splice: false };
-      stat.add(bundleStrut(p1, p2, bo));
-      stat.add(bundleStrut(p3, p4, bo));
+      statC.add(bundleStrut(p1, p2, bo));
+      statC.add(bundleStrut(p3, p4, bo));
     });
   }
 
@@ -757,9 +775,9 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
       const px = cx + f.half * sx, pz = cz + f.half * sz;
       const hoop = new THREE.Mesh(hoopGeoC(r2(nodeR), 0.05, 18), ironS());
       hoop.rotation.x = Math.PI / 2; hoop.rotation.z = Math.random() * Math.PI;
-      hoop.position.set(px, f.y, pz); hoop.castShadow = true; stat.add(hoop);
-      addWind(stat, new THREE.Vector3(px, f.y + 0.24, pz), 'y', wgeo, bambooS());
-      addWind(stat, new THREE.Vector3(px, f.y - 0.24, pz), 'y', wgeo, bambooS());
+      hoop.position.set(px, f.y, pz); hoop.castShadow = true; statC.add(hoop);
+      addWind(statC, new THREE.Vector3(px, f.y + 0.24, pz), 'y', wgeo, bambooS());
+      addWind(statC, new THREE.Vector3(px, f.y - 0.24, pz), 'y', wgeo, bambooS());
     });
   });
 
@@ -769,7 +787,7 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
     const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.34, 0.62), vStone(0x928d84, 0.96));
     plinth.position.set(cx + f.half * sx, 0.86, cz + f.half * sz);
     plinth.rotation.y = (Math.random() - 0.5) * 0.2;
-    plinth.castShadow = true; plinth.receiveShadow = true; stat.add(plinth);
+    plinth.castShadow = true; plinth.receiveShadow = true; statC.add(plinth);
   });
 
   // ---- 踏阶（三角木楔）：四根束柱均设攀爬踏脚 ----
@@ -779,26 +797,29 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
       const st = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.26), woodDarkMat);
       st.position.set(cx + f.half * sx, yy, cz + f.half * sz * 1.08);
       st.rotation.x = -0.32;
-      stat.add(st);
+      statC.add(st);
     });
   }
+  // ---- 顶冠（结构收头，归入束柱构件） ----
+  const crown = new THREE.Mesh(new THREE.BoxGeometry(topHalf * 2 + 0.4, 0.5, topHalf * 2 + 0.4), woodMat);
+  crown.position.set(cx, H + 0.3 + 0.45, cz); statC.add(crown);
 
-  // ---- 顶部天辊（带槽定滑轮，随提卤绳联动） ----
+  emit(statC); flushBin(P.cols); // 束柱构件合并入 cols 分区
+
+  // ---- 顶部天辊（带槽定滑轮，随提卤绳联动）+ 风篾（放射拉索） → top 构件 ----
   const topY = H + 0.3;
   const wheel = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.22, 12, 28), woodTex(WOOD_LIGHT, 0.8));
-  wheel.position.set(cx, topY, cz); wheel.castShadow = true; g.add(wheel);
+  wheel.position.set(cx, topY, cz); wheel.castShadow = true; P.top.add(wheel);
   for (let i = 0; i < 6; i++) {
     const spoke = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.3, 0.12), woodDarkMat);
-    spoke.position.set(cx, topY, cz); spoke.rotation.z = (i / 6) * Math.PI * 2; stat.add(spoke);
+    spoke.position.set(cx, topY, cz); spoke.rotation.z = (i / 6) * Math.PI * 2; statT.add(spoke);
   }
   // 天辊轴端铁箍（受力最集中处）
   [-1, 1].forEach((s) => {
     const cap = new THREE.Mesh(hoopGeoC(0.26, 0.05, 14), ironS());
-    cap.rotation.x = Math.PI / 2; cap.position.set(cx, topY, cz + s * 0.3); stat.add(cap);
+    cap.rotation.x = Math.PI / 2; cap.position.set(cx, topY, cz + s * 0.3); statT.add(cap);
   });
   if (isMain) g.userData.skyRoller = wheel; else g.userData.spin.push({ mesh: wheel, axis: 'z', speed: 0.8 });
-  const crown = new THREE.Mesh(new THREE.BoxGeometry(topHalf * 2 + 0.4, 0.5, topHalf * 2 + 0.4), woodMat);
-  crown.position.set(cx, topY + 0.45, cz); stat.add(crown);
 
   // 悬吊篾绳材质（风篾拉索复用）；天辊→汲卤筒的提卤主绳改由采卤站统一生成（见 buildWell）
   const ropeMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
@@ -807,25 +828,25 @@ function buildDerrick(g, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMa
   const windY = H * 0.78;
   const ringR = topHalf + 0.25;
   const windRing = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.09, 8, 20), woodDarkMat);
-  windRing.rotation.x = Math.PI / 2; windRing.position.set(cx, windY, cz); stat.add(windRing);
+  windRing.rotation.x = Math.PI / 2; windRing.position.set(cx, windY, cz); statT.add(windRing);
   const R = baseHalf * 2.6, N = 12;
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2;
     const ax = cx + Math.cos(a) * ringR, az = cz + Math.sin(a) * ringR;
     const px = cx + Math.cos(a) * R, pz = cz + Math.sin(a) * R;
-    stat.add(strut(new THREE.Vector3(ax, windY, az), new THREE.Vector3(px, 0.7, pz), 0.06, ropeMat));
+    statT.add(strut(new THREE.Vector3(ax, windY, az), new THREE.Vector3(px, 0.7, pz), 0.06, ropeMat));
     const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.9, 8), woodDarkMat);
-    peg.position.set(px, 0.25, pz); peg.castShadow = true; stat.add(peg);
+    peg.position.set(px, 0.25, pz); peg.castShadow = true; statT.add(peg);
     // 地桩铁箍（防劈裂）
     const pc = new THREE.Mesh(hoopGeoC(0.15, 0.03, 12), ironS());
-    pc.rotation.x = Math.PI / 2; pc.position.set(px, 0.62, pz); stat.add(pc);
+    pc.rotation.x = Math.PI / 2; pc.position.set(px, 0.62, pz); statT.add(pc);
   }
 
-  emit(stat); // 合并入桶，由 buildWell 末尾统一 flush
+  emit(statT); flushBin(P.top); // 天辊·风篾构件合并入 top 分区
 }
 
 // 立式大车（提卤巨轮）：轮面朝 z，绕水平轴(z)旋转；底杠支撑轮轴两端
-function buildCart(g, x, z) {
+function buildCart(g, part, x, z) {
   const woodMat = woodTex(WOOD, 0.9);
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const R = 1.6;
@@ -851,6 +872,7 @@ function buildCart(g, x, z) {
     );
     emit(b);
   });
+  flushBin(part); // 底杠合并入大车分区
   // 轴碗竹篾 + 轴端铁箍
   const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
   const cartWindGeo = helixWindGeo(0.24, 0.5, 3, 0.04);
@@ -859,27 +881,27 @@ function buildCart(g, x, z) {
     const ic = new THREE.Mesh(hoopGeoC(0.22, 0.04, 14), ironS());
     ic.rotation.x = Math.PI / 2; ic.position.set(0, R, s * 0.52); cart.add(ic);
   });
-  g.add(cart);
+  part.add(cart);
   g.userData.cartWheel = wheel; // 由提卤绳联动驱动（见 animate）
 }
 
 // 地辊（地面转向定滑轮）：绳从天辊到此转向，再引向大车
-function buildGroundRoller(g, x, z) {
+function buildGroundRoller(g, part, x, z) {
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const roller = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.13, 10, 22), woodTex(WOOD_LIGHT, 0.8));
-  roller.position.set(x, 1.0, z); g.add(roller);
+  roller.position.set(x, 1.0, z); part.add(roller);
   for (let i = 0; i < 4; i++) {
     const sp = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.0, 0.09), woodDark);
-    sp.position.set(x, 1.0, z); sp.rotation.z = (i / 4) * Math.PI * 2; g.add(sp);
+    sp.position.set(x, 1.0, z); sp.rotation.z = (i / 4) * Math.PI * 2; part.add(sp);
   }
   // 竹篾缠绕：轴端篾绳捆扎
   const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
-  addWind(g, new THREE.Vector3(x, 1.0, z), 'z', helixWindGeo(0.2, 0.45, 3, 0.04), bindMat);
+  addWind(part, new THREE.Vector3(x, 1.0, z), 'z', helixWindGeo(0.2, 0.45, 3, 0.04), bindMat);
   g.userData.groundRoller = roller; // 由提卤绳联动驱动（见 animate）
 }
 
 // 碓架（踩架）：冲击式顿钻。门形木架 + 横梁花辊子 + 踩板杠杆 + 碓头重锤 + 钻杆
-function buildDuijia(g, x, z) {
+function buildDuijia(g, part, x, z) {
   const woodMat = woodTex(WOOD, 0.9);
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const H = 4.2, base = 0.7;
@@ -891,12 +913,13 @@ function buildDuijia(g, x, z) {
       { count: 3, rad: 0.082, spread: 0.08, color: WOOD, rough: 0.9, bindStep: 0.7, ironEvery: 3, splice: false }
     ));
   });
+  flushBin(part); // 立柱合并入碓架分区
   const beam = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.3, 0.3), vWood(WOOD_DARK, 0.9));
-  beam.position.set(x, base + H, z); g.add(beam);
+  beam.position.set(x, base + H, z); part.add(beam);
   const pivotY = base + H - 0.4;
   // 花辊轴（固定，铰接杠杆）
   const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10), woodDark);
-  hub.rotation.z = Math.PI / 2; hub.position.set(x, pivotY, z); g.add(hub);
+  hub.rotation.z = Math.PI / 2; hub.position.set(x, pivotY, z); part.add(hub);
   // 杠杆组（绕花辊轴摆动 = 冲击式顿钻）：杠杆 + 碓头 + 钻杆 + 踏板
   const pivot = new THREE.Group();
   pivot.position.set(x, pivotY, z);
@@ -915,16 +938,16 @@ function buildDuijia(g, x, z) {
   drill.position.set(-1.3, -2.8, 0); pivot.add(drill);
   const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.5), woodTex(WOOD_LIGHT, 0.8));
   pedal.position.set(1.3, -0.1, 0); pivot.add(pedal);
-  g.add(pivot);
+  part.add(pivot);
   g.userData.duijiaPivot = pivot; // 由 animate 驱动（冲击节奏）
   // 竹篾缠绕：门形架穿斗节点 + 花辊轴端 + 碓头连接（螺旋篾绳捆扎，不用铁钉）
   const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
   const djWindGeo = helixWindGeo(0.26, 0.5, 3, 0.04);
   [-1, 1].forEach((s) => {
-    addWind(g, new THREE.Vector3(x + s * 1.2, base + H - 0.15, z), 'y', djWindGeo, bindMat);
-    addWind(g, new THREE.Vector3(x + s * 1.1, pivotY, z), 'x', djWindGeo, bindMat);
+    addWind(part, new THREE.Vector3(x + s * 1.2, base + H - 0.15, z), 'y', djWindGeo, bindMat);
+    addWind(part, new THREE.Vector3(x + s * 1.1, pivotY, z), 'x', djWindGeo, bindMat);
   });
-  addWind(g, new THREE.Vector3(x - 1.3, pivotY - 0.3, z), 'y', helixWindGeo(0.3, 0.5, 3, 0.04), bindMat);
+  addWind(part, new THREE.Vector3(x - 1.3, pivotY - 0.3, z), 'y', helixWindGeo(0.3, 0.5, 3, 0.04), bindMat);
 }
 
 // ============================================================
@@ -950,7 +973,7 @@ function bambooPanel(w, h) {
 }
 
 // 井台外缘的竹笆屏：挡风遮泥，兼晾晒篾绳
-function buildScreen(g, x, z, w = 3.2, h = 1.5) {
+function buildScreen(g, part, x, z, w = 3.2, h = 1.5) {
   const p = new THREE.Group();
   p.position.set(x, 0, z);
   p.rotation.y = Math.atan2(x, z);   // 屏面朝向井口
@@ -964,13 +987,14 @@ function buildScreen(g, x, z, w = 3.2, h = 1.5) {
   const panel = bambooPanel(w - 0.06, h);
   panel.position.y = 0.05; p.add(panel);
   emit(p);
+  flushBin(part); // 竹笆屏合并入寮棚·竹笆分区
 }
 
 // ============================================================
 // 盐工寮棚：井台旁的草顶竹笆工棚
 // 盐工歇脚、存卤、放篾绳与工具之处；单坡草顶前高后低，三面竹笆一面敞开朝井
 // ============================================================
-function buildShed(g, x, z) {
+function buildShed(g, part, x, z) {
   const s = new THREE.Group();
   s.position.set(x, 0, z);
   s.rotation.y = Math.atan2(x, z);   // 敞开的一面（局部 -z）朝井口
@@ -1039,6 +1063,7 @@ function buildShed(g, x, z) {
   }
 
   emit(s);
+  flushBin(part); // 寮棚合并入寮棚·竹笆分区
 }
 
 // 两点之间的木杆 / 斜撑（按方向自动朝向）
@@ -1076,9 +1101,15 @@ function duijiaAngle(t) {
 }
 function focusOn(index) {
   const step = PROCESS[index];
-  const p = new THREE.Vector3(step.position[0], 0, step.position[2]);
-  const toPos = p.clone().add(new THREE.Vector3(0, 10, 24));
-  const toTarget = p.clone().add(new THREE.Vector3(0, 6, 0));
+  let toPos, toTarget;
+  if (step.cam && step.target) {
+    toPos = new THREE.Vector3(step.cam[0], step.cam[1], step.cam[2]);
+    toTarget = new THREE.Vector3(step.target[0], step.target[1], step.target[2]);
+  } else {
+    const p = new THREE.Vector3(step.position[0], 0, step.position[2]);
+    toPos = p.clone().add(new THREE.Vector3(0, 10, 24));
+    toTarget = p.clone().add(new THREE.Vector3(0, 6, 0));
+  }
   tween = { fromPos: camera.position.clone(), toPos, fromTarget: controls.target.clone(), toTarget, t: 0, dur: 1.1 };
   setActive(index);
 }
@@ -1086,24 +1117,153 @@ function focusOn(index) {
 // ============================================================
 // UI 与 i18n
 // ============================================================
+// 聚焦分区初始化：每个构件 mesh 克隆独立材质并记录 base 颜色，
+// 再为每个构件生成「反向外壳描边」网格（聚焦时显示）：一层清晰淡金边 + 一层更宽的半透明淡金光晕。
+function initParts() {
+  // 描边材质关闭 toneMapping，保证浅金在任何光照下都鲜亮如“发光”
+  outlineMat = new THREE.MeshBasicMaterial({ color: OUTLINE_GOLD, side: THREE.BackSide, toneMapped: false });
+  haloMat = new THREE.MeshBasicMaterial({
+    color: OUTLINE_GOLD, side: THREE.BackSide, toneMapped: false,
+    transparent: true, opacity: 0.32, depthWrite: false,
+  });
+  PART_ORDER.forEach((name) => {
+    const grp = PART[name];
+    grp.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material = o.material.clone();
+      o.material.userData.baseColor = o.material.color.clone();
+      o.material.userData.baseEmissive = o.material.emissive.clone();
+      o.material.userData.baseEmissiveIntensity = o.material.emissiveIntensity ?? 1;
+    });
+    buildOutline(grp, name);
+  });
+}
+
+// 反向外壳描边：克隆每个 mesh 几何、绕其自身质心放大，用 BackSide 渲染，
+// 仅露出轮廓（正面被模型本体遮挡）。edge 层清晰描边，halo 层更宽半透明 → 视觉上“发光”的边。
+function buildOutline(group, name) {
+  const list = [];
+  group.traverse((src) => {
+    if (!src.isMesh) return;
+    const geo = src.geometry;
+    geo.computeBoundingBox();
+    const c = new THREE.Vector3();
+    geo.boundingBox.getCenter(c);
+    const mkShell = (scale, mat, order) => {
+      const og = geo.clone();
+      og.translate(-c.x, -c.y, -c.z);
+      og.scale(scale, scale, scale);
+      og.translate(c.x, c.y, c.z);
+      const om = new THREE.Mesh(og, mat);
+      om.position.copy(src.position);
+      om.quaternion.copy(src.quaternion);
+      om.scale.copy(src.scale);
+      om.visible = false;
+      om.renderOrder = order;
+      om.frustumCulled = false;
+      om.userData.isOutline = true; // 描边外壳：不参与 applyFocus 的调色/压暗
+      src.parent.add(om);
+      return om;
+    };
+    list.push(mkShell(1.045, outlineMat, 6));   // 清晰淡金边
+    list.push(mkShell(1.13, haloMat, 5));        // 更宽的半透明淡金光晕
+  });
+  PART_OUTLINES[name] = list;
+}
+
+// 焦点即所得：聚焦构件保持原色，仅显示淡金描边+光晕；其余构件轻微压暗，使焦点即所得。
+function applyFocus(index) {
+  const focused = (index >= 1 && FOCUS_MAP[index]) ? FOCUS_MAP[index] : [];
+  PART_ORDER.forEach((name) => {
+    const isFocus = focused.includes(name);
+    PART[name].traverse((o) => {
+      if (!o.isMesh || o.userData.isOutline) return;
+      const mat = o.material, base = mat.userData.baseColor;
+      if (!base) return; // 未登记基色的网格（如描边外壳）跳过，避免 color.copy(undefined)
+      if (index === 0 || focused.length === 0) {
+        // 总览：全部还原原色与原 emissive
+        mat.color.copy(base);
+        mat.emissive.copy(mat.userData.baseEmissive);
+        mat.emissiveIntensity = mat.userData.baseEmissiveIntensity;
+      } else if (isFocus) {
+        // 聚焦：保持物体原色，不加提亮、不加自发光；焦点由淡金描边+光晕与“其余压暗”共同呈现
+        mat.color.copy(base);
+        mat.emissive.copy(mat.userData.baseEmissive);
+        mat.emissiveIntensity = mat.userData.baseEmissiveIntensity;
+      } else {
+        // 非聚焦：轻微压暗，凸显焦点
+        mat.color.copy(base).multiplyScalar(DIM);
+        mat.emissive.copy(mat.userData.baseEmissive);
+        mat.emissiveIntensity = mat.userData.baseEmissiveIntensity;
+      }
+    });
+    const outs = PART_OUTLINES[name] || [];
+    outs.forEach((om) => { om.visible = (index >= 1 && isFocus); });
+  });
+}
+
 function setActive(index) {
   currentActive = index;
   document.querySelectorAll('.nav-item').forEach((el, i) => el.classList.toggle('active', i === index));
-  baseRings.forEach((r, i) => { r.material.emissiveIntensity = i === index ? 1.1 : 0.45; r.scale.setScalar(i === index ? 1.12 : 1.0); });
+  applyFocus(index);
   if (index >= 0) showInfo(PROCESS[index]);
+}
+
+// 自检：校验分区/描边/压暗逻辑在无头环境也能正确运行（?selftest 时使用）
+function runSelfTest() {
+  // 统计某分组内「颜色偏离基色」的网格数（用于验证：聚焦件保持原色、其余被压暗）
+  const countColorDrift = (grp, expectBase) => {
+    let n = 0;
+    grp.traverse((o) => {
+      if (!o.isMesh || o.userData.isOutline || !o.material.userData.baseColor) return;
+      const base = o.material.userData.baseColor;
+      const eq = Math.abs(o.material.color.r - base.r) < 1e-4
+              && Math.abs(o.material.color.g - base.g) < 1e-4
+              && Math.abs(o.material.color.b - base.b) < 1e-4;
+      if (expectBase ? !eq : eq) n++;
+    });
+    return n;
+  };
+  const visibleOutlines = (name) => (PART_OUTLINES[name] || []).filter((o) => o.visible).length;
+  applyFocus(0);
+  const resetDrift = countColorDrift(scene, true);   // 总览：全部分区颜色均 = 基色
+  applyFocus(2);                                     // 聚焦「天辊·风篾」(top)
+  const topDrift = countColorDrift(PART.top, true);  // 聚焦件应「保持原色」(drift=0)
+  const topOutline = visibleOutlines('top');         // 聚焦件淡金描边+光晕应可见
+  const otherDrift = countColorDrift(PART.cols, false); // 其余构件应被压暗 (drift>0)
+  applyFocus(0);
+  const diag = {
+    errs: window.__errs,
+    parts: PART_ORDER.length,
+    partChildren: PART_ORDER.map((n) => PART[n].children.length),
+    outlinesPerPart: PART_ORDER.map((n) => (PART_OUTLINES[n] || []).length),
+    resetDrift, topDrift, topOutline, otherDrift,
+    selftest: 'ok',
+  };
+  window.__diag = diag;
+  const d = document.getElementById('diag');
+  if (d) d.textContent = JSON.stringify(diag);
 }
 function showInfo(step) {
   const panel = document.getElementById('infopanel');
   const I = I18N[state.lang];
   panel.classList.add('show');
-  document.getElementById('ip-index').textContent = `${I.ipIndex} ${step.index} / ${PROCESS.length}`;
+  panel.scrollTop = 0; // 切换构件时回到顶部，避免携带上一组件的滚动位置
+  document.getElementById('ip-index').textContent = `${I.ipIndex} ${String(step.index).padStart(2, '0')} / ${String(PROCESS.length).padStart(2, '0')}`;
   document.getElementById('ip-name').textContent = lf(step, 'name');
   document.getElementById('ip-sub').textContent = lf(step, 'subtitle');
   document.getElementById('ip-principle').textContent = lf(step, 'principle');
-  document.getElementById('ip-equip').innerHTML = lf(step, 'equipment').map((e) => `<li>${e}</li>`).join('');
-  document.getElementById('ip-reaction').innerHTML = step.reaction.map((r) => `<code>${r}</code>`).join('');
+  const rx = (step.reaction && step.reaction.en) ? (state.lang === 'en' ? step.reaction.en : step.reaction.zh) : step.reaction;
+  document.getElementById('ip-reaction').innerHTML = rx.map((r) => `<code>${r}</code>`).join('');
+  const eq = lf(step, 'equipment');
+  const eqBlock = document.getElementById('ip-equip-block');
+  if (eq && eq.length) { eqBlock.style.display = ''; document.getElementById('ip-equip').innerHTML = eq.map((e) => `<li>${e}</li>`).join(''); }
+  else eqBlock.style.display = 'none';
   document.getElementById('ip-params').innerHTML = lf(step, 'params').map((p) => `<span>${p}</span>`).join('');
-  document.getElementById('ip-output').textContent = lf(step, 'output');
+  const op = lf(step, 'output');
+  const opBlock = document.getElementById('ip-output-block');
+  if (op) { opBlock.style.display = ''; document.getElementById('ip-output').textContent = op; }
+  else opBlock.style.display = 'none';
   document.getElementById('ip-color').style.background = '#' + step.color.toString(16).padStart(6, '0');
   document.getElementById('ip-title').textContent = I.ipPrinciple;
   document.getElementById('ip-reaction-title').textContent = I.ipReaction;
@@ -1152,7 +1312,11 @@ function applyLang() {
   document.getElementById('intro-sub').textContent = I.introSub;
   document.getElementById('intro-enter').textContent = I.introBtn;
   const langBtn = document.getElementById('btn-lang');
-  if (langBtn) langBtn.querySelector('.ct').textContent = state.lang === 'zh' ? 'EN' : '中文';
+  if (langBtn) { langBtn.dataset.lang = state.lang; langBtn.querySelector('.ct').textContent = state.lang === 'zh' ? 'EN' : '中'; }
+  const ovBtn = document.getElementById('btn-overview');
+  if (ovBtn) ovBtn.textContent = I.btnOverview;
+  const inBtn = document.getElementById('btn-intro');
+  if (inBtn) inBtn.title = I.btnInfo;
   applyNavText();
   if (currentActive >= 0) showInfo(PROCESS[currentActive]);
 }
@@ -1165,6 +1329,77 @@ function stopTour() {
 
 function bindUI() {
   document.getElementById('intro-enter').onclick = () => document.getElementById('intro').classList.add('hidden');
+  const langBtn = document.getElementById('btn-lang');
+  if (langBtn) langBtn.onclick = () => { state.lang = state.lang === 'zh' ? 'en' : 'zh'; applyLang(); };
+  const ovBtn = document.getElementById('btn-overview');
+  if (ovBtn) ovBtn.onclick = () => { stopTour(); focusOn(0); };
+  const inBtn = document.getElementById('btn-intro');
+  if (inBtn) inBtn.onclick = () => document.getElementById('intro').classList.remove('hidden');
+
+  // 详情抽屉：默认折叠；点击头部 / 拖拽头部都能切换展开
+  bindInfoDrawer();
+}
+
+// 详情面板：点击『详情』按钮 / 头部文字都触发折叠切换；竖屏支持拖拽头部收起。
+function bindInfoDrawer() {
+  const panel = document.getElementById('infopanel');
+  if (!panel) return;
+  const head = panel.querySelector('.ip-head');
+  const toggle = panel.querySelector('.ip-toggle');
+  const setOpen = (open) => {
+    panel.classList.toggle('expanded', open);
+    head.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-label', open ? '收起详情' : '展开详情');
+  };
+
+  // 头部整体点击（按钮自身用 stopPropagation 单独处理）
+  head.addEventListener('click', (e) => {
+    if (e.target.closest('.ip-toggle')) return;
+    setOpen(!panel.classList.contains('expanded'));
+  });
+  // 『详情』按钮本身点击：直接切换
+  toggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setOpen(!panel.classList.contains('expanded'));
+  });
+  // 键盘可达（Enter / Space 切展开）
+  head.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!panel.classList.contains('expanded')); }
+  });
+
+  // 拖拽：竖屏（底部抽屉）下拖 60px 收 / 上拖 60px 展
+  let dragStartY = 0, dragPointerId = -1, dragMoved = false;
+  const isNarrow = () => window.matchMedia('(max-width: 860px)').matches;
+  head.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('.ip-toggle')) return; // 不与按钮冲突
+    if (!isNarrow()) return;                   // 仅竖屏启用拖拽
+    dragStartY = e.clientY;
+    dragPointerId = e.pointerId;
+    dragMoved = false;
+  });
+  head.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== dragPointerId) return;
+    const dy = e.clientY - dragStartY;
+    if (!dragMoved && Math.abs(dy) < 6) return;
+    dragMoved = true;
+    panel.classList.add('dragging');
+  });
+  head.addEventListener('pointerup', (e) => {
+    if (e.pointerId !== dragPointerId) return;
+    const dy = e.clientY - dragStartY;
+    const wasDragging = dragMoved;
+    dragStartY = 0; dragPointerId = -1; dragMoved = false;
+    panel.classList.remove('dragging');
+    if (!wasDragging) return; // 没有拖动 → 交给 head.click 处理
+    const wasExpanded = panel.classList.contains('expanded');
+    if (wasExpanded && dy > 60) setOpen(false);
+    else if (!wasExpanded && dy < -60) setOpen(true);
+  });
+  head.addEventListener('pointercancel', () => {
+    dragStartY = 0; dragPointerId = -1; dragMoved = false;
+    panel.classList.remove('dragging');
+  });
 }
 
 // ============================================================
@@ -1213,12 +1448,6 @@ function animate() {
     }
   });
 
-  baseRings.forEach((r, i) => {
-    const base = i === currentActive ? 1.1 : 0.45;
-    r.material.emissiveIntensity = base + Math.sin(t * 2 + i) * 0.12;
-  });
-
-
   if (autoTour) {
     tourTimer += dt;
     if (tourTimer > 4.5) { tourTimer = 0; tourIndex = (tourIndex + 1) % PROCESS.length; focusOn(tourIndex); }
@@ -1236,4 +1465,9 @@ function onResize() {
   labelRenderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-init();
+try {
+  init();
+} catch (e) {
+  __recordErr('init:' + (e && e.stack ? e.stack : e));
+  throw e;
+}

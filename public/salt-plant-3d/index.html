@@ -30,6 +30,7 @@
 </head>
 <body>
   <div id="scene-root"></div>
+  <div id="diag" hidden></div>
 
   <header id="topbar">
     <div class="bar-inner">
@@ -38,7 +39,17 @@
           <span class="brand-word">DIAGONAL</span>
           <span class="brand-sub">/ 天车</span>
         </a>
-        <div id="legend" class="legend"></div>
+        <div class="bar-right">
+          <div id="legend" class="legend"></div>
+          <div class="top-ctrls">
+            <button id="btn-overview" class="btn-top" type="button">总览</button>
+            <button id="btn-intro" class="btn-top btn-info" type="button" title="关于天车" aria-label="关于天车">ⓘ</button>
+            <button id="btn-lang" class="lang-pill" type="button" data-lang="zh" aria-label="切换语言">
+              <span class="lang-track"><span class="lang-dot"></span></span>
+              <span class="ct">EN</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -49,34 +60,42 @@
     <div id="side-tip" class="side-tip">点击装置聚焦视角 · 拖拽旋转 · 滚轮缩放</div>
   </aside>
 
-  <section id="infopanel">
-    <div class="ip-head">
+  <section id="infopanel" aria-expanded="false">
+    <div class="ip-head" role="button" tabindex="0" aria-controls="ip-body" aria-expanded="false" title="展开 / 收起详情">
       <span id="ip-color" class="ip-color"></span>
-      <div>
+      <div class="ip-head-text">
         <div id="ip-index" class="ip-index">装置</div>
         <h2 id="ip-name">装置名称</h2>
         <div id="ip-sub" class="ip-sub">Subtitle</div>
       </div>
+      <button class="ip-toggle" type="button" aria-label="展开详情" aria-expanded="false">
+        <span class="ip-toggle-hint" data-hint="info">详情</span>
+        <svg class="ip-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
     </div>
-    <div class="ip-block">
-      <h3 id="ip-title">工艺原理</h3>
-      <p id="ip-principle"></p>
-    </div>
-    <div class="ip-block">
-      <h3 id="ip-reaction-title">结构 · 营建要点</h3>
-      <div id="ip-reaction" class="ip-reaction"></div>
-    </div>
-    <div class="ip-block">
-      <h3 id="ip-equip-title">主要构件</h3>
-      <ul id="ip-equip" class="ip-equip"></ul>
-    </div>
-    <div class="ip-block">
-      <h3 id="ip-params-title">关键形制</h3>
-      <div id="ip-params" class="ip-params"></div>
-    </div>
-    <div class="ip-block ip-out">
-      <h3 id="ip-output-title">提卤产出</h3>
-      <div id="ip-output" class="ip-output"></div>
+    <div class="ip-body" id="ip-body">
+      <div class="ip-block">
+        <h3 id="ip-title">工艺原理</h3>
+        <p id="ip-principle"></p>
+      </div>
+      <div class="ip-block">
+        <h3 id="ip-reaction-title">结构 · 营建要点</h3>
+        <div id="ip-reaction" class="ip-reaction"></div>
+      </div>
+      <div class="ip-block" id="ip-equip-block">
+        <h3 id="ip-equip-title">主要构件</h3>
+        <ul id="ip-equip" class="ip-equip"></ul>
+      </div>
+      <div class="ip-block">
+        <h3 id="ip-params-title">关键形制</h3>
+        <div id="ip-params" class="ip-params"></div>
+      </div>
+      <div class="ip-block ip-out" id="ip-output-block">
+        <h3 id="ip-output-title">提卤产出</h3>
+        <div id="ip-output" class="ip-output"></div>
+      </div>
     </div>
   </section>
 

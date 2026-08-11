@@ -1,11 +1,14 @@
 "use client";
 
-import { useThree } from "@react-three/fiber";
+import { useThree, useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
 import type CameraControlsImpl from "camera-controls";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useReducedMotion } from "framer-motion";
 import * as THREE from "three";
 import { SceneShell, CameraFocus } from "../SceneShell";
-import { metalColors } from "../Tag";
+import { metalColors, Tag } from "../Tag";
+import { stages } from "@/lib/data";
 import { BrineUnit, BRINE_OUTLET } from "./BrineUnit";
 import { EvaporateUnit, EVAP_BRINE_INLET, EVAP_SALT_OUTLET } from "./EvaporateUnit";
 import { CentrifugeUnit, CENTRIFUGE_INLET, CENTRIFUGE_WET_OUTLET } from "./CentrifugeUnit";
@@ -78,14 +81,16 @@ export function PipelineScene({
     ? anchors[cameraStageId]
     : { pos: [0, 0.5, 0], distance: 0, height: 0 };
   const isOverview = !cameraStageId;
+  // 系统“减弱动效”偏好：冻结 3D 粒子与脉冲（③-4）
+  const reduced = useReducedMotion() ?? false;
 
   // 分环节编组：位置 + 语义染色
   const stageList = [
-    { id: "brine", x: STAGE_X.brine, tint: metalColors.brine },
-    { id: "evaporate", x: STAGE_X.evaporate, tint: metalColors.brine },
-    { id: "centrifuge", x: STAGE_X.centrifuge, tint: metalColors.alloy },
-    { id: "dry", x: STAGE_X.dry, tint: metalColors.amber },
-    { id: "pack", x: STAGE_X.pack, tint: metalColors.alloy },
+    { id: "brine", x: STAGE_X.brine, tint: metalColors.brine, labelY: 3.2 },
+    { id: "evaporate", x: STAGE_X.evaporate, tint: metalColors.brine, labelY: 5.2 },
+    { id: "centrifuge", x: STAGE_X.centrifuge, tint: metalColors.alloy, labelY: 4.2 },
+    { id: "dry", x: STAGE_X.dry, tint: metalColors.amber, labelY: 3.2 },
+    { id: "pack", x: STAGE_X.pack, tint: metalColors.alloy, labelY: 3.6 },
   ];
 
   return (
@@ -105,11 +110,23 @@ export function PipelineScene({
         {/* 首帧就绪信号（Canvas 内） */}
         {onReady && <SceneReadySignal onReady={onReady} />}
 
+        {/* 场景雾：全景态轻雾给纵深；聚焦态浓雾压暗远处环节，焦点即所得（③-1 氛围 / ②-1） */}
+        <fog attach="fog" args={isOverview ? ["#eef1f5", 26, 82] : ["#eef1f5", 18, 52]} />
+
+        {/* 地面环境光晕：径向渐变贴图，给产线“落地”的空间感（③-1 场景氛围） */}
+        <FloorGlow />
+
+        {/* 聚焦态地面光环：常驻于对准环节，强化“已选中”；切全景时淡出回正 */}
+        <FocusHalo x={cameraStageId ? STAGE_X[cameraStageId as keyof typeof STAGE_X] : null} />
+
         {/* 地面平台（贯穿整条产线） */}
         <mesh position={[PIPELINE.centerX, PLATFORM.y, 0]} receiveShadow>
           <boxGeometry args={[PLATFORM.xMax - PLATFORM.xMin, 0.16, PLATFORM.depth]} />
           <meshStandardMaterial color="#eef2f7" metalness={0.2} roughness={0.85} />
         </mesh>
+
+        {/* 统一米制标尺：平台前缘的尺度参照（③-5） */}
+        <ScaleRuler />
 
         {/* 流向轨：流程方向叙事（青蓝 → 盐白） */}
         <FlowRail />
@@ -126,32 +143,22 @@ export function PipelineScene({
           />
         ))}
 
-        {/* 五大环节设备（点击模块即飞向该环节） */}
-        <BrineUnit
-          onSelect={() => onSelectStage("brine")}
-          focused={cameraStageId === "brine"}
-          lang={lang}
-        />
-        <EvaporateUnit
-          onSelect={() => onSelectStage("evaporate")}
-          focused={cameraStageId === "evaporate"}
-          lang={lang}
-        />
-        <CentrifugeUnit
-          onSelect={() => onSelectStage("centrifuge")}
-          focused={cameraStageId === "centrifuge"}
-          lang={lang}
-        />
-        <DryUnit
-          onSelect={() => onSelectStage("dry")}
-          focused={cameraStageId === "dry"}
-          lang={lang}
-        />
-        <PackUnit
-          onSelect={() => onSelectStage("pack")}
-          focused={cameraStageId === "pack"}
-          lang={lang}
-        />
+        {/* 五大环节设备（hover 预览 + 点击模块即飞向该环节） */}
+        <HoverStage id="brine" x={STAGE_X.brine} labelY={3.2} focused={cameraStageId === "brine"} lang={lang} onSelect={() => onSelectStage("brine")}>
+          <BrineUnit onSelect={() => onSelectStage("brine")} focused={cameraStageId === "brine"} lang={lang} />
+        </HoverStage>
+        <HoverStage id="evaporate" x={STAGE_X.evaporate} labelY={5.2} focused={cameraStageId === "evaporate"} lang={lang} onSelect={() => onSelectStage("evaporate")}>
+          <EvaporateUnit onSelect={() => onSelectStage("evaporate")} focused={cameraStageId === "evaporate"} lang={lang} />
+        </HoverStage>
+        <HoverStage id="centrifuge" x={STAGE_X.centrifuge} labelY={4.2} focused={cameraStageId === "centrifuge"} lang={lang} onSelect={() => onSelectStage("centrifuge")}>
+          <CentrifugeUnit onSelect={() => onSelectStage("centrifuge")} focused={cameraStageId === "centrifuge"} lang={lang} />
+        </HoverStage>
+        <HoverStage id="dry" x={STAGE_X.dry} labelY={3.2} focused={cameraStageId === "dry"} lang={lang} onSelect={() => onSelectStage("dry")}>
+          <DryUnit onSelect={() => onSelectStage("dry")} focused={cameraStageId === "dry"} lang={lang} />
+        </HoverStage>
+        <HoverStage id="pack" x={STAGE_X.pack} labelY={3.6} focused={cameraStageId === "pack"} lang={lang} onSelect={() => onSelectStage("pack")}>
+          <PackUnit onSelect={() => onSelectStage("pack")} focused={cameraStageId === "pack"} lang={lang} />
+        </HoverStage>
 
         {/* 连接管路：精卤 → Ⅰ效加热室（贴剖切面浅绕，全景下可见且直观接入） */}
         <FlowTube
@@ -163,8 +170,11 @@ export function PipelineScene({
             EVAP_BRINE_INLET,
           ]}
           color={metalColors.brine}
+          toColor={metalColors.salt}
           particleCount={8}
           speed={0.24}
+          pulse
+          reduced={reduced}
         />
 
         {/* 盐浆 → 离心机（从Ⅳ效排料口引出，接入旋流器进料口） */}
@@ -179,6 +189,8 @@ export function PipelineScene({
           color={metalColors.salt}
           particleCount={6}
           speed={0.2}
+          pulse
+          reduced={reduced}
         />
 
         {/* 湿盐 → 干燥床（接入流化床左下进料口） */}
@@ -191,6 +203,8 @@ export function PipelineScene({
           color={metalColors.salt}
           particleCount={5}
           speed={0.22}
+          pulse
+          reduced={reduced}
         />
 
         {/* 干盐 → 包装机（流化床出料 → 包装机进料口） */}
@@ -203,6 +217,8 @@ export function PipelineScene({
           color={metalColors.salt}
           particleCount={5}
           speed={0.22}
+          pulse
+          reduced={reduced}
         />
       </SceneShell>
 
@@ -213,5 +229,159 @@ export function PipelineScene({
           : "全景视图 · 拖拽旋转 / 点击下方编号或设备对准环节"}
       </div>
     </div>
+  );
+}
+
+/**
+ * 环节设备 hover 预览层：悬停时整体轻微抬升 + 光标变 pointer + 名称浮标，
+ * 提示「该设备可点击聚焦」，提升 3D 可发现性。点击即飞向对应环节。
+ */
+function HoverStage({
+  id,
+  x,
+  labelY,
+  focused,
+  lang,
+  onSelect,
+  children,
+}: {
+  id: string;
+  x: number;
+  labelY: number;
+  focused: boolean;
+  lang: "zh" | "en";
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  const ref = useRef<THREE.Group>(null);
+  const [hovered, setHovered] = useState(false);
+  const stage = stages.find((s) => s.id === id);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const target = hovered && !focused ? 0.16 : 0;
+    ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, target, 9, 0.016);
+  });
+
+  return (
+    <group
+      ref={ref}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+        document.body.style.cursor = "auto";
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect();
+      }}
+    >
+      {children}
+      {hovered && !focused && stage && (
+        <Tag
+          position={[x, labelY, 0]}
+          label={lang === "zh" ? stage.name : stage.nameEn}
+          value={lang === "zh" ? "点击查看原理" : "click for detail"}
+          color="#B33A2A"
+        />
+      )}
+    </group>
+  );
+}
+
+/**
+ * 聚焦态地面光环：常驻于当前对准的环节，用品牌红描边强调“已选中”，
+ * 让点选后的模型本体与未聚焦区立刻区分开（②-1 聚焦态描边/压暗）。
+ * 切回全景时阻尼淡出（scale→0），作为“回正微动效”（②-3 持续选中态+过渡）。
+ */
+function FocusHalo({ x }: { x: number | null }) {
+  const ref = useRef<THREE.Group>(null);
+  const lastX = useRef(PLATFORM.centerX);
+  useFrame(() => {
+    if (!ref.current) return;
+    const targetX = x ?? lastX.current;
+    if (x != null) lastX.current = x;
+    ref.current.position.x = THREE.MathUtils.damp(ref.current.position.x, targetX, 9, 0.016);
+    const targetS = x != null ? 1 : 0;
+    const s = THREE.MathUtils.damp(ref.current.scale.x, targetS, 8, 0.016);
+    ref.current.scale.setScalar(Math.max(0.0001, s));
+  });
+  return (
+    <group ref={ref} position={[PLATFORM.centerX, PLATFORM.y + 0.12, 0]} scale={0.0001}>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.0, 2.55, 64]} />
+        <meshBasicMaterial color="#B33A2A" transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1.5, 2.0, 64]} />
+        <meshBasicMaterial color="#B33A2A" transparent opacity={0.16} side={THREE.DoubleSide} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * 地面环境光晕：在平台与地面之间铺一层径向渐变贴图，
+ * 让整条产线“落地”有空间纵深感（③-1 场景氛围）。
+ * 贴图在客户端 effect 中生成，避免 SSR 访问 document。
+ */
+function FloorGlow() {
+  const [tex, setTex] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const c = document.createElement("canvas");
+    c.width = c.height = 256;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const g = ctx.createRadialGradient(128, 128, 8, 128, 128, 128);
+    g.addColorStop(0, "rgba(255,255,255,0.5)");
+    g.addColorStop(0.55, "rgba(228,236,245,0.22)");
+    g.addColorStop(1, "rgba(228,236,245,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 256);
+    const t = new THREE.CanvasTexture(c);
+    setTex(t);
+    return () => t.dispose();
+  }, []);
+  if (!tex) return null;
+  return (
+    <mesh position={[PIPELINE.centerX, PLATFORM.y + 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[PLATFORM.xMax - PLATFORM.xMin + 8, PLATFORM.depth + 8]} />
+      <meshBasicMaterial map={tex} transparent depthWrite={false} opacity={0.9} />
+    </mesh>
+  );
+}
+
+/**
+ * 统一米制标尺：平台前缘的尺度参照条（③-5）。
+ * 8 场景单位 ≈ 8 m（示意），带刻度与“m”标注，给工业装置一个尺度感。
+ */
+function ScaleRuler() {
+  const len = 8;
+  const x0 = PLATFORM.xMin + 2.5;
+  const z = PLATFORM.depth / 2 + 0.35;
+  const y = PLATFORM.y + 0.06;
+  const ticks = Array.from({ length: len + 1 }, (_, i) => x0 + i);
+  return (
+    <group>
+      <mesh position={[(x0 * 2 + len) / 2, y, z]}>
+        <boxGeometry args={[len, 0.035, 0.035]} />
+        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.3} roughness={0.7} />
+      </mesh>
+      {ticks.map((tx, i) => (
+        <mesh key={i} position={[tx, y, z]}>
+          <boxGeometry args={[0.035, i % 2 === 0 ? 0.2 : 0.12, 0.035]} />
+          <meshStandardMaterial color={metalColors.alloyMid} metalness={0.3} roughness={0.7} />
+        </mesh>
+      ))}
+      <Html position={[x0 + len + 0.7, y + 0.12, z]} center distanceFactor={16} zIndexRange={[15, 0]}>
+        <div className="pointer-events-none select-none text-[10px] font-mono text-ink-400 whitespace-nowrap">8 m</div>
+      </Html>
+    </group>
   );
 }

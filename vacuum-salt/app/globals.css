@@ -144,3 +144,34 @@ body {
   );
   animation: vs-loading-stripe 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
+
+/* —— 产线进度轨：播放时 当前节点→下一节点 的流动指示点 —— */
+@keyframes vs-flow-dot {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+.vs-flow-dot-anim {
+  animation: vs-flow-dot 1.1s ease-in-out infinite;
+}
+
+/* —— 系统“减弱动效”偏好：停用条纹/流动点等装饰性动画（③-4） —— */
+@media (prefers-reduced-motion: reduce) {
+  .vs-loading-bar {
+    animation: none !important;
+  }
+  .vs-flow-dot-anim {
+    animation: none !important;
+  }
+}

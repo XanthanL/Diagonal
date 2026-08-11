@@ -56,6 +56,28 @@ function SaltBag({ scale = 0.26 }: { scale?: number }) {
   );
 }
 
+/** 2-link 平面逆运动学：求夹爪尖端到达 (tx,ty) 时的两关节角 [θ1, θ2]。
+ *  基座在 (bx,by)，上臂长 L1、前臂长 L2；θ2 取肘朝上构型，避免前臂扫到地面。 */
+function solve2Link(
+  tx: number,
+  ty: number,
+  bx: number,
+  by: number,
+  L1: number,
+  L2: number
+): [number, number] {
+  const dx = tx - bx;
+  const dy = ty - by;
+  let D = Math.hypot(dx, dy);
+  const Dmax = L1 + L2 - 1e-3;
+  const Dmin = Math.abs(L1 - L2) + 1e-3;
+  D = Math.min(Math.max(D, Dmin), Dmax);
+  const cos2 = (D * D - L1 * L1 - L2 * L2) / (2 * L1 * L2);
+  const th2 = -Math.acos(Math.min(1, Math.max(-1, cos2))); // 肘朝上
+  const th1 = Math.atan2(dy, dx) - Math.atan2(L2 * Math.sin(th2), L1 + L2 * Math.cos(th2));
+  return [th1, th2];
+}
+
 // ---------- 1. 进料输送（盐袋被喂入包装机） ----------
 function Conveyor() {
   const bagRefs = useRef<THREE.Mesh[]>([]);
@@ -125,24 +147,28 @@ function Packer() {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const cyc = (t % CYCLE) / CYCLE;
-    if (bagRef.current) {
+    const bag = bagRef.current;
+    if (bag) {
       const vis = cyc < 0.5;
-      bagRef.current.visible = vis;
+      bag.visible = vis;
       if (vis) {
         const form = THREE.MathUtils.smoothstep(cyc, 0.0, 0.12); // 空袋成形
         const fill = THREE.MathUtils.smoothstep(cyc, 0.12, 0.4); // 充填胀大
         const drop = THREE.MathUtils.smoothstep(cyc, 0.4, 0.5); // 封口后落向皮带
         const settle = Math.sin(t * 9) * 0.015 * fill; // 充填时轻微沉降抖动
-        bagRef.current.position.set(0, 1.0 - drop * 1.15 + settle, 0);
-        bagRef.current.scale.setScalar(0.06 + form * 0.06 + fill * 0.16);
+        // 落袋时略向右挪，衔接输出皮带起点（修复原断点）
+        bag.position.set(drop * 0.1, 1.0 - drop * 1.15 + settle, 0);
+        // scale 直接由本 group 控制（SaltBag 传 scale=1，避免双重缩放导致盐袋过小）
+        bag.scale.setScalar(0.1 + form * 0.02 + fill * 0.14);
       }
     }
-    if (sealRef.current) {
+    const seal = sealRef.current;
+    if (seal) {
       // 充填末段（0.42–0.5）：封口夹下压、随袋顶一同落到皮带，完成封口
-      const seal = THREE.MathUtils.smoothstep(cyc, 0.42, 0.5);
-      sealRef.current.visible = seal > 0.01 && cyc < 0.5;
+      const s = THREE.MathUtils.smoothstep(cyc, 0.42, 0.5);
+      seal.visible = s > 0.01 && cyc < 0.5;
       const bagY = 1.0 - THREE.MathUtils.smoothstep(cyc, 0.4, 0.5) * 1.15;
-      sealRef.current.position.y = bagY + 0.22;
+      seal.position.y = bagY + 0.22;
     }
   });
   return (
@@ -167,9 +193,9 @@ function Packer() {
         <boxGeometry args={[0.5, 0.14, 0.4]} />
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.4} />
       </mesh>
-      {/* 空袋成形 → 充填胀大 → 封口落下的盐袋 */}
+      {/* 空袋成形 → 充填胀大 → 封口落下的盐袋（scale 由外层 group 直接控制） */}
       <group ref={bagRef} visible={false}>
-        <SaltBag />
+        <SaltBag scale={1} />
       </group>
     </group>
   );
@@ -179,8 +205,8 @@ function Packer() {
 function OutputBelt() {
   const bagRef = useRef<THREE.Group>(null);
   const beltRef = useRef<THREE.Mesh>(null);
-  const X0 = X_BELT - 0.9;
-  const X1 = X_BELT + 0.9; // 取袋点 ~1.9
+  const X0 = X_BELT - 0.9; // 取袋点一侧（衔接包装机落袋点）
+  const X1 = X_BELT + 0.9;
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const cyc = (t % CYCLE) / CYCLE;
@@ -217,36 +243,51 @@ function OutputBelt() {
       ))}
       {/* 被传送的盐袋（取袋点前可见） */}
       <group ref={bagRef} visible={false}>
-        <SaltBag />
+        <SaltBag scale={0.24} />
       </group>
     </group>
   );
 }
 
-// ---------- 4. 码垛机械臂（取袋 → 搬运 → 放垛） ----------
+// ---------- 4. 码垛机械臂（取袋 → 搬运 → 放垛，2-link IK 保证不穿模） ----------
 function RobotArm() {
   const pivotRef = useRef<THREE.Group>(null);
   const foreRef = useRef<THREE.Group>(null);
   const carryRef = useRef<THREE.Group>(null);
-  const HOME: [number, number] = [-0.3, 0.6]; // 待机
-  const PICK: [number, number] = [0.85, -0.5]; // 下探取袋（左）
-  const PLACE: [number, number] = [-1.05, 0.8]; // 上举放垛（右）
+  // 连杆：上臂 L1 + 前臂 L2；基座（立柱顶）在 (X_ROBOT, PIVOT_Y)
+  const L1 = 1.2;
+  const L2 = 1.1;
+  const PIVOT_Y = 0.9;
+  // 三个关键帧的世界目标点（相对 PackUnit 组）：取袋在皮带、放垛在仓储正面外侧、待机朝上
+  const POSES = useMemo(() => {
+    const home = solve2Link(X_ROBOT, PIVOT_Y + 0.9, X_ROBOT, PIVOT_Y, L1, L2); // 待机：朝上
+    const pick = solve2Link(X_BELT + 0.4, -0.05, X_ROBOT, PIVOT_Y, L1, L2); // 取袋：输出皮带
+    const place = solve2Link(X_WH - 0.45, 0.25, X_ROBOT, PIVOT_Y, L1, L2); // 放垛：仓储正面外侧（不进架体）
+    return { home, pick, place };
+  }, []);
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const cyc = (t % CYCLE) / CYCLE;
-    let pose = HOME;
-    if (cyc < 0.78) {
-      const k = THREE.MathUtils.smoothstep(cyc, 0.66, 0.78);
-      pose = [HOME[0] + (PICK[0] - HOME[0]) * k, HOME[1] + (PICK[1] - HOME[1]) * k];
+    let a1 = POSES.home[0];
+    let a2 = POSES.home[1];
+    if (cyc < 0.72) {
+      // 待机 → 下探取袋
+      const k = THREE.MathUtils.smoothstep(cyc, 0.55, 0.72);
+      a1 = POSES.home[0] + (POSES.pick[0] - POSES.home[0]) * k;
+      a2 = POSES.home[1] + (POSES.pick[1] - POSES.home[1]) * k;
     } else if (cyc < 0.92) {
-      const k = THREE.MathUtils.smoothstep(cyc, 0.78, 0.92);
-      pose = [PICK[0] + (PLACE[0] - PICK[0]) * k, PICK[1] + (PLACE[1] - PICK[1]) * k];
+      // 取袋 → 搬运至仓储
+      const k = THREE.MathUtils.smoothstep(cyc, 0.72, 0.92);
+      a1 = POSES.pick[0] + (POSES.place[0] - POSES.pick[0]) * k;
+      a2 = POSES.pick[1] + (POSES.place[1] - POSES.pick[1]) * k;
     } else {
+      // 放垛 → 收回待机
       const k = THREE.MathUtils.smoothstep(cyc, 0.92, 1.0);
-      pose = [PLACE[0] + (HOME[0] - PLACE[0]) * k, PLACE[1] + (HOME[1] - PLACE[1]) * k];
+      a1 = POSES.place[0] + (POSES.home[0] - POSES.place[0]) * k;
+      a2 = POSES.place[1] + (POSES.home[1] - POSES.place[1]) * k;
     }
-    if (pivotRef.current) pivotRef.current.rotation.z = pose[0];
-    if (foreRef.current) foreRef.current.rotation.z = pose[1];
+    if (pivotRef.current) pivotRef.current.rotation.z = a1;
+    if (foreRef.current) foreRef.current.rotation.z = a2;
     if (carryRef.current) carryRef.current.visible = cyc > 0.72 && cyc < 0.94; // 搬运段携带
   });
   return (
@@ -256,31 +297,31 @@ function RobotArm() {
         <cylinderGeometry args={[0.42, 0.5, 0.34, 18]} />
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.4} />
       </mesh>
-      {/* 立柱 */}
-      <mesh position={[0, -1.05, 0]} castShadow>
-        <cylinderGeometry args={[0.22, 0.22, 1.3, 14]} />
+      {/* 立柱（落地在 GROUND，顶到 PIVOT_Y） */}
+      <mesh position={[0, (GROUND + PIVOT_Y) / 2, 0]} castShadow>
+        <cylinderGeometry args={[0.22, 0.22, PIVOT_Y - GROUND, 14]} />
         <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.4} />
       </mesh>
       {/* 大臂（绕立柱顶旋转） */}
-      <group ref={pivotRef} position={[0, -0.4, 0]}>
-        <mesh position={[0.7, 0.12, 0]} castShadow>
-          <boxGeometry args={[1.4, 0.22, 0.22]} />
+      <group ref={pivotRef} position={[0, PIVOT_Y, 0]}>
+        <mesh position={[L1 / 2, 0, 0]} castShadow>
+          <boxGeometry args={[L1, 0.22, 0.22]} />
           <meshStandardMaterial color={metalColors.alloyLight} metalness={0.5} roughness={0.35} />
         </mesh>
         {/* 小臂 */}
-        <group ref={foreRef} position={[1.4, 0.12, 0]}>
-          <mesh position={[0.5, -0.1, 0]} castShadow>
-            <boxGeometry args={[1.0, 0.18, 0.18]} />
+        <group ref={foreRef} position={[L1, 0, 0]}>
+          <mesh position={[L2 / 2, 0, 0]} castShadow>
+            <boxGeometry args={[L2, 0.18, 0.18]} />
             <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.4} />
           </mesh>
           {/* 夹爪 */}
-          <mesh position={[1.0, -0.3, 0]}>
+          <mesh position={[L2, 0, 0]}>
             <boxGeometry args={[0.1, 0.4, 0.26]} />
             <meshStandardMaterial color={metalColors.amber} metalness={0.6} roughness={0.4} />
           </mesh>
-          {/* 携带的盐袋（随夹爪移动） */}
-          <group ref={carryRef} position={[1.0, -0.7, 0]} visible={false}>
-            <SaltBag />
+          {/* 携带的盐袋（随夹爪移动，放垛前消失） */}
+          <group ref={carryRef} position={[L2, -0.35, 0]} visible={false}>
+            <SaltBag scale={0.2} />
           </group>
         </group>
       </group>
@@ -288,16 +329,17 @@ function RobotArm() {
   );
 }
 
-// ---------- 5. 立体仓储（逐槽累积，满托重置） ----------
+// ---------- 5. 立体仓储（正面朝机械臂、逐槽累积，满托重置） ----------
 function Warehouse() {
   const slotRefs = useRef<THREE.Mesh[]>([]);
   const N = 9;
-  // 三层 × 三列；每袋袋高 0.30（scale 0.24），y 取「横梁顶面 + 0.15 + 0.02 余隙」→ 整齐坐在横梁上、零穿插
-  const slots = useMemo<[number, number][]>(() => {
-    const xs = [-0.42, 0, 0.42];
-    const ys = [-1.75, -0.75, 0.25]; // 对应横梁顶面 -1.92 / -0.92 / 0.08
-    const out: [number, number][] = [];
-    ys.forEach((y) => xs.forEach((x) => out.push([x, y])));
+  // 结构：窄 X、深 Z（列沿 Z 排），正面(-X 侧)朝向机械臂。
+  // 填充自上而下、前排(z=0)优先，与机械臂放垛(正面外侧)一致。
+  const cols = [0, 0.55, -0.55]; // Z 向列：前 / 后+ / 后-
+  const levels = [0.25, -0.75, -1.75]; // Y 向层：顶 → 底
+  const slots = useMemo<[number, number, number][]>(() => {
+    const out: [number, number, number][] = [];
+    levels.forEach((y) => cols.forEach((z) => out.push([0, y, z])));
     return out;
   }, []);
   useFrame((state) => {
@@ -310,37 +352,37 @@ function Warehouse() {
   });
   return (
     <group position={[X_WH, 0, 0]}>
-      {/* 货架横梁（三层承重 + 顶框） */}
-      {[-1.95, -0.95, 0.05, 0.55].map((row) => (
+      {/* 货架横梁（顶框 + 三层承重），窄 X、深 Z */}
+      {[0.55, 0.05, -0.95, -1.95].map((row) => (
         <mesh key={row} position={[0, row, 0]}>
-          <boxGeometry args={[1.5, 0.06, 0.9]} />
+          <boxGeometry args={[0.7, 0.06, 1.7]} />
           <meshStandardMaterial color={metalColors.alloyDark} metalness={0.55} roughness={0.5} />
         </mesh>
       ))}
-      {/* 立柱：从托盘(-2.24)连通至顶框(0.65)，不再悬空 */}
-      {[-0.75, 0.75].map((x) => (
-        <mesh key={x} position={[x, -0.795, 0]}>
-          <boxGeometry args={[0.08, 2.89, 0.9]} />
+      {/* 立柱：沿 Z 两侧（从托盘连通至顶框，不再悬空） */}
+      {[-0.85, 0.85].map((z) => (
+        <mesh key={z} position={[0, -0.7, z]}>
+          <boxGeometry args={[0.08, 2.9, 0.08]} />
           <meshStandardMaterial color={metalColors.alloyDark} metalness={0.55} roughness={0.5} />
         </mesh>
       ))}
       {/* 托盘底座（落地） */}
       <mesh position={[0, GROUND + 0.08, 0]} castShadow>
-        <boxGeometry args={[1.5, 0.16, 1.1]} />
+        <boxGeometry args={[0.7, 0.16, 1.7]} />
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.5} roughness={0.6} />
       </mesh>
-      {/* 逐槽累积的盐袋（机械臂码垛填入，整齐坐在横梁上） */}
+      {/* 逐槽累积的盐袋（机械臂码垛填入，前排 z=0 朝向机械臂） */}
       {slots.map((p, i) => (
         <mesh
           key={i}
           ref={(el) => {
             if (el) slotRefs.current[i] = el;
           }}
-          position={[p[0], p[1], 0]}
+          position={p}
           visible={false}
           castShadow
         >
-          <SaltBag scale={0.24} />
+          <SaltBag scale={0.22} />
         </mesh>
       ))}
     </group>
@@ -385,7 +427,7 @@ export function PackUnit({
             color={metalColors.alloy}
           />
           <Tag
-            position={[X_ROBOT, 0.9, 0]}
+            position={[X_ROBOT, 1.7, 0]}
             label={zh ? "码垛机械臂" : "Palletizing robot"}
             value={zh ? "取袋 → 搬运 → 放垛" : "pick → carry → stack"}
             color={metalColors.amber}

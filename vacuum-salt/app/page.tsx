@@ -9,6 +9,7 @@ import { NavBar } from "@/components/hud/NavBar";
 import { ControlDeck } from "@/components/hud/ControlDeck";
 import { InfoPanel, IntroPanel } from "@/components/hud/InfoPanel";
 import { RefsPanel } from "@/components/hud/RefsPanel";
+import { Coachmark } from "@/components/hud/Coachmark";
 
 /** 客户端挂载后才渲染子节点，避免 useMediaQuery 等客户端状态导致 hydration mismatch */
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,8 @@ export default function Home() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [introOpen, setIntroOpen] = useState(true);
   const [refsOpen, setRefsOpen] = useState(false);
+  // 首入操作引导（仅首次访问，localStorage 标记）；在引言关闭后才出现（③-7）
+  const [coachOpen, setCoachOpen] = useState(false);
   // 引导式自动巡游
   const [tour, setTour] = useState(false);
   const tourRef = useRef(false);
@@ -93,6 +96,26 @@ export default function Home() {
     playback.setSpeed(playback.speed === 1 ? 2 : playback.speed === 2 ? 3 : 1);
   };
 
+  // 返回全景（清空相机目标，overview 自适应取景）
+  const handleOverview = () => setCameraStageId(null);
+
+  // 首次访问：引言关闭后弹出操作引导；localStorage 记录已读，仅首访出现
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("vs_coach_done")) setCoachOpen(true);
+    } catch {
+      setCoachOpen(true);
+    }
+  }, []);
+  const handleCoachClose = () => {
+    setCoachOpen(false);
+    try {
+      localStorage.setItem("vs_coach_done", "1");
+    } catch {
+      /* 忽略隐私模式写入失败 */
+    }
+  };
+
   return (
     <main className="relative w-screen h-[100dvh] overflow-hidden bg-paper-100">
       {/* 背景网格 */}
@@ -128,6 +151,8 @@ export default function Home() {
         onPrev={handlePrev}
         onCycleSpeed={cycleSpeed}
         onOpenInfo={() => setInfoOpen(true)}
+        onOverview={handleOverview}
+        focused={cameraStageId !== null}
         tour={tour}
         onToggleTour={handleToggleTour}
       />
@@ -140,6 +165,7 @@ export default function Home() {
         <InfoPanel stage={stage} lang={lang} open={infoOpen} onClose={() => setInfoOpen(false)} />
         <IntroPanel lang={lang} open={introOpen} onClose={() => setIntroOpen(false)} />
         <RefsPanel open={refsOpen} lang={lang} onClose={() => setRefsOpen(false)} />
+        <Coachmark lang={lang} open={coachOpen && !introOpen} onClose={handleCoachClose} />
       </ClientOnly>
     </main>
   );

@@ -6,6 +6,7 @@ import type { Lang } from "@/lib/useLang";
 import type { StageData } from "@/lib/types";
 import { StageCard } from "./StageCard";
 import { VacuumPanel } from "./VacuumPanel";
+import { OverviewKpi } from "./OverviewKpi";
 
 interface ControlDeckProps {
   stages: StageData[];
@@ -19,6 +20,10 @@ interface ControlDeckProps {
   onPrev: () => void;
   onCycleSpeed: () => void;
   onOpenInfo: () => void;
+  /** 返回全景（聚焦态常驻入口） */
+  onOverview: () => void;
+  /** 当前是否处于聚焦某环节（非全景） */
+  focused: boolean;
   /** 引导式巡游开关 */
   tour: boolean;
   onToggleTour: () => void;
@@ -87,11 +92,13 @@ function Stepper({
   stages,
   current,
   lang,
+  playing,
   onGoto,
 }: {
   stages: StageData[];
   current: number;
   lang: Lang;
+  playing: boolean;
   onGoto: (i: number) => void;
 }) {
   return (
@@ -126,7 +133,16 @@ function Stepper({
                 {lang === "zh" ? s.name : s.nameEn}
               </span>
             </button>
-            {i < stages.length - 1 && <div className="w-2.5 h-px bg-black/15 mx-0.5 shrink-0" />}
+            {i < stages.length - 1 && (
+              <div className="relative w-7 h-px mx-0.5 shrink-0 overflow-visible">
+                <div
+                  className={`absolute inset-0 ${i < current ? "bg-diagonal-red/40" : "bg-black/15"}`}
+                />
+                {playing && i === current && (
+                  <span className="absolute top-1/2 left-0 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-diagonal-red shadow-[0_0_8px_rgba(179,58,42,0.55)] vs-flow-dot-anim" />
+                )}
+              </div>
+            )}
           </div>
         );
       })}
@@ -134,17 +150,23 @@ function Stepper({
   );
 }
 
-/** 引导式巡游字幕（顶部居中）：当前环节讲解词 + 进度条，自管 rAF 动画避免整树重渲染 */
+/** 引导式巡游字幕（顶部居中）：当前环节讲解词 + 进度小地图 + 进度条，自管 rAF 动画避免整树重渲染 */
 function TourCaption({
   stage,
+  stages,
+  current,
   lang,
   playing,
   speed,
+  onGoto,
 }: {
   stage: StageData;
+  stages: StageData[];
+  current: number;
   lang: Lang;
   playing: boolean;
   speed: 1 | 2 | 3;
+  onGoto: (i: number) => void;
 }) {
   const zh = lang === "zh";
   const [p, setP] = useState(0);
@@ -180,6 +202,22 @@ function TourCaption({
           {zh ? stage.name : stage.nameEn}
         </div>
         <div className="text-[12px] text-ink-600 mt-0.5 leading-relaxed">{narration}</div>
+        {/* 进度小地图：五环节点，当前高亮，点击直达（巡游中也能随时跳转） */}
+        <div className="mt-2 flex items-center gap-1.5">
+          {stages.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => onGoto(i)}
+              title={lang === "zh" ? s.name : s.nameEn}
+              aria-label={lang === "zh" ? s.name : s.nameEn}
+              className={`h-1.5 rounded-full transition-all ${
+                i === current
+                  ? "w-5 bg-diagonal-red"
+                  : "w-1.5 bg-black/20 hover:bg-black/40"
+              }`}
+            />
+          ))}
+        </div>
         <div className="mt-2 h-1 rounded-full bg-black/10 overflow-hidden">
           <div
             className="h-full bg-diagonal-red rounded-full"
@@ -210,12 +248,13 @@ export function ControlDeck(props: ControlDeckProps) {
     onPrev,
     onCycleSpeed,
     onOpenInfo,
+    onOverview,
+    focused,
     tour,
     onToggleTour,
   } = props;
   const [expanded, setExpanded] = useState(false);
   const stage = stages[current];
-  const showVacuum = stages[current]?.id === "evaporate";
   const zh = lang === "zh";
 
   return (
@@ -231,17 +270,31 @@ export function ControlDeck(props: ControlDeckProps) {
           />
         </div>
 
-        {/* 真空梯度面板：环节 2 聚焦时在右侧浮现 */}
-        {showVacuum && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[264px] max-w-[40vw] pointer-events-auto">
-            <VacuumPanel lang={lang} />
+        {/* 真空梯度 / 工艺真空度面板：常驻右侧，随播放实时爬升 */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 w-[264px] max-w-[40vw] pointer-events-auto">
+          <VacuumPanel lang={lang} current={current} />
+        </div>
+
+        {/* 全产线 KPI：全景态（非聚焦、非巡游）左下角展示整体指标（③-6） */}
+        {!focused && !tour && (
+          <div className="absolute left-4 bottom-4 w-[252px] max-w-[44vw] pointer-events-auto">
+            <OverviewKpi lang={lang} />
           </div>
         )}
 
         {/* 底部中央：步骤条 + 播放 */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
           <div className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-full pl-2 pr-1.5 py-1.5 flex items-center gap-2">
-            <Stepper stages={stages} current={current} lang={lang} onGoto={onGoto} />
+            <Stepper stages={stages} current={current} lang={lang} playing={playing} onGoto={onGoto} />
+            {focused && (
+              <button
+                onClick={onOverview}
+                className="px-2.5 h-9 rounded-full text-[11px] font-mono border border-black/10 bg-white text-ink-700 hover:border-diagonal-red/50 hover:text-diagonal-red transition"
+                title={zh ? "返回全景" : "Back to overview"}
+              >
+                {zh ? "全景" : "Overview"}
+              </button>
+            )}
             <div className="w-px h-6 bg-black/15" />
             <button
               onClick={onToggleTour}
@@ -295,6 +348,16 @@ export function ControlDeck(props: ControlDeckProps) {
               </div>
             </button>
 
+            {focused && (
+              <button
+                onClick={onOverview}
+                aria-label={zh ? "返回全景" : "Overview"}
+                className="shrink-0 w-8 h-8 rounded-md border border-black/10 text-[10px] font-mono text-ink-600 hover:text-diagonal-red hover:border-diagonal-red/40 flex items-center justify-center"
+              >
+                {zh ? "全景" : "ALL"}
+              </button>
+            )}
+
             {/* 迷你进度点（可直接跳转） */}
             <div className="flex items-center gap-1 shrink-0">
               {stages.map((s, i) => (
@@ -341,11 +404,15 @@ export function ControlDeck(props: ControlDeckProps) {
                     </span>
                   </div>
 
-                  <Stepper stages={stages} current={current} lang={lang} onGoto={onGoto} />
+                  <Stepper stages={stages} current={current} lang={lang} playing={playing} onGoto={onGoto} />
 
-                  {showVacuum && (
+                  <div className="pointer-events-auto">
+                    <VacuumPanel lang={lang} current={current} />
+                  </div>
+
+                  {!focused && !tour && (
                     <div className="pointer-events-auto">
-                      <VacuumPanel lang={lang} />
+                      <OverviewKpi lang={lang} />
                     </div>
                   )}
 
@@ -356,6 +423,14 @@ export function ControlDeck(props: ControlDeckProps) {
                     >
                       {lang === "zh" ? "原理 / 参数 →" : "Principle / Parameters →"}
                     </button>
+                    {focused && (
+                      <button
+                        onClick={onOverview}
+                        className="px-3 py-2 rounded-md border border-black/10 bg-paper-200 text-ink-700 text-[11px] font-mono transition hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40"
+                      >
+                        {zh ? "返回全景" : "Overview"}
+                      </button>
+                    )}
                     <button
                       onClick={onToggleTour}
                       className={`px-3 py-2 rounded-md border text-[11px] font-mono transition ${
@@ -390,7 +465,15 @@ export function ControlDeck(props: ControlDeckProps) {
 
       {/* 引导式巡游字幕（桌面 / 移动通用） */}
       {tour && (
-        <TourCaption stage={stage} lang={lang} playing={playing} speed={speed} />
+        <TourCaption
+          stage={stage}
+          stages={stages}
+          current={current}
+          lang={lang}
+          playing={playing}
+          speed={speed}
+          onGoto={onGoto}
+        />
       )}
     </>
   );

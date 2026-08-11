@@ -21,10 +21,10 @@ export function StageCard({
     <AnimatePresence mode="wait">
       <motion.div
         key={stage.id}
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -12 }}
-        transition={{ duration: 0.28 }}
+        exit={{ opacity: 0, y: -14 }}
+        transition={{ duration: 0.34, ease: [0.23, 1, 0.32, 1] }}
         className="bg-white/80 backdrop-blur-md border border-black/[0.06] shadow-sm rounded-xl p-4 w-full"
       >
         <div className="flex items-baseline justify-between mb-1.5">
