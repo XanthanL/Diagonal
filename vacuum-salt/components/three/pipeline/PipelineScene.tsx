@@ -301,7 +301,7 @@ function HoverStage({
  */
 function FocusHalo({ x }: { x: number | null }) {
   const ref = useRef<THREE.Group>(null);
-  const lastX = useRef(PLATFORM.centerX);
+  const lastX = useRef(PIPELINE.centerX);
   useFrame(() => {
     if (!ref.current) return;
     const targetX = x ?? lastX.current;
@@ -312,7 +312,7 @@ function FocusHalo({ x }: { x: number | null }) {
     ref.current.scale.setScalar(Math.max(0.0001, s));
   });
   return (
-    <group ref={ref} position={[PLATFORM.centerX, PLATFORM.y + 0.12, 0]} scale={0.0001}>
+    <group ref={ref} position={[PIPELINE.centerX, PLATFORM.y + 0.12, 0]} scale={0.0001}>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.0, 2.55, 64]} />
         <meshBasicMaterial color="#B33A2A" transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
