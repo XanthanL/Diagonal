@@ -656,7 +656,9 @@ function buildWell(g) {
   // 立式大车（提卤巨轮）+ 地辊（转向定滑轮）+ 碓架（冲击式顿钻踩架）
   buildCart(g, PART.cart, -3.8, 1.4);
   buildGroundRoller(g, PART.ground, -1.9, 2.1);
-  buildDuijia(g, PART.duijia, 3.0, -1.6);
+  // 碓架（踩架）挪到井口右前方的空地：避开主/副天车「束柱」腿部（两者 z 跨度均 ≤2.3，
+  // 此处 z=3.0 在它们前方，x 也全部在副天车右侧之外），消除与束柱的穿模。
+  buildDuijia(g, PART.duijia, 3.0, 3.0);
   // 提卤绳链：天辊 → 地辊（转向）→ 大车（绕绳）
   const linkMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
   PART.well.add(strut(new THREE.Vector3(-0.6, 15.3, 0.2), new THREE.Vector3(-1.9, 1.0, 2.1), 0.05, linkMat));

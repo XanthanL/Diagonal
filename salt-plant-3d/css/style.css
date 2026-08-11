@@ -178,6 +178,7 @@ html, body {
 /* 头部：横向排布，点击 / 键盘 / 拖拽皆可触发折叠 */
 .ip-head {
   display: flex; gap: 12px; align-items: flex-start;
+  flex: none; /* 头部固定高度，滚动交给 .ip-body */
   cursor: pointer;
   user-select: none; -webkit-user-select: none;
   touch-action: none; /* 头部只做拖拽/点击，不让浏览器横插滚动 */
@@ -219,8 +220,10 @@ html, body {
 #infopanel.expanded .ip-chevron { transform: rotate(180deg); }
 #infopanel.expanded .ip-toggle-hint { display: none; }
 
-/* 抽屉主体：默认折叠（max-height 0），展开时放量 */
+/* 抽屉主体：默认折叠（max-height 0），展开时放量并可上下滚动 */
 .ip-body {
+  flex: 1 1 auto;   /* 占据头部之外的剩余空间 */
+  min-height: 0;    /* 关键：允许在 flex 容器内收缩并出现内部滚动 */
   max-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -232,12 +235,13 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 #infopanel.expanded {
-  overflow-y: auto; /* 展开后允许内部滚动 */
+  overflow: hidden; /* 面板只做圆角裁切；滚动交给 .ip-body */
 }
 #infopanel.expanded .ip-body {
-  max-height: 1800px; /* 足够大；面板本身 max-height 会接管滚动 */
+  max-height: 1800px; /* 足够大；面板 max-height 接管总高，.ip-body 内部滚动 */
   opacity: 1;
   margin-top: 6px;
+  overflow-y: auto;   /* 展开后内容可上下滚动（手机端完整查看构件导览） */
 }
 
 /* 拖拽中的过渡：跟随手指，没有动效 */
@@ -323,9 +327,9 @@ html, body {
 }
 #intro-enter:hover { transform: translateY(-2px); background: #9c3122; }
 
-/* 滚动条 */
-#infopanel::-webkit-scrollbar { width: 6px; }
-#infopanel::-webkit-scrollbar-thumb { background: rgba(26,26,26,0.25); border-radius: 3px; }
+/* 滚动条（展开后 .ip-body 内部滚动） */
+#infopanel.expanded .ip-body::-webkit-scrollbar { width: 6px; }
+#infopanel.expanded .ip-body::-webkit-scrollbar-thumb { background: rgba(26,26,26,0.25); border-radius: 3px; }
 
 /* ---------------- 响应式：竖屏 / 手机端 ----------------
    窄屏下把左侧「构件导览」挪到底部，变为始终可见的横向滚动导航条，
@@ -359,13 +363,13 @@ html, body {
   /* 详情面板 → 底部抽屉（浮在导览条之上，可上下滚动） */
   #infopanel {
     top: auto; bottom: 70px; left: 12px; right: 12px;
-    width: auto; max-height: calc(52vh - 32px);
+    width: auto; max-height: calc(64vh - 32px);
     border-radius: 16px 16px 0 0;
     padding: 12px 14px;
     transform: translateY(20px);
   }
   #infopanel.show { transform: translateY(0); }
-  #infopanel.expanded .ip-body { max-height: 1400px; }
+  #infopanel.expanded .ip-body { max-height: 1600px; }
 }
 
 @media (max-width: 480px) {
@@ -374,6 +378,6 @@ html, body {
   .btn-top { font-size: 12px; }
   .lang-pill .ct { min-width: 1.2rem; }
   .nav-item { padding: 7px 10px; font-size: 12px; }
-  #infopanel { max-height: calc(58vh - 32px); }
-  #infopanel.expanded .ip-body { max-height: 1400px; }
+  #infopanel { max-height: calc(72vh - 32px); }
+  #infopanel.expanded .ip-body { max-height: 1600px; }
 }
