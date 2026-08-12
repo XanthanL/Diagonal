@@ -110,14 +110,8 @@ export function PipelineScene({
         {/* 首帧就绪信号（Canvas 内） */}
         {onReady && <SceneReadySignal onReady={onReady} />}
 
-        {/* 场景雾：全景态轻雾给纵深；聚焦态浓雾压暗远处环节，焦点即所得（③-1 氛围 / ②-1） */}
-        <fog attach="fog" args={isOverview ? ["#eef1f5", 26, 82] : ["#eef1f5", 18, 52]} />
-
-        {/* 地面环境光晕：径向渐变贴图，给产线“落地”的空间感（③-1 场景氛围） */}
+        {/* 地面环境光晕：径向渐变贴图，给产线“落地”的空间感（③-1 场景氛围；已移除法线雾以避免缩远时模型被遮挡） */}
         <FloorGlow />
-
-        {/* 聚焦态地面光环：常驻于对准环节，强化“已选中”；切全景时淡出回正 */}
-        <FocusHalo x={cameraStageId ? STAGE_X[cameraStageId as keyof typeof STAGE_X] : null} />
 
         {/* 地面平台（贯穿整条产线） */}
         <mesh position={[PIPELINE.centerX, PLATFORM.y, 0]} receiveShadow>
@@ -290,37 +284,6 @@ function HoverStage({
           color="#B33A2A"
         />
       )}
-    </group>
-  );
-}
-
-/**
- * 聚焦态地面光环：常驻于当前对准的环节，用品牌红描边强调“已选中”，
- * 让点选后的模型本体与未聚焦区立刻区分开（②-1 聚焦态描边/压暗）。
- * 切回全景时阻尼淡出（scale→0），作为“回正微动效”（②-3 持续选中态+过渡）。
- */
-function FocusHalo({ x }: { x: number | null }) {
-  const ref = useRef<THREE.Group>(null);
-  const lastX = useRef(PIPELINE.centerX);
-  useFrame(() => {
-    if (!ref.current) return;
-    const targetX = x ?? lastX.current;
-    if (x != null) lastX.current = x;
-    ref.current.position.x = THREE.MathUtils.damp(ref.current.position.x, targetX, 9, 0.016);
-    const targetS = x != null ? 1 : 0;
-    const s = THREE.MathUtils.damp(ref.current.scale.x, targetS, 8, 0.016);
-    ref.current.scale.setScalar(Math.max(0.0001, s));
-  });
-  return (
-    <group ref={ref} position={[PIPELINE.centerX, PLATFORM.y + 0.12, 0]} scale={0.0001}>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.0, 2.55, 64]} />
-        <meshBasicMaterial color="#B33A2A" transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.5, 2.0, 64]} />
-        <meshBasicMaterial color="#B33A2A" transparent opacity={0.16} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
     </group>
   );
 }
