@@ -201,11 +201,11 @@ export function PipelineScene({
           reduced={reduced}
         />
 
-        {/* 干盐 → 包装机（流化床出料 → 包装机进料口） */}
+        {/* 干盐 → 包装机（流化床出料 → 进料皮带接料漏斗） */}
         <FlowTube
           points={[
             DRY_OUTLET,
-            [STAGE_X.pack - 1.4, -0.4, 0],
+            [STAGE_X.pack - 3.3, -0.4, 0],
             PACK_INLET,
           ]}
           color={metalColors.salt}

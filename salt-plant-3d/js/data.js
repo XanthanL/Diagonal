@@ -177,9 +177,9 @@ export const PROCESS = [
   {
     id: 'duijia', index: 5, name: '碓架', subtitle: '冲击顿钻 · 凿井',
     nameEn: 'Percussion Rig', subtitleEn: 'Impact Drilling',
-    color: 0x6E5A42, position: [3.0, 0, -1.6],
-    cam: [10, 5, 9], target: [3.0, 2, -1.6],
-    halo: [3.0, 2.6, -1.6, 2.3],
+    color: 0x6E5A42, position: [5.6, 0, 1.6],
+    cam: [13, 6, 7.5], target: [5.6, 2.5, 1.6],
+    halo: [5.6, 2.6, 1.6, 2.3],
     principle:
       '碓架以踩板蓄能、碓头借重力冲击，带动井下钻杆做冲击式顿钻，是凿穿岩层、加深盐井的核心机构。它通常与提卤共用同一井位，凿井与采卤交替进行。',
     principleEn:
@@ -243,9 +243,9 @@ export const PROCESS = [
   {
     id: 'shed', index: 7, name: '盐工寮棚 · 竹笆', subtitle: '井场聚落 · 遮风',
     nameEn: 'Shed & Screen', subtitleEn: 'Well-yard Shelter',
-    color: 0x9A8455, position: [7.6, 0, 2],
-    cam: [16, 7, 16], target: [6, 3, 1],
-    halo: [7.0, 2.2, 2.0, 3.6],
+    color: 0x9A8455, position: [7.6, 0, 4.8],
+    cam: [12.5, 5.5, 11.5], target: [7.6, 2.2, 4.8],
+    halo: [7.6, 2.2, 4.8, 3.6],
     principle:
       '井台旁设草顶竹笆工棚，供盐工歇息、存放工具与卤缸；井台外缘以竹笆屏风挡风遮泥。寮棚与竹笆让冰冷的工业井架旁长出一处有人烟的「井场聚落」，是天车得以常年运转的生活基底。',
     principleEn:
