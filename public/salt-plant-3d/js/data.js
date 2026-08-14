@@ -177,9 +177,9 @@ export const PROCESS = [
   {
     id: 'duijia', index: 5, name: '碓架', subtitle: '冲击顿钻 · 凿井',
     nameEn: 'Percussion Rig', subtitleEn: 'Impact Drilling',
-    color: 0x6E5A42, position: [5.6, 0, 1.6],
-    cam: [13, 6, 7.5], target: [5.6, 2.5, 1.6],
-    halo: [5.6, 2.6, 1.6, 2.3],
+    color: 0x6E5A42, position: [6.4, 0, 1.8],
+    cam: [13.8, 6, 7.5], target: [6.4, 2.5, 1.8],
+    halo: [6.4, 2.6, 1.8, 2.3],
     principle:
       '碓架以踩板蓄能、碓头借重力冲击，带动井下钻杆做冲击式顿钻，是凿穿岩层、加深盐井的核心机构。它通常与提卤共用同一井位，凿井与采卤交替进行。',
     principleEn:
@@ -210,9 +210,9 @@ export const PROCESS = [
   {
     id: 'bailer', index: 6, name: '汲卤筒', subtitle: '提卤桶 · 入井',
     nameEn: 'Bailer', subtitleEn: 'Draw Bucket',
-    color: 0x6B6259, position: [0.4, 0, 0],
-    cam: [7, 7, 13], target: [0.4, 4, 0],
-    halo: [0.4, 3.2, 0, 1.5],
+    color: 0x6B6259, position: [-0.6, 0, 0.2],
+    cam: [6, 7, 13.2], target: [-0.6, 4, 0.2],
+    halo: [-0.6, 3.2, 0.2, 1.5],
     principle:
       '汲卤筒是入井提卤的木桶：桶口以双道铁箍锁固、桶底收成锥尖便于沉入卤水；由提卤绳经天辊—地辊—大车升降，把井底卤水一筒筒绞上地面。',
     principleEn:
@@ -288,7 +288,7 @@ export const I18N = {
     sub: '木构天车 3D 解构',
     sideTitle: '天车 · 构件导览',
     sideTip: '点击构件聚焦视角 · 拖拽旋转 · 滚轮缩放',
-    ctrl: { prev: '上一步', tour: '自动聚焦', next: '下一步', play: '动画', playOff: '已停止', rotate: '自转', rotateOff: '自转关', labels: '标签', labelsOff: '标签关', reset: '总览', touring: '聚焦中', download: '下载' },
+    ctrl: { prev: '上一步', tour: '自动聚焦', next: '下一步', play: '动画', pause: '暂停', playOff: '已停止', rotate: '自转', rotateOff: '自转关', labels: '标签', labelsOff: '标签关', reset: '总览', touring: '聚焦中', download: '下载' },
     introTitle: '天车',
     introDesc: '自贡井盐的标志——木构天车（井架）。其以多根杉木并束、错缝搭接成柱，外缠竹篾成箍，节点以手锻铁箍锁紧，全程不用一钉；顶端天辊、地面地辊与大车构成提卤滑轮组，碓架以冲击顿钻凿井。井台旁设有盐工寮棚与竹笆屏风。本页为其实时 3D 解构。',
     introSub: '拖拽旋转视角，点击左侧构件聚焦查看；动画展示提卤与顿钻。',
@@ -301,7 +301,7 @@ export const I18N = {
     sub: '3D Deconstruction of the Timber Derrick',
     sideTitle: 'Derrick · Parts',
     sideTip: 'Click a part to focus · Drag to orbit · Scroll to zoom',
-    ctrl: { prev: 'Prev', tour: 'Auto Focus', next: 'Next', play: 'Animate', playOff: 'Stopped', rotate: 'Rotate', rotateOff: 'Rotate Off', labels: 'Labels', labelsOff: 'Labels Off', reset: 'Overview', touring: 'Focusing', download: 'Download' },
+    ctrl: { prev: 'Prev', tour: 'Auto Focus', next: 'Next', play: 'Animate', pause: 'Pause', playOff: 'Stopped', rotate: 'Rotate', rotateOff: 'Rotate Off', labels: 'Labels', labelsOff: 'Labels Off', reset: 'Overview', touring: 'Focusing', download: 'Download' },
     introTitle: 'Derrick',
     introDesc: 'The emblem of Zigong well salt — the timber derrick. Each column is a bundle of fir trunks with offset splices, lashed tight by bamboo-cord rings and locked at the nodes by hand-forged iron hoops; not a single iron nail. A sky roller aloft and ground rollers and draw-cart below form the lifting pulley train; the percussion rig drills by impact. A brine-shed and bamboo screen frame the well yard. This page is its live 3D deconstruction.',
     introSub: 'Drag to orbit; click a part at left to focus. Animation shows brine lifting and percussion drilling.',

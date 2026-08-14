@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Newsreader, Noto_Serif_SC } from "next/font/goog
 import { getAbsoluteUrl, siteUrl } from "@/lib/path";
 import { Providers } from "@/components/Providers";
 import { GlobalNav } from "@/components/GlobalNav";
+import { PageTransition } from "@/components/PageTransition";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
@@ -79,7 +80,7 @@ export default function RootLayout({
             跳转到主内容
           </a>
           <GlobalNav />
-          <main id="main-content">{children}</main>
+          <PageTransition>{children}</PageTransition>
           <SiteFooter />
         </Providers>
       </body>

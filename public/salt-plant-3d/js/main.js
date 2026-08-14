@@ -56,7 +56,6 @@ let TEX = {};
 
 const tmpV = new THREE.Vector3();
 const tmpM = new THREE.Matrix4();
-const tmpZ = new THREE.Vector3(0, 0, 1); // 天辊轮缘出绳点计算用（绕 z 轴）
 
 // ---------- 语言辅助 ----------
 function lf(step, key) { return state.lang === 'en' ? step[key + 'En'] : step[key]; }
@@ -621,15 +620,27 @@ function buildWell(g) {
   buildDerrick(g, P, -0.6, 0.2, 15, 2.1, 6, wood, woodDark, true);
   buildDerrick(g, P, 2.6, -0.8, 11, 1.6, 5, woodLight, woodDark, false);
 
-  // 井口石箍（自贡盐井以石圈箍井，防潮固壁）
-  const stoneBase = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.32, 26), stoneTex(0x97928a, 0.96));
-  stoneBase.position.set(0.4, 0.56, 0); stoneBase.castShadow = true; stoneBase.receiveShadow = true; PART.well.add(stoneBase);
+  // 井口中心与主天车顶辊/束柱中心对齐：提卤绳沿塔内无撑通道直下，
+  // 不再穿右侧水平箍梁；汲卤筒也正好落入井口孔道。
+  const wellX = -0.6, wellZ = 0.2;
+
+  // 井口石箍（自贡盐井以石圈箍井，防潮固壁）。
+  // 石台改为石环而非实心圆盘，留出井口孔道，汲卤筒下降时不再穿进石台。
+  const stoneBase = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.22, 12, 30), stoneTex(0x97928a, 0.96));
+  stoneBase.rotation.x = Math.PI / 2; stoneBase.position.set(wellX, 0.56, wellZ);
+  stoneBase.castShadow = true; stoneBase.receiveShadow = true; PART.well.add(stoneBase);
+  // 井筒孔道（暗色内壁）：汲卤筒下探时进入此孔，而不是与木台/石台穿插
+  const wellShaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.8, 0.8, 0.42, 24),
+    new THREE.MeshStandardMaterial({ color: 0x2A2420, roughness: 0.96, metalness: 0.0 })
+  );
+  wellShaft.position.set(wellX, 0.51, wellZ); PART.well.add(wellShaft);
   const collarN = 14;
   for (let i = 0; i < collarN; i++) {
     const a = (i / collarN) * Math.PI * 2;
     const blk = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.95, 0.34), vStone(0x8f8a80, 0.96));
     const R = 0.82;
-    blk.position.set(0.4 + Math.cos(a) * R, 1.12, Math.sin(a) * R);
+    blk.position.set(wellX + Math.cos(a) * R, 1.12, wellZ + Math.sin(a) * R);
     blk.rotation.y = -a + (Math.random() - 0.5) * 0.12;
     const sc = 0.9 + Math.random() * 0.22;
     blk.scale.set(sc, 0.92 + Math.random() * 0.18, sc);
@@ -637,13 +648,14 @@ function buildWell(g) {
   }
   // 井口石压顶（一圈略宽的石环）
   const cap = new THREE.Mesh(new THREE.TorusGeometry(0.86, 0.09, 8, 28), stoneTex(0x8a857c, 0.95));
-  cap.rotation.x = Math.PI / 2; cap.position.set(0.4, 1.62, 0); PART.well.add(cap);
+  cap.rotation.x = Math.PI / 2; cap.position.set(wellX, 1.62, wellZ); PART.well.add(cap);
   // 井口锻铁箍（压住石圈、护住井唇，长年卤水浸润锈色深重）
   const wellIron = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.055, 8, 26), ironS());
-  wellIron.rotation.x = Math.PI / 2; wellIron.position.set(0.4, 1.7, 0); PART.well.add(wellIron);
-  // 顿钻钻杆（入井）
+  wellIron.rotation.x = Math.PI / 2; wellIron.position.set(wellX, 1.7, wellZ); PART.well.add(wellIron);
+  // 顿钻钻杆（入井）：提卤阶段由 animate 根据汲卤筒高度隐藏，
+  // 避免钻杆与汲卤筒同轴重叠（钻 / 提卤交替进行）。
   const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 6, 10), woodTex(0x473A2B, 0.9));
-  stem.position.set(0.4, -1.6, 0); PART.well.add(stem);
+  stem.position.set(wellX, -1.6, wellZ); PART.well.add(stem);
 
   // 传统木卤桶（heritage 点缀）：置于木地台之上（桶底落在台面 0.7），
   // 位置避开四角束柱与础石，避免桶体埋进地台、穿入柱腿
@@ -663,8 +675,9 @@ function buildWell(g) {
   buildGroundRoller(g, PART.ground, -1.9, 2.1);
   // 碓架（踩架）置于井口右前方空地、主天车风篾圈之外：
   // 避开主/副天车束柱腿部与两组风篾地桩/拉索；
-  // z=1.6 与寮棚左面竹笆墙（沿 (5.5,4.0)→(7.8,2.6) 走向）拉开 1.0+ 间距，消除穿模。
-  buildDuijia(g, PART.duijia, 5.6, 1.6);
+  // 实测副天车 60° 风篾会扫过原 (5.6, 1.6) 处的碓架杠杆，
+  // 故右移至 (6.4, 1.8)，同时仍与寮棚左面竹笆墙拉开 1.0+ 间距。
+  buildDuijia(g, PART.duijia, 6.4, 1.8);
   // 提卤绳链：天辊 → 地辊（转向）→ 大车（绕绳）
   const linkMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
   PART.well.add(strut(new THREE.Vector3(-1.8, 15.3, 0.2), new THREE.Vector3(-1.9, 1.0, 2.1), 0.05, linkMat));
@@ -686,15 +699,18 @@ function buildWell(g) {
     const bh = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.035, 8, 18), ironS());
     bh.rotation.x = Math.PI / 2; bh.position.y = yy; bucket.add(bh);
   });
-  bucket.position.set(0.4, 3.4, 0); PART.bailer.add(bucket);
-  // 提卤绳：天辊锚点 → 桶顶，随桶升降而伸缩
+  bucket.position.set(wellX, 3.4, wellZ); PART.bailer.add(bucket);
+  // 提卤绳：天辊锚点 → 桶顶，随桶升降而伸缩。
+  // 该 mesh 每帧由 orientCylinder 直接改写 position/scale/quaternion，
+  // 静态 outline 无法跟随，聚焦时会出现“幽灵描边”，故跳过描边生成。
   const liftRope = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1, 6), liftRopeMat);
+  liftRope.userData.noOutline = true;
   PART.bailer.add(liftRope);
   g.userData.wellAnim = {
-    bucket, liftRope,
+    bucket, liftRope, stem,
     top: 3.4, bottom: 1.3, period: 8.0,
     anchor: new THREE.Vector3(0.6, 15.3, 0.2), // 天辊轮缘出绳点（随天辊转动实时更新）
-    bucketX: 0.4, bucketZ: 0,
+    bucketX: wellX, bucketZ: wellZ,
     prevY: 3.4,
   };
 
@@ -703,6 +719,38 @@ function buildWell(g) {
   buildShed(g, PART.shed, 7.6, 4.8);
   buildScreen(g, PART.shed, -8.6, 3.0, 3.4, 1.5);
   buildScreen(g, PART.shed, 5.6, -6.6, 3.0, 1.35);
+}
+
+// 风篾跳角规则：buildDerrick 与 ?selftest 碰撞回归共用同一函数，避免两处规则漂移。
+function windStayShouldSkip(a, isMain) {
+  // 副天车朝主天车一侧不设拉索：实测 120° 拉索会穿主天车右前束柱，
+  // 150°/180°/210° 拉索与地桩会穿入主天车底盘与架体。
+  if (!isMain && ((a > (140 * Math.PI) / 180 && a < (220 * Math.PI) / 180) ||
+                  Math.abs(a - (120 * Math.PI) / 180) < 1e-3)) return true;
+  // 主天车 0° 拉索正穿副天车前横梁，330° 地桩落在副天车东南角础石上。
+  if (isMain && (Math.abs(a) < 1e-3 ||
+                 Math.abs(a - (330 * Math.PI) / 180) < 1e-3)) return true;
+  return false;
+}
+
+// 生成某座天车的风篾线段端点（世界坐标），buildDerrick 与 selftest 共用。
+function windStaySegments(cx, cz, H, baseHalf, isMain) {
+  const topHalf = baseHalf * 0.32;
+  const windY = H * 0.78;
+  const halfAtWind = baseHalf * (1 - windY / H) + topHalf * (windY / H);
+  const ringR = halfAtWind * Math.SQRT2 + 0.25;
+  const pegR = baseHalf * 2.6;
+  const segs = [];
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    if (windStayShouldSkip(a, isMain)) continue;
+    segs.push({
+      a,
+      p1: [cx + Math.cos(a) * ringR, windY, cz + Math.sin(a) * ringR],
+      p2: [cx + Math.cos(a) * pegR, 0.7, cz + Math.sin(a) * pegR],
+    });
+  }
+  return segs;
 }
 
 // 单座天车：四面收分木井架（束柱）+ 交叉斜撑 + 顶部天辊 + 风篾拉索
@@ -869,17 +917,10 @@ function buildDerrick(g, P, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, i
       woodDarkMat
     ));
   }
-  const R = baseHalf * 2.6, N = 12;
-  for (let i = 0; i < N; i++) {
-    const a = (i / N) * Math.PI * 2;
-    // 副天车朝主天车一侧（约 140°–220°）不设拉索：两塔相距近，
-    // 该侧拉索与地桩会穿入主天车底盘与架体，主/副两组风篾互不干涉
-    if (!isMain && a > (140 * Math.PI) / 180 && a < (220 * Math.PI) / 180) continue;
-    // 主天车 330° 方位的地桩/拉索正好落在副天车东南角础石上，该方位留出缺口
-    if (isMain && Math.abs(a - (330 * Math.PI) / 180) < 1e-3) continue;
-    const ax = cx + Math.cos(a) * ringR, az = cz + Math.sin(a) * ringR;
-    const px = cx + Math.cos(a) * R, pz = cz + Math.sin(a) * R;
-    statT.add(strut(new THREE.Vector3(ax, windY, az), new THREE.Vector3(px, 0.7, pz), 0.06, ropeMat));
+  for (const seg of windStaySegments(cx, cz, H, baseHalf, isMain)) {
+    const [ax, ay, az] = seg.p1;
+    const [px, py, pz] = seg.p2;
+    statT.add(strut(new THREE.Vector3(ax, ay, az), new THREE.Vector3(px, py, pz), 0.06, ropeMat));
     const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.9, 8), woodDarkMat);
     peg.position.set(px, 0.25, pz); peg.castShadow = true; statT.add(peg);
     // 地桩铁箍（防劈裂）
@@ -898,7 +939,8 @@ function buildCart(g, part, x, z) {
   const cart = new THREE.Group();
   cart.position.set(x, 0, z);
   const wheel = new THREE.Mesh(new THREE.TorusGeometry(R, 0.28, 14, 32), woodTex(WOOD, 0.9));
-  wheel.position.y = R; cart.add(wheel);
+  wheel.position.y = R; wheel.userData.noOutline = true; // 轮体自身旋转，静态 outline 会脱节
+  cart.add(wheel);
   for (let i = 0; i < 10; i++) {
     const sp = new THREE.Mesh(new THREE.BoxGeometry(0.14, R * 1.85, 0.14), woodDark);
     sp.position.y = R; sp.rotation.z = (i / 10) * Math.PI * 2; cart.add(sp);
@@ -934,7 +976,8 @@ function buildCart(g, part, x, z) {
 function buildGroundRoller(g, part, x, z) {
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const roller = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.13, 10, 22), woodTex(WOOD_LIGHT, 0.8));
-  roller.position.set(x, 1.0, z); part.add(roller);
+  roller.position.set(x, 1.0, z); roller.userData.noOutline = true; // 地辊自身旋转，静态 outline 会脱节
+  part.add(roller);
   for (let i = 0; i < 4; i++) {
     const sp = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.0, 0.09), woodDark);
     sp.position.set(x, 1.0, z); sp.rotation.z = (i / 4) * Math.PI * 2; part.add(sp);
@@ -1190,6 +1233,7 @@ function buildOutline(group, name) {
   const list = [];
   group.traverse((src) => {
     if (!src.isMesh) return;
+    if (src.userData.noOutline) return; // 动态 mesh（旋转轮体 / 伸缩提卤绳）不生成静态描边
     const geo = src.geometry;
     geo.computeBoundingBox();
     const c = new THREE.Vector3();
@@ -1277,13 +1321,95 @@ function runSelfTest() {
   const topOutline = visibleOutlines('top');         // 聚焦件淡金描边+光晕应可见
   const otherDrift = countColorDrift(PART.cols, false); // 其余构件应被压暗 (drift>0)
   applyFocus(0);
+
+  // —— 碰撞回归断言：关键线段不得命中「不应相交」的构件分区 ——
+  const collisionErrors = [];
+  const segmentHits = (p1, p2, targets, label, near = 0.05) => {
+    const a = new THREE.Vector3(...p1), b = new THREE.Vector3(...p2);
+    const dir = new THREE.Vector3().subVectors(b, a);
+    const len = dir.length();
+    if (len < 1e-6) return [];
+    dir.normalize();
+    const objs = [];
+    const objectParts = new Map();
+    targets.forEach((partName) => {
+      if (!PART[partName]) return;
+      PART[partName].traverse((o) => {
+        if (o.isMesh && !o.userData.isOutline) {
+          objectParts.set(o, partName);
+          objs.push(o);
+        }
+      });
+    });
+    const ray = new THREE.Raycaster(a, dir, near, len * 0.995);
+    return ray.intersectObjects(objs, false).map((h) => ({
+      label,
+      part: objectParts.get(h.object) ?? '?',
+      point: [Math.round(h.point.x * 100) / 100, Math.round(h.point.y * 100) / 100, Math.round(h.point.z * 100) / 100],
+    }));
+  };
+
+  let collisionSegments = 0;
+  const mainStays = windStaySegments(-0.6, 0.2, 15, 2.1, true);
+  const subStays = windStaySegments(2.6, -0.8, 11, 1.6, false);
+  const stayTargets = ['cols', 'cart', 'ground', 'duijia', 'shed', 'well'];
+  [...mainStays, ...subStays].forEach((seg) => {
+    collisionSegments += 1;
+    const hits = segmentHits(seg.p1, seg.p2, stayTargets, `wind@${Math.round(seg.a * 180 / Math.PI)}deg`);
+    if (hits.length) collisionErrors.push(...hits);
+  });
+
+  const w = stationGroups[0].userData.wellAnim;
+  const anchor = new THREE.Vector3(0, -1.2, 0).add(stationGroups[0].userData.skyRoller.position);
+  [[w.bucket.position.y, 'lift-top'], [1.3, 'lift-bottom']].forEach(([yy, label]) => {
+    collisionSegments += 1;
+    const hits = segmentHits(
+      [anchor.x, anchor.y, anchor.z],
+      [w.bucketX, yy + 0.66, w.bucketZ],
+      ['cols', 'top'],
+      label
+    );
+    if (hits.length) collisionErrors.push(...hits);
+  });
+
+  // 汲卤筒最低行程：锥尖必须在井筒内、半径小于井筒半径，且钻杆隐藏
+  const prevBucketY = w.bucket.position.y;
+  w.bucket.position.y = 1.3;
+  if (w.stem) w.stem.visible = 1.3 > 2.34;
+  scene.updateMatrixWorld(true);
+  const bucketBox = new THREE.Box3();
+  w.bucket.traverse((o) => {
+    if (o.isMesh && !o.userData.isOutline) bucketBox.expandByObject(o);
+  });
+  const bucketCX = (bucketBox.min.x + bucketBox.max.x) / 2;
+  const bucketCZ = (bucketBox.min.z + bucketBox.max.z) / 2;
+  const bucketMaxR = Math.max(
+    Math.abs(bucketBox.min.x - bucketCX),
+    Math.abs(bucketBox.max.x - bucketCX),
+    Math.abs(bucketBox.min.z - bucketCZ),
+    Math.abs(bucketBox.max.z - bucketCZ)
+  );
+  if (bucketBox.min.y < 0.3) collisionErrors.push({ label: 'bailer-bottom', detail: `tipY=${bucketBox.min.y}` });
+  if (bucketMaxR > 0.75) collisionErrors.push({ label: 'bailer-radius', detail: `r=${bucketMaxR}` });
+  if (w.stem && w.stem.visible) collisionErrors.push({ label: 'drill-stem-should-hide' });
+  w.bucket.position.y = prevBucketY;
+  if (w.stem) w.stem.visible = prevBucketY > 2.34;
+  scene.updateMatrixWorld(true);
+
+  collisionErrors.forEach((e) => window.__errs.push(`collision:${e.label}`));
   const diag = {
     errs: window.__errs,
     parts: PART_ORDER.length,
     partChildren: PART_ORDER.map((n) => PART[n].children.length),
     outlinesPerPart: PART_ORDER.map((n) => (PART_OUTLINES[n] || []).length),
     resetDrift, topDrift, topOutline, otherDrift,
-    selftest: 'ok',
+    collision: {
+      checked: collisionSegments,
+      hits: collisionErrors.length,
+      clear: collisionErrors.length === 0,
+      errors: collisionErrors,
+    },
+    selftest: collisionErrors.length === 0 ? 'ok' : 'fail',
   };
   window.__diag = diag;
   const d = document.getElementById('diag');
@@ -1336,15 +1462,13 @@ function applyNavText() {
 }
 function refreshControlsText() {
   const I = I18N[state.lang].ctrl;
-  document.querySelectorAll('#controls .ctrl').forEach((btn) => {
-    const key = btn.getAttribute('data-ct-key');
-    if (key === 'lang') return;
-    const ct = btn.querySelector('.ct');
-    if (key === 'tour') ct.textContent = autoTour ? I.touring : I.tour;
-    else if (key === 'play') ct.textContent = playing ? I.play : I.playOff;
-    else if (key === 'rotate') ct.textContent = controls.autoRotate ? I.rotate : I.rotateOff;
-    else ct.textContent = I[key];
-  });
+  const playBtn = document.getElementById('btn-play');
+  if (playBtn) playBtn.textContent = playing ? I.pause : I.play;
+  const tourBtn = document.getElementById('btn-tour');
+  if (tourBtn) {
+    tourBtn.textContent = autoTour ? I.touring : I.tour;
+    tourBtn.classList.toggle('active', autoTour);
+  }
 }
 function applyLang() {
   const I = I18N[state.lang];
@@ -1363,6 +1487,7 @@ function applyLang() {
   const inBtn = document.getElementById('btn-intro');
   if (inBtn) inBtn.title = I.btnInfo;
   applyNavText();
+  refreshControlsText();
   if (currentActive >= 0) showInfo(PROCESS[currentActive]);
 }
 function stopTour() {
@@ -1380,6 +1505,16 @@ function bindUI() {
   if (ovBtn) ovBtn.onclick = () => { stopTour(); focusOn(0); };
   const inBtn = document.getElementById('btn-intro');
   if (inBtn) inBtn.onclick = () => document.getElementById('intro').classList.remove('hidden');
+  const playBtn = document.getElementById('btn-play');
+  if (playBtn) playBtn.onclick = () => { playing = !playing; refreshControlsText(); };
+  const tourBtn = document.getElementById('btn-tour');
+  if (tourBtn) tourBtn.onclick = () => {
+    if (autoTour) { stopTour(); return; }
+    autoTour = true;
+    tourTimer = 0;
+    tourIndex = currentActive >= 0 ? currentActive : 0;
+    refreshControlsText();
+  };
 
   // 详情抽屉：默认折叠；点击头部 / 拖拽头部都能切换展开
   bindInfoDrawer();
@@ -1483,6 +1618,9 @@ function animate() {
       const p = (t % w.period) / w.period;
       const yy = w.bottom + (w.top - w.bottom) * (0.5 - 0.5 * Math.cos(p * Math.PI * 2));
       w.bucket.position.y = yy;
+      // 汲卤筒下探时隐藏静止钻杆（钻 / 提卤交替进行）；
+      // 阈值取「桶锥尖仍高于钻杆顶 1.4」的时刻，保证二者永不同框相交。
+      if (w.stem) w.stem.visible = yy > 2.34;
       orientCylinder(w.liftRope, w.anchor, new THREE.Vector3(w.bucketX, yy + 0.66, w.bucketZ));
       const vel = (yy - w.prevY) / Math.max(dt, 1e-3);
       w.prevY = yy;
@@ -1491,13 +1629,15 @@ function animate() {
       if (g.userData.groundRoller) g.userData.groundRoller.rotation.z += dW;
       if (g.userData.skyRoller) {
         g.userData.skyRoller.rotation.z += dW;
-        // 提卤绳锚点跟随天辊轮缘：绳真实「绕上轮缘」出入，而非从轴心出绳
-        w.anchor.set(1.2, 0, 0).applyAxisAngle(tmpZ, g.userData.skyRoller.rotation.z).add(g.userData.skyRoller.position);
+        // 提卤绳从天辊轮缘正下方切线出绳：井口已与天辊中心对齐，
+        // 固定底缘出绳点可保证绳段竖直落在塔内无撑通道中，
+        // 不会随轮缘转到左右两侧而扫过 y≈12.5 的侧向水平箍梁。
+        w.anchor.set(0, -1.2, 0).add(g.userData.skyRoller.position);
       }
     }
   });
 
-  if (autoTour) {
+  if (autoTour && playing) {
     tourTimer += dt;
     if (tourTimer > 4.5) { tourTimer = 0; tourIndex = (tourIndex + 1) % PROCESS.length; focusOn(tourIndex); }
   }

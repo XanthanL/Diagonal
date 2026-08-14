@@ -132,8 +132,15 @@ body {
   .animate-scrollBob,
   .animate-atlasProgress,
   .animate-fadeIn,
-  #main-content {
+  #main-content,
+  ::view-transition-old(page-main),
+  ::view-transition-new(page-main) {
     animation: none;
+  }
+  .page-transition-overlay,
+  .page-transition-overlay.pt-cover,
+  .page-transition-overlay.pt-reveal {
+    transition: none;
   }
 
   /* 按压：丢掉缩放与位移，换成透明度反馈（更温和，而非归零）。
@@ -166,6 +173,69 @@ body {
 }
 #main-content {
   animation: pageEnter 0.3s ease-out;
+}
+
+/* —— 页面切换：原生 View Transitions（支持时） —— */
+#main-content {
+  view-transition-name: page-main;
+}
+::view-transition-old(page-main) {
+  animation: vt-page-out 0.18s var(--ease-out) both;
+}
+::view-transition-new(page-main) {
+  animation: vt-page-in 0.36s var(--ease-out) both;
+}
+@keyframes vt-page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes vt-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* —— 页面切换：SWUP 式红色幕布（不支持 View Transitions 或独立子项目时） —— */
+.page-transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: #b33a2a;
+  transform: translateY(101%);
+  pointer-events: none;
+  will-change: transform;
+}
+.page-transition-overlay.pt-cover {
+  transform: translateY(0);
+  transition: transform 240ms var(--ease-out);
+}
+.page-transition-overlay.pt-reveal {
+  transform: translateY(-101%);
+  transition: transform 560ms var(--ease-in-out);
+}
+.page-transition-overlay-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.page-transition-overlay-slash {
+  position: absolute;
+  left: -20%;
+  top: -10%;
+  width: 140%;
+  height: 140%;
+  background: linear-gradient(
+    135deg,
+    transparent 49.6%,
+    rgba(255, 255, 255, 0.16) 49.6%,
+    rgba(255, 255, 255, 0.16) 50.4%,
+    transparent 50.4%
+  );
 }
 
 /* —— 图片加载过渡 —— */
