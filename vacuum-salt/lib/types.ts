@@ -33,6 +33,8 @@ export interface PartInfo {
 export interface ReactionItem {
   id: string;
   title: string;
+  /** 反应名称（英文） */
+  titleEn: string;
   /** 反应式（纯文本，前端用等宽字体展示） */
   equation: string;
   note: string;

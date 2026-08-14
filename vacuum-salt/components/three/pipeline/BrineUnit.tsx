@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors, Tag } from "../Tag";
+import { useProcessPaused } from "@/lib/useProcessPaused";
 import { FlowTube } from "./FlowTube";
 import { STAGE_X } from "./layout";
 
@@ -30,9 +31,6 @@ const X_WELL = -4.3; // 地质剖面 + 深井
 const X_REACTOR = -1.0; // 净化反应槽
 const X_CLARIFIER = 2.4; // 道尔澄清槽
 const X_FILTER = 5.0; // 砂滤 / 叶滤器
-
-/** 精卤出口（世界坐标）——供 PipelineScene 接管道到蒸发环节 */
-export const BRINE_OUTLET: [number, number, number] = [STAGE_X.brine + X_FILTER, -1.62, 0];
 
 // 工艺色（在 metalColors 基础上补充「浑浊 / 泥」两档，用于表达净化前后的差异）
 const C = {
@@ -90,8 +88,10 @@ function WellSection() {
 
   const UP = 9;
   const DOWN = 6;
+  const paused = useProcessPaused();
 
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     // 卤水上升（黄褐）：溶腔 → 井口
     upRefs.current.forEach((m, i) => {
@@ -308,8 +308,10 @@ function Reactor() {
       })),
     []
   );
+  const paused = useProcessPaused();
 
   useFrame((state, delta) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     if (stirRef.current) stirRef.current.rotation.y += delta * 1.25;
 
@@ -475,8 +477,10 @@ function Clarifier() {
       })),
     []
   );
+  const paused = useProcessPaused();
 
   useFrame((state, delta) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     if (rakeRef.current) rakeRef.current.rotation.y += delta * 0.28;
 
@@ -660,8 +664,10 @@ function SandFilter() {
     { color: "#d9cdb2", y: -0.7, h: 0.48, r: F_R - 0.07 }, // 粗石英砂
     { color: "#c3b79c", y: -1.12, h: 0.34, r: F_R - 0.07 }, // 承托砾石
   ];
+  const paused = useProcessPaused();
 
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     // 上部浑浊卤水下渗（进入砂层即淡出）
     inRefs.current.forEach((m, i) => {

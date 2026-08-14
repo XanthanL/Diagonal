@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors, Tag } from "../Tag";
+import { useProcessPaused } from "@/lib/useProcessPaused";
 import { FlowTube } from "./FlowTube";
 import { STAGE_X } from "./layout";
 
@@ -40,14 +41,6 @@ const SPACING = 3.0;
 export function localEffectX(i: number): number {
   return (-1.5 + i) * SPACING;
 }
-/** 世界坐标的效中心 x（供 PipelineScene / 跨环节管路使用） */
-export function effectX(i: number): number {
-  return STAGE_X.evaporate + localEffectX(i);
-}
-
-// 跨环节连接点（世界坐标，供 PipelineScene 接管道）
-export const EVAP_BRINE_INLET: [number, number, number] = [effectX(0), -1.5, -0.5];
-export const EVAP_SALT_OUTLET: [number, number, number] = [effectX(3), -1.25, 0.0];
 
 // 裁剪面（世界空间，不随单元 x 平移改变 z）
 const EVAP_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0); // 四效：保留 z<=0
@@ -159,8 +152,10 @@ function Evaporator({
   const heatGlow = 0.55 - ((index - 1) / 3) * 0.42;
   // 沸腾剧烈度随效略减（高温效更剧烈）
   const boil = 1 - ((index - 1) / 3) * 0.55;
+  const paused = useProcessPaused();
 
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     // 晶体：顶部成核 → 缓慢下沉、不断长大 → 沉入锥底（成核 / 长大 / 排出循环）
     crystalRefs.current.forEach((m, i) => {
@@ -414,7 +409,9 @@ function Condenser({ x, z }: { x: number; z: number }) {
       })),
     [COND_R]
   );
+  const paused = useProcessPaused();
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     if (sprayRef.current) {
       (sprayRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
@@ -503,8 +500,10 @@ function VacuumGauge({ x, y, z }: { x: number; y: number; z: number }) {
   // 半圆刻度：0%（左，min）→ 100%（右，max），自顶扫过
   const fraction = 0.88; // 末效真空度 ≈ 88%
   const angle = Math.PI * (1 - fraction); // fraction0→π(左), 1→0(右)
+  const paused = useProcessPaused();
 
   useFrame((state) => {
+    if (paused) return;
     if (needleRef.current) {
       const wob = Math.sin(state.clock.elapsedTime * 1.4) * 0.03;
       needleRef.current.rotation.z = angle + wob;
@@ -559,7 +558,9 @@ export function EvaporateUnit({
 
   // 低压冷色晕染（呼吸式微脉动，暗示末效真空区）
   const tintRef = useRef<THREE.Mesh>(null);
+  const paused = useProcessPaused();
   useFrame((state) => {
+    if (paused) return;
     if (tintRef.current) {
       const m = tintRef.current.material as THREE.MeshStandardMaterial;
       m.opacity = 0.06 + (Math.sin(state.clock.elapsedTime * 1.2) * 0.5 + 0.5) * 0.05;

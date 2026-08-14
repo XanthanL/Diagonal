@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run validate:ports && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "validate:ports": "node --no-warnings scripts/validate-ports.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

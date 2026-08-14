@@ -33,6 +33,7 @@ interface ControlDeckProps {
 function Playback({
   playing,
   speed,
+  lang,
   onPrev,
   onTogglePlay,
   onNext,
@@ -40,6 +41,7 @@ function Playback({
 }: {
   playing: boolean;
   speed: 1 | 2 | 3;
+  lang: Lang;
   onPrev: () => void;
   onTogglePlay: () => void;
   onNext: () => void;
@@ -50,7 +52,8 @@ function Playback({
       <CtrlBtn onClick={onPrev} label="上一环节">◀</CtrlBtn>
       <button
         onClick={onTogglePlay}
-        aria-label={playing ? "暂停" : "播放"}
+        aria-label={playing ? (lang === "zh" ? "暂停巡览与产线动画" : "Pause tour & process") : (lang === "zh" ? "播放巡览与产线动画" : "Play tour & process")}
+        title={playing ? (lang === "zh" ? "暂停巡览与产线动画" : "Pause tour & process") : (lang === "zh" ? "播放巡览与产线动画" : "Play tour & process")}
         className="w-10 h-10 rounded-full bg-diagonal-red text-white hover:bg-diagonal-redDark transition flex items-center justify-center text-sm shadow-[0_0_0_1px_rgba(179,58,42,0.2),0_8px_24px_rgba(179,58,42,0.18)]"
       >
         {playing ? "❚❚" : "▶"}
@@ -210,7 +213,7 @@ function TourCaption({
               onClick={() => onGoto(i)}
               title={lang === "zh" ? s.name : s.nameEn}
               aria-label={lang === "zh" ? s.name : s.nameEn}
-              className={`h-1.5 rounded-full transition-all ${
+              className={`pointer-events-auto h-1.5 rounded-full transition-all ${
                 i === current
                   ? "w-5 bg-diagonal-red"
                   : "w-1.5 bg-black/20 hover:bg-black/40"
@@ -310,6 +313,7 @@ export function ControlDeck(props: ControlDeckProps) {
             <Playback
               playing={playing}
               speed={speed}
+              lang={lang}
               onPrev={onPrev}
               onTogglePlay={onTogglePlay}
               onNext={onNext}
@@ -329,7 +333,7 @@ export function ControlDeck(props: ControlDeckProps) {
           <div className="flex items-center gap-3 px-3.5 py-2.5">
             <button
               onClick={onTogglePlay}
-              aria-label={playing ? "暂停" : "播放"}
+              aria-label={playing ? (zh ? "暂停巡览与产线动画" : "Pause tour & process") : (zh ? "播放巡览与产线动画" : "Play tour & process")}
               className="w-10 h-10 shrink-0 rounded-full bg-diagonal-red text-white flex items-center justify-center text-sm shadow-[0_0_0_1px_rgba(179,58,42,0.2),0_8px_24px_rgba(179,58,42,0.18)]"
             >
               {playing ? "❚❚" : "▶"}
@@ -397,10 +401,12 @@ export function ControlDeck(props: ControlDeckProps) {
                   </p>
 
                   <div className="flex items-center gap-2 text-[10px] text-ink-500 flex-wrap">
-                    <span className="px-1.5 py-0.5 rounded bg-paper-200 text-ink-700">{stage.input}</span>
+                    <span className="px-1.5 py-0.5 rounded bg-paper-200 text-ink-700">
+                      {lang === "zh" ? stage.input : stage.inputEn}
+                    </span>
                     <span className="text-diagonal-red">→</span>
                     <span className="px-1.5 py-0.5 rounded bg-paper-200 text-ink-700 border border-black/10">
-                      {stage.output}
+                      {lang === "zh" ? stage.output : stage.outputEn}
                     </span>
                   </div>
 
@@ -428,7 +434,7 @@ export function ControlDeck(props: ControlDeckProps) {
                         onClick={onOverview}
                         className="px-3 py-2 rounded-md border border-black/10 bg-paper-200 text-ink-700 text-[11px] font-mono transition hover:bg-diagonal-red/10 hover:text-diagonal-red hover:border-diagonal-red/40"
                       >
-                        {zh ? "返回全景" : "Overview"}
+                        {lang === "zh" ? "返回全景" : "Overview"}
                       </button>
                     )}
                     <button
@@ -447,13 +453,14 @@ export function ControlDeck(props: ControlDeckProps) {
                     <Playback
                       playing={playing}
                       speed={speed}
+                      lang={lang}
                       onPrev={onPrev}
                       onTogglePlay={onTogglePlay}
                       onNext={onNext}
                       onCycleSpeed={onCycleSpeed}
                     />
                     <div className="text-[9px] text-ink-400 font-mono">
-                      数据为工业参考值 · 3D 为工艺示意
+                      {zh ? "数据为工业参考值 · 3D 为工艺示意" : "Reference values · schematic 3D"}
                     </div>
                   </div>
                 </div>

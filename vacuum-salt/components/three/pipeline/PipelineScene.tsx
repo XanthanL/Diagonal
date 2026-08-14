@@ -9,11 +9,12 @@ import * as THREE from "three";
 import { SceneShell, CameraFocus } from "../SceneShell";
 import { metalColors, Tag } from "../Tag";
 import { stages } from "@/lib/data";
-import { BrineUnit, BRINE_OUTLET } from "./BrineUnit";
-import { EvaporateUnit, EVAP_BRINE_INLET, EVAP_SALT_OUTLET } from "./EvaporateUnit";
-import { CentrifugeUnit, CENTRIFUGE_INLET, CENTRIFUGE_WET_OUTLET } from "./CentrifugeUnit";
-import { DryUnit, DRY_INLET, DRY_OUTLET } from "./DryUnit";
-import { PackUnit, PACK_INLET } from "./PackUnit";
+import { PIPELINE_PORTS } from "@/lib/pipelinePorts";
+import { BrineUnit } from "./BrineUnit";
+import { EvaporateUnit } from "./EvaporateUnit";
+import { CentrifugeUnit } from "./CentrifugeUnit";
+import { DryUnit } from "./DryUnit";
+import { PackUnit } from "./PackUnit";
 import { FlowTube } from "./FlowTube";
 import { FlowRail } from "./FlowRail";
 import { StageMarker } from "./StageMarker";
@@ -30,13 +31,24 @@ function OverviewFit() {
 
   useEffect(() => {
     if (!controls) return;
-    const aspect = size.width / size.height;
+    const aspect = size.width / Math.max(1, size.height);
     const vfov = THREE.MathUtils.degToRad(camera.fov);
     const halfW = PIPELINE.halfWidth * 1.12; // 留边距
-    let dist = halfW / (Math.tan(vfov / 2) * aspect);
-    dist = THREE.MathUtils.clamp(dist, 18, 60);
+    const distW = halfW / (Math.tan(vfov / 2) * aspect);
+    // 竖屏下需要 180+ 的距离才能看全 53 单位产线；旧 clamp(18,60) 会在手机上裁掉两侧环节。
+    const dist = THREE.MathUtils.clamp(distW, 16, 240);
+
+    // 命令式放宽上限，避免 <CameraControls> 的固定 maxDistance 把取景夹住
+    const currentMax = Number(controls.maxDistance);
+    controls.minDistance = 5;
+    controls.maxDistance = Math.max(
+      Number.isFinite(currentMax) ? currentMax : 72,
+      dist * 1.08,
+      72
+    );
+
     controls.setLookAt(PIPELINE.centerX, 8.5, dist, PIPELINE.centerX, PIPELINE.centerY, 0, true);
-  }, [controls, camera, size]);
+  }, [controls, camera, size.width, size.height]);
 
   return null;
 }
@@ -48,6 +60,8 @@ interface PipelineSceneProps {
   onSelectStage: (id: string) => void;
   /** 界面语言（3D 内浮标文案跟随） */
   lang?: "zh" | "en";
+  /** 产线动画暂停（播放/暂停按钮控制，不影响相机交互） */
+  paused?: boolean;
   /** 场景首次渲染完成后回调（用于收起加载覆盖层） */
   onReady?: () => void;
 }
@@ -75,11 +89,12 @@ export function PipelineScene({
   cameraStageId,
   onSelectStage,
   lang = "zh",
+  paused = false,
   onReady,
 }: PipelineSceneProps) {
   const anchor: Anchor = cameraStageId
     ? anchors[cameraStageId]
-    : { pos: [0, 0.5, 0], distance: 0, height: 0 };
+    : { pos: [0, 0.5, 0], distance: 0, height: 0, halfWidth: 0 };
   const isOverview = !cameraStageId;
   // 系统“减弱动效”偏好：冻结 3D 粒子与脉冲（③-4）
   const reduced = useReducedMotion() ?? false;
@@ -95,7 +110,7 @@ export function PipelineScene({
 
   return (
     <div className="relative w-full h-full">
-      <SceneShell cameraPosition={overviewCamera} ambient={0.9} enableControls>
+      <SceneShell cameraPosition={overviewCamera} ambient={0.9} enableControls paused={paused}>
         {/* 相机：全景自适应 / 聚焦飞行 */}
         {isOverview ? (
           <OverviewFit />
@@ -104,6 +119,7 @@ export function PipelineScene({
             target={anchor.pos}
             distance={anchor.distance}
             height={anchor.height}
+            halfWidth={anchor.halfWidth}
           />
         )}
 
@@ -157,11 +173,11 @@ export function PipelineScene({
         {/* 连接管路：精卤 → Ⅰ效加热室（贴剖切面浅绕，全景下可见且直观接入） */}
         <FlowTube
           points={[
-            BRINE_OUTLET,
-            [BRINE_OUTLET[0] + 1.7, -1.7, -0.22],
-            [BRINE_OUTLET[0] + 3.1, -1.62, -0.45],
-            [EVAP_BRINE_INLET[0] - 0.35, -1.52, -0.5],
-            EVAP_BRINE_INLET,
+            PIPELINE_PORTS.brine.outlet.pos,
+            [PIPELINE_PORTS.brine.outlet.pos[0] + 1.7, -1.7, -0.22],
+            [PIPELINE_PORTS.brine.outlet.pos[0] + 3.1, -1.62, -0.45],
+            [PIPELINE_PORTS.evaporate.brineInlet.pos[0] - 0.35, -1.52, -0.5],
+            PIPELINE_PORTS.evaporate.brineInlet.pos,
           ]}
           color={metalColors.brine}
           toColor={metalColors.salt}
@@ -174,11 +190,11 @@ export function PipelineScene({
         {/* 盐浆 → 离心机（从Ⅳ效排料口引出，接入旋流器进料口） */}
         <FlowTube
           points={[
-            EVAP_SALT_OUTLET,
-            [EVAP_SALT_OUTLET[0] + 0.8, -0.9, 0],
+            PIPELINE_PORTS.evaporate.saltOutlet.pos,
+            [PIPELINE_PORTS.evaporate.saltOutlet.pos[0] + 0.8, -0.9, 0],
             [STAGE_X.centrifuge - 3.5, 0.6, 0],
             [STAGE_X.centrifuge - 2.9, 1.6, 0],
-            CENTRIFUGE_INLET,
+            PIPELINE_PORTS.centrifuge.inlet.pos,
           ]}
           color={metalColors.salt}
           particleCount={6}
@@ -190,9 +206,9 @@ export function PipelineScene({
         {/* 湿盐 → 干燥床（接入流化床左下进料口） */}
         <FlowTube
           points={[
-            CENTRIFUGE_WET_OUTLET,
+            PIPELINE_PORTS.centrifuge.wetOutlet.pos,
             [STAGE_X.dry - 2.4, -0.6, 0],
-            DRY_INLET,
+            PIPELINE_PORTS.dry.inlet.pos,
           ]}
           color={metalColors.salt}
           particleCount={5}
@@ -204,9 +220,9 @@ export function PipelineScene({
         {/* 干盐 → 包装机（流化床出料 → 进料皮带接料漏斗） */}
         <FlowTube
           points={[
-            DRY_OUTLET,
+            PIPELINE_PORTS.dry.outlet.pos,
             [STAGE_X.pack - 3.3, -0.4, 0],
-            PACK_INLET,
+            PIPELINE_PORTS.pack.inlet.pos,
           ]}
           color={metalColors.salt}
           particleCount={5}

@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors, Tag } from "../Tag";
+import { useProcessPaused } from "@/lib/useProcessPaused";
 import { FlowTube } from "./FlowTube";
 import { STAGE_X } from "./layout";
 
@@ -38,6 +39,9 @@ const X_ROBOT = 2.4; // 码垛机械臂
 const X_WH = 4.2; // 立体仓储（右）
 const CYCLE = 4.0; // 每袋节拍（秒）
 const LABEL_RED = "#B33A2A"; // diagonal 品牌红，用于盐袋标签
+// 盐袋统一比例：包装机成形、输出皮带、机械臂携带、仓储入槽共用同一尺寸，
+// 消除「包装机 0.26 → 皮带 0.24」交接瞬间的缩放跳变。
+const BAG_SCALE = 0.24;
 
 /** 节拍相位（0..1，整环节共享同一 CYCLE 时钟） */
 const PH = {
@@ -64,12 +68,8 @@ function beat(t: number) {
   return { cycle, cyc, filled, visible, placeSlot: WH_SLOTS[cycle % WH_SLOT_N] };
 }
 
-/** 干盐进口（世界坐标）——供 PipelineScene 接「干盐 → 进料皮带」管道。
- *  落在进料皮带左端上方的接料漏斗里（世界 x = STAGE_X.pack + X_CONV - 0.9）。 */
-export const PACK_INLET: [number, number, number] = [STAGE_X.pack + X_CONV - 0.9, 0.45, 0];
-
 // 盐袋小方块（纯白发光 + 红色标签条，呼应成品干盐）
-function SaltBag({ scale = 0.26 }: { scale?: number }) {
+function SaltBag({ scale = BAG_SCALE }: { scale?: number }) {
   return (
     <group scale={scale}>
       <mesh castShadow>
@@ -140,7 +140,9 @@ function Conveyor() {
       })),
     []
   );
+  const paused = useProcessPaused();
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     if (beltRef.current) {
       (beltRef.current.material as THREE.MeshStandardMaterial).emissiveIntensity =
@@ -219,7 +221,9 @@ function Packer() {
   const bagRef = useRef<THREE.Group>(null);
   const sealRef = useRef<THREE.Mesh>(null);
   const fillRefs = useRef<THREE.Mesh[]>([]);
+  const paused = useProcessPaused();
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     const cyc = (t % CYCLE) / CYCLE;
     const bag = bagRef.current;
@@ -231,10 +235,17 @@ function Packer() {
         const fill = THREE.MathUtils.smoothstep(cyc, 0.12, 0.4); // 充填胀大
         const drop = THREE.MathUtils.smoothstep(cyc, 0.4, 0.5); // 封口后落向皮带
         const settle = Math.sin(t * 9) * 0.015 * fill; // 充填时轻微沉降抖动
-        // 落袋时略向右挪，正好落在输出皮带左端（与皮带袋出现位置严格一致）
-        bag.position.set(drop * 0.1, 1.0 - drop * 0.98 + settle, 0);
+        const bagScale = 0.1 + form * 0.02 + fill * (BAG_SCALE - 0.12);
+        // 袋顶始终贴在下料 spout 下方（spout 底约 0.89），充填时袋体向下长大，
+        // 避免盐袋从成形阶段就吞进下料口；封口后再整体落到输出皮带左端。
+        const restY = 0.86 - bagScale * (1.25 / 2); // SaltBag 高 1.25，中心在几何中心
+        bag.position.set(
+          drop * 0.1,
+          THREE.MathUtils.lerp(restY, 0.02, drop) + settle,
+          0
+        );
         // scale 直接由本 group 控制（SaltBag 传 scale=1，避免双重缩放导致盐袋过小）
-        bag.scale.setScalar(0.1 + form * 0.02 + fill * 0.14);
+        bag.scale.setScalar(bagScale);
       }
     }
     // 充填盐流：料斗尖 → 袋内（仅充填相位可见，与袋充填同步，表达「定量灌装」）
@@ -254,15 +265,36 @@ function Packer() {
     });
     const seal = sealRef.current;
     if (seal) {
-      // 充填末段（0.42–0.5）：封口夹下压、随袋顶一同落到皮带，完成封口
+      // 充填末段（0.42–0.5）：封口夹下压、随袋顶一同落到皮带，完成封口。
+      // 封口夹与盐袋共用同一落袋曲线，且袋顶贴住夹口下沿，不再与下料 spout 重叠。
       const s = THREE.MathUtils.smoothstep(cyc, 0.42, 0.5);
       seal.visible = s > 0.01 && cyc < 0.5;
-      const bagY = 1.0 - THREE.MathUtils.smoothstep(cyc, 0.4, 0.5) * 0.98;
-      seal.position.y = bagY + 0.22;
+      const sealDrop = THREE.MathUtils.smoothstep(cyc, 0.4, 0.5);
+      const bagTop = BAG_SCALE * 0.625;
+      const bagY = THREE.MathUtils.lerp(0.86 - bagTop, 0.02, sealDrop);
+      seal.position.y = bagY + bagTop + 0.07;
     }
   });
   return (
     <group position={[X_PACKER, 0, 0]}>
+      {/* 机架支腿：原模型机壳悬空，补足四角支撑 */}
+      {[
+        [-0.4, -0.3],
+        [0.4, -0.3],
+        [-0.4, 0.3],
+        [0.4, 0.3],
+      ].map(([dx, dz], i) => (
+        <mesh key={i} position={[dx, (GROUND + -0.3) / 2, dz]} castShadow>
+          <boxGeometry args={[0.12, -0.3 - GROUND, 0.12]} />
+          <meshStandardMaterial color={metalColors.alloyDark} metalness={0.55} roughness={0.45} />
+        </mesh>
+      ))}
+      {/* 机架底座（四脚落地并连接成框） */}
+      <mesh position={[0, GROUND + 0.07, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.25, 0.14, 1.0]} />
+        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.4} roughness={0.6} />
+      </mesh>
+
       {/* 机壳（真剖面：剖开看充填封口） */}
       <mesh position={[0, 0.45, 0]} castShadow>
         <boxGeometry args={[1.1, 1.5, 0.9]} />
@@ -307,10 +339,12 @@ function Packer() {
 function OutputBelt() {
   const bagRef = useRef<THREE.Group>(null);
   const beltRef = useRef<THREE.Mesh>(null);
+  const paused = useProcessPaused();
   // 纯局部坐标：组已平移到 X_BELT；袋从皮带左端（包装机落袋点）运到取袋点
   const X0 = -0.9;
   const X_PICK = 0.4; // 取袋点（机械臂夹爪在此闭合）
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     const cyc = (t % CYCLE) / CYCLE;
     if (beltRef.current) {
@@ -329,6 +363,18 @@ function OutputBelt() {
   });
   return (
     <group position={[X_BELT, 0, 0]}>
+      {/* 支腿：原输出皮带悬空，补足四角支撑 */}
+      {[
+        [-0.8, -0.22],
+        [0.8, -0.22],
+        [-0.8, 0.22],
+        [0.8, 0.22],
+      ].map(([dx, dz], i) => (
+        <mesh key={i} position={[dx, (GROUND + -0.15) / 2, dz]} castShadow>
+          <boxGeometry args={[0.1, -0.15 - GROUND, 0.1]} />
+          <meshStandardMaterial color={metalColors.alloyDark} metalness={0.55} roughness={0.45} />
+        </mesh>
+      ))}
       <mesh ref={beltRef} position={[0, -0.15, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <boxGeometry args={[1.8, 0.6, 0.04]} />
         <meshStandardMaterial
@@ -347,7 +393,7 @@ function OutputBelt() {
       ))}
       {/* 被传送的盐袋（取袋点前可见） */}
       <group ref={bagRef} visible={false}>
-        <SaltBag scale={0.24} />
+        <SaltBag scale={BAG_SCALE} />
       </group>
     </group>
   );
@@ -365,8 +411,10 @@ function RobotArm() {
   const L2 = 1.1;
   const PIVOT_Y = 0.9;
   const BAG_DROP = 0.35; // 袋中心在夹爪尖端下方
+  const paused = useProcessPaused();
 
   useFrame((state, delta) => {
+    if (paused) return;
     const { cyc, placeSlot } = beat(state.clock.elapsedTime);
     const [sx, sy, sz] = placeSlot; // 仓储局部槽位 → PackUnit 相对坐标需加 X_WH
     const tx = X_WH + sx;
@@ -464,7 +512,7 @@ function RobotArm() {
             </mesh>
             {/* 携带的盐袋（随夹爪移动，放垛瞬间消失并同步入槽） */}
             <group ref={carryRef} position={[L2, -BAG_DROP, 0]} visible={false}>
-              <SaltBag scale={0.24} />
+              <SaltBag scale={BAG_SCALE} />
             </group>
           </group>
         </group>
@@ -476,9 +524,11 @@ function RobotArm() {
 // ---------- 5. 立体仓储（正面朝机械臂、逐槽累积，满托重置） ----------
 function Warehouse() {
   const slotRefs = useRef<THREE.Mesh[]>([]);
+  const paused = useProcessPaused();
   // 结构：窄 X、深 Z（列沿 Z 排），正面(-X 侧)朝向机械臂。
   // 填充自下而上、前排(z=0)优先，与机械臂放垛（逐槽精确定位）一致。
   useFrame((state) => {
+    if (paused) return;
     const { visible } = beat(state.clock.elapsedTime);
     slotRefs.current.forEach((m, i) => {
       if (m) m.visible = i < visible;
@@ -523,7 +573,7 @@ function Warehouse() {
           visible={false}
           castShadow
         >
-          <SaltBag scale={0.24} />
+          <SaltBag scale={BAG_SCALE} />
         </mesh>
       ))}
     </group>

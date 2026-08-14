@@ -35,10 +35,13 @@ export function RefsPanel({
             <div className="flex items-center justify-between mb-4">
               <div className="accent-line pl-3">
                 <div className="label-eyebrow">REFERENCES</div>
-                <h2 className="text-lg font-semibold text-ink-900">参考资料与来源</h2>
+                <h2 className="text-lg font-semibold text-ink-900">
+                  {lang === "zh" ? "参考资料与来源" : "References & Sources"}
+                </h2>
               </div>
               <button
                 onClick={onClose}
+                aria-label={lang === "zh" ? "关闭" : "Close"}
                 className="w-8 h-8 rounded-md border border-black/10 text-ink-500 hover:text-ink-900 hover:border-diagonal-red/50 transition"
               >
                 ✕
@@ -46,7 +49,9 @@ export function RefsPanel({
             </div>
 
             <p className="text-[12px] text-ink-600 leading-relaxed mb-4">
-              本站工艺参数与原理取自以下公开行业资料、标准与文献。所有数值均为工业参考值，实际随矿床、设备、产品标准而异。
+              {lang === "zh"
+                ? "本站工艺参数与原理取自以下公开行业资料、标准与文献。所有数值均为工业参考值，实际随矿床、设备、产品标准而异。"
+                : "Process parameters and principles on this page are drawn from the public industry references, standards and literature below. All values are industry references and vary by deposit, equipment and product standard."}
             </p>
 
             <ol className="space-y-2">

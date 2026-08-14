@@ -66,7 +66,7 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
               <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-md border border-black/10 text-ink-500 hover:text-ink-900 hover:border-diagonal-red/50 transition"
-                aria-label="关闭"
+                aria-label={lang === "zh" ? "关闭" : "Close"}
               >
                 ✕
               </button>
@@ -75,7 +75,9 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
             <div className="px-4 py-4 space-y-5">
               {/* 核心看点：一句话提炼，置顶强调，扫读即抓重点 */}
               <div className="rounded-lg bg-diagonal-red/[0.06] border border-diagonal-red/25 px-3 py-2.5">
-                <div className="label-eyebrow text-diagonal-red mb-1">核心看点 · KEY TAKEAWAY</div>
+                <div className="label-eyebrow text-diagonal-red mb-1">
+                  {lang === "zh" ? "核心看点 · KEY TAKEAWAY" : "KEY TAKEAWAY"}
+                </div>
                 <p className="text-[13px] leading-relaxed text-ink-900 font-medium">
                   {lang === "zh" ? stage.coreHighlight : stage.coreHighlightEn}
                 </p>
@@ -113,7 +115,9 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
                   <div className="label-eyebrow">化学反应 · REACTIONS</div>
                   {stage.reactions.map((r) => (
                     <div key={r.id} className="rounded-md bg-paper-100 border border-black/10 p-3">
-                      <div className="text-xs text-amber-500 mb-1">{r.title}</div>
+                      <div className="text-xs text-amber-500 mb-1">
+                        {lang === "zh" ? r.title : r.titleEn}
+                      </div>
                       <div className="font-mono text-[13px] text-ink-900 break-all">{r.equation}</div>
                       <div className="text-[11px] text-ink-500 mt-1.5 leading-relaxed">
                         {lang === "zh" ? r.note : r.noteEn}
@@ -134,7 +138,9 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
                           <td className="px-3 py-2 text-ink-600">
                             {lang === "zh" ? p.name : p.nameEn}
                             {p.indicative && (
-                              <span className="ml-1 text-[9px] text-amber-500 align-top">参考</span>
+                              <span className="ml-1 text-[9px] text-amber-500 align-top">
+                                {lang === "zh" ? "参考" : "ref"}
+                              </span>
                             )}
                           </td>
                           <td className="px-3 py-2 text-right font-mono text-ink-900 whitespace-nowrap">
@@ -155,14 +161,20 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
                   {stage.parts.map((part) => (
                     <div key={part.id} className="rounded-md bg-paper-100 border border-black/10 p-2.5">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-[13px] font-medium text-ink-900">{part.name}</span>
-                        <span className="text-[10px] text-ink-400 font-mono">{part.nameEn}</span>
+                        <span className="text-[13px] font-medium text-ink-900">
+                          {lang === "zh" ? part.name : part.nameEn}
+                        </span>
+                        <span className="text-[10px] text-ink-400 font-mono">
+                          {lang === "zh" ? part.nameEn : part.name}
+                        </span>
                       </div>
                       <p className="text-[11px] text-ink-600 mt-1 leading-relaxed">
                         {lang === "zh" ? part.desc : part.descEn}
                       </p>
                       {part.material && (
-                        <div className="text-[10px] text-ink-400 mt-1 font-mono">材质：{part.material}</div>
+                        <div className="text-[10px] text-ink-400 mt-1 font-mono">
+                          {lang === "zh" ? "材质" : "Material"}：{part.material}
+                        </div>
                       )}
                     </div>
                   ))}
@@ -170,7 +182,9 @@ export function InfoPanel({ stage, lang, open, onClose }: InfoPanelProps) {
               </div>
 
               <div className="text-[10px] text-ink-400 leading-relaxed pt-2 border-t border-black/10">
-                数值均为工业参考值，实际随矿床、设备、产品标准而异；详见「参考资料与来源」。
+                {lang === "zh"
+                  ? "数值均为工业参考值，实际随矿床、设备、产品标准而异；详见「参考资料与来源」。"
+                  : "All values are industry references and vary by deposit, equipment and product standard; see References."}
               </div>
             </div>
           </motion.div>
@@ -211,7 +225,7 @@ export function IntroPanel({ lang, open, onClose }: { lang: Lang; open: boolean;
               <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-md border border-black/10 text-ink-500 hover:text-ink-900 hover:border-diagonal-red/50 transition shrink-0"
-                aria-label="关闭"
+                aria-label={lang === "zh" ? "关闭" : "Close"}
               >
                 ✕
               </button>

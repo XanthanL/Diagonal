@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors, Tag } from "../Tag";
+import { useProcessPaused } from "@/lib/useProcessPaused";
 import { FlowTube } from "./FlowTube";
 import { STAGE_X } from "./layout";
 
@@ -31,11 +32,6 @@ const GROUND = -2.4;
 const X_HYDRO = -2.7; // 水力旋流器（左）
 const X_BOWL = 0; // 转鼓（中）
 
-/** 盐浆进口（世界坐标）——供 PipelineScene 接「盐浆 → 离心机」管道 */
-export const CENTRIFUGE_INLET: [number, number, number] = [STAGE_X.centrifuge + X_HYDRO, 2.3, 0];
-/** 湿盐出口（世界坐标）——供 PipelineScene 接「湿盐 → 干燥床」管道 */
-export const CENTRIFUGE_WET_OUTLET: [number, number, number] = [STAGE_X.centrifuge + X_BOWL, -0.6, 0];
-
 // 真剖面：与环节 2（蒸发）一致，用世界空间裁剪面（保留 z<=0 半边）从相机侧干净剖开，
 // 内部转鼓 / 筛网 / 盐饼 / 母液完整可见；盐饼、母液、颗粒不加裁剪，保持实体。
 const CENT_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
@@ -58,8 +54,10 @@ function Hydrocyclone() {
       })),
     []
   );
+  const paused = useProcessPaused();
 
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     // 旋流：盐浆自切向进入，沿壁螺旋下沉至底流（增浓）
     swirlRefs.current.forEach((m, i) => {
@@ -196,8 +194,10 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
     () => Array.from({ length: 6 }).map(() => ({ phase: Math.random(), speed: 0.8 + Math.random() * 0.4 })),
     []
   );
+  const paused = useProcessPaused();
 
   useFrame((state, delta) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     if (drumRef.current) drumRef.current.rotation.y += delta * 2.0;
     const bowlAngle = drumRef.current?.rotation.y ?? 0;

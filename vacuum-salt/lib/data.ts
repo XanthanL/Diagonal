@@ -88,8 +88,8 @@ export const stages: StageData[] = [
       { id: "filter", name: "砂滤 / 叶滤器", nameEn: "Sand / leaf filter", desc: "精滤除去残余悬浮物，保证进入蒸发器的卤水清澈。", descEn: "Polishes the brine to remove residual suspended solids, ensuring a clear feed to the evaporator.", material: "多层石英砂 / 滤布" },
     ],
     reactions: [
-      { id: "r1", title: "除镁", equation: "Mg²⁺ + Ca(OH)₂ → Mg(OH)₂↓ + Ca²⁺", note: "石灰乳调 pH 至约 10，Mg(OH)₂ 沉淀析出；同时引入的 Ca²⁺ 待下一步去除。", noteEn: "Lime milk raises pH to ~10; Mg(OH)₂ precipitates. The Ca²⁺ introduced is removed in the next step." },
-      { id: "r2", title: "除钙", equation: "Ca²⁺ + Na₂CO₃ → CaCO₃↓ + 2Na⁺", note: "加入纯碱使 Ca²⁺ 以 CaCO₃ 形式沉淀，钠离子留存于卤水。", noteEn: "Soda ash precipitates Ca²⁺ as CaCO₃; the sodium remains in the brine." },
+      { id: "r1", title: "除镁", titleEn: "Mg removal", equation: "Mg²⁺ + Ca(OH)₂ → Mg(OH)₂↓ + Ca²⁺", note: "石灰乳调 pH 至约 10，Mg(OH)₂ 沉淀析出；同时引入的 Ca²⁺ 待下一步去除。", noteEn: "Lime milk raises pH to ~10; Mg(OH)₂ precipitates. The Ca²⁺ introduced is removed in the next step." },
+      { id: "r2", title: "除钙", titleEn: "Ca removal", equation: "Ca²⁺ + Na₂CO₃ → CaCO₃↓ + 2Na⁺", note: "加入纯碱使 Ca²⁺ 以 CaCO₃ 形式沉淀，钠离子留存于卤水。", noteEn: "Soda ash precipitates Ca²⁺ as CaCO₃; the sodium remains in the brine." },
     ],
   },
 

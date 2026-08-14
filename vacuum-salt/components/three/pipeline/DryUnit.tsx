@@ -4,8 +4,10 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { metalColors, Tag } from "../Tag";
+import { useProcessPaused } from "@/lib/useProcessPaused";
 import { FlowTube } from "./FlowTube";
 import { STAGE_X } from "./layout";
+import { PIPELINE_PORTS } from "@/lib/pipelinePorts";
 
 /**
  * 环节 4：干燥与筛分（沸腾流化床 + 振动筛 + 旋风除尘器）
@@ -29,10 +31,16 @@ const X_FAN = -1.2; // 鼓风机 + 加热器（左下）
 const X_SCREEN = 2.7; // 振动筛（右）
 const X_CYCLONE = 0.3; // 旋风除尘器（顶部）
 
-/** 湿盐进口（世界坐标）——供 PipelineScene 接「湿盐 → 干燥床」管道 */
-export const DRY_INLET: [number, number, number] = [STAGE_X.dry - 1.4, -0.1, 0];
-/** 干盐出口（世界坐标）——供 PipelineScene 接「干盐 → 包装机」管道 */
-export const DRY_OUTLET: [number, number, number] = [STAGE_X.dry + 3.0, -0.4, 0];
+/** 湿盐进口（世界坐标，来自中心端口表） */
+const DRY_INLET: [number, number, number] = PIPELINE_PORTS.dry.inlet.pos;
+/** 湿盐进口（局部坐标；进料短管直接对齐中心端口表） */
+const DRY_INLET_LOCAL: [number, number, number] = [
+  DRY_INLET[0] - STAGE_X.dry,
+  DRY_INLET[1],
+  DRY_INLET[2],
+];
+/** 干盐出口（世界坐标，来自中心端口表；本文件内另有 DRY_OUTLET_LOCAL 供局部坐标使用） */
+const DRY_OUTLET: [number, number, number] = PIPELINE_PORTS.dry.outlet.pos;
 
 // 流化床几何
 const BED_W = 2.8;
@@ -46,7 +54,9 @@ const DIST_Y = -0.4; // 气体分布板高度
 // ---------- 1. 鼓风机 + 加热器 ----------
 function FanHeater() {
   const fanRef = useRef<THREE.Group>(null);
+  const paused = useProcessPaused();
   useFrame((_, delta) => {
+    if (paused) return;
     if (fanRef.current) fanRef.current.rotation.z += delta * 6;
   });
   return (
@@ -138,8 +148,10 @@ function FluidBed({ lang }: { lang: "zh" | "en" }) {
       })),
     []
   );
+  const paused = useProcessPaused();
 
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     saltRefs.current.forEach((m, i) => {
       if (!m) return;
@@ -212,8 +224,8 @@ function FluidBed({ lang }: { lang: "zh" | "en" }) {
           depthWrite={false}
         />
       </mesh>
-      {/* 湿盐进料口（左下壁，接外部管道，位于分布板上方） */}
-      <mesh position={[-BED_W / 2, DIST_Y + 0.35, 0]}>
+      {/* 湿盐进料口（左下壁，接外部管道，位于分布板上方；坐标来自中心端口表） */}
+      <mesh position={DRY_INLET_LOCAL}>
         <cylinderGeometry args={[0.16, 0.16, 0.6, 14]} />
         <meshStandardMaterial color={metalColors.alloyDark} metalness={0.6} roughness={0.35} />
       </mesh>
@@ -264,6 +276,21 @@ const DECK_Y = [0.0, -0.26, -0.52]; // 上(粗)/中(中)/下(细) 三层筛面
 const FEED_X = -SCREEN_W / 2;
 const DISCH_X = SCREEN_W / 2;
 
+// 细盐分级出料点（DryUnit 局部坐标；世界 x = STAGE_X.dry + 3.9）
+const SCREEN_FINE_OUT: [number, number, number] = [
+  X_SCREEN + DISCH_X,
+  SCREEN_SY + DECK_Y[2],
+  0,
+];
+// 干盐出口（DryUnit 局部坐标）。注意：本文件所有几何都在
+// <group position={[STAGE_X.dry, 0, 0]}> 内部，绝不能再叠 STAGE_X.dry，
+// 否则会出现「出口管跑到 x=27、与跨环节管道断开」的历史 bug。
+const DRY_OUTLET_LOCAL: [number, number, number] = [
+  DRY_OUTLET[0] - STAGE_X.dry,
+  DRY_OUTLET[1],
+  DRY_OUTLET[2],
+];
+
 function VibratingScreen() {
   const screenRef = useRef<THREE.Group>(null);
   const grainRefs = useRef<THREE.Mesh[]>([]);
@@ -284,7 +311,9 @@ function VibratingScreen() {
       }),
     [GRADE]
   );
+  const paused = useProcessPaused();
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     // 整体低频振动（驱动颗粒输送）
     if (screenRef.current) {
@@ -377,7 +406,9 @@ function Cyclone({ lang }: { lang: "zh" | "en" }) {
       })),
     []
   );
+  const paused = useProcessPaused();
   useFrame((state) => {
+    if (paused) return;
     const t = state.clock.elapsedTime;
     swirlRefs.current.forEach((m, i) => {
       if (!m) return;
@@ -551,12 +582,12 @@ export function DryUnit({
         </group>
       ))}
 
-      {/* 细盐（合格品）→ 干盐出口（去包装）：补足「筛分 → 出口」断点 */}
+      {/* 细盐（合格品）→ 干盐出口（去包装）：筛分右端 → 环节出口，全部使用局部坐标 */}
       <FlowTube
         points={[
-          [X_SCREEN + DISCH_X, SCREEN_SY + DECK_Y[2], 0],
-          [STAGE_X.dry + 3.0, -0.6, 0],
-          DRY_OUTLET,
+          SCREEN_FINE_OUT,
+          [DRY_OUTLET_LOCAL[0], DRY_OUTLET_LOCAL[1] - 0.2, 0],
+          DRY_OUTLET_LOCAL,
         ]}
         color={metalColors.salt}
         radius={0.07}

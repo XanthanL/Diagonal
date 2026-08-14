@@ -1,18 +1,20 @@
 "use client";
 
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { metalColors } from "../Tag";
+import { useProcessPaused } from "@/lib/useProcessPaused";
 import { PLATFORM, PIPELINE } from "./layout";
 
 /**
  * 贯穿整条产线的「流向轨」：平台中线上的一串流动刻度，
  * 由卤水青蓝渐变到盐白，统一朝右（流程方向）运动，
  * 直观表达物料从左到右的工艺流向。
+ * 刻度使用单个 InstancedMesh：26 个锥体合并为 1 次 draw call。
  */
 export function FlowRail({ count = 26, speed = 0.05 }: { count?: number; speed?: number }) {
-  const refs = useRef<THREE.Mesh[]>([]);
+  const paused = useProcessPaused();
   const x0 = PLATFORM.xMin + 1;
   const x1 = PLATFORM.xMax - 1;
   const span = x1 - x0;
@@ -21,24 +23,60 @@ export function FlowRail({ count = 26, speed = 0.05 }: { count?: number; speed?:
   const cStart = useMemo(() => new THREE.Color(metalColors.brine), []);
   const cEnd = useMemo(() => new THREE.Color(metalColors.salt), []);
   const cTmp = useMemo(() => new THREE.Color(), []);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  const instanced = useMemo(() => {
+    const geo = new THREE.ConeGeometry(0.09, 0.34, 4);
+    const mat = new THREE.MeshStandardMaterial({
+      color: "#ffffff", // 实际颜色交给 instanceColor，避免与实例色二次相乘
+      emissive: cStart,
+      emissiveIntensity: 0.6,
+      transparent: true,
+      opacity: 0.5,
+      roughness: 0.4,
+    });
+    const mesh = new THREE.InstancedMesh(geo, mat, count);
+    mesh.frustumCulled = false;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    for (let i = 0; i < count; i++) {
+      dummy.position.set(x0 + (i / count) * span, PLATFORM.y + 0.09, 0);
+      dummy.rotation.set(0, 0, -Math.PI / 2);
+      dummy.scale.setScalar(0.25);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      mesh.setColorAt(i, cStart);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    return mesh;
+  }, [count, span, x0, cStart, dummy]);
+
+  useEffect(() => {
+    return () => {
+      instanced.geometry.dispose();
+      (instanced.material as THREE.Material).dispose();
+      instanced.dispose();
+    };
+  }, [instanced]);
 
   useFrame((state) => {
+    if (paused) return; // 播放/暂停按钮同步冻结流向轨
+
     const t = state.clock.elapsedTime * speed;
-    refs.current.forEach((m, i) => {
-      if (!m) return;
-      // u 从 0→1 循环；首尾平滑淡入淡出，避免硬回绕跳变
+    for (let i = 0; i < count; i++) {
+      // u 从 0→1 循环；首尾用 scale 淡出，避免硬回绕跳变
       const u = (t + i / count) % 1;
-      const x = x0 + u * span;
-      m.position.x = x;
-      // 端点淡化（sin 包络），中段最实
       const env = Math.sin(u * Math.PI);
-      const mat = m.material as THREE.MeshStandardMaterial;
-      mat.opacity = 0.12 + env * 0.6;
-      // 颜色随位置由青蓝过渡到盐白
+      dummy.position.set(x0 + u * span, PLATFORM.y + 0.09, 0);
+      dummy.rotation.set(0, 0, -Math.PI / 2);
+      dummy.scale.setScalar(0.25 + env * 0.75);
+      dummy.updateMatrix();
+      instanced.setMatrixAt(i, dummy.matrix);
       cTmp.copy(cStart).lerp(cEnd, u);
-      mat.color.copy(cTmp);
-      mat.emissive.copy(cTmp);
-    });
+      instanced.setColorAt(i, cTmp);
+    }
+    instanced.instanceMatrix.needsUpdate = true;
+    if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true;
   });
 
   return (
@@ -53,28 +91,7 @@ export function FlowRail({ count = 26, speed = 0.05 }: { count?: number; speed?:
           roughness={0.6}
         />
       </mesh>
-      {/* 流动刻度 */}
-      {Array.from({ length: count }).map((_, i) => (
-        <mesh
-          key={i}
-          ref={(el) => {
-            if (el) refs.current[i] = el;
-          }}
-          position={[x0 + (i / count) * span, PLATFORM.y + 0.09, 0]}
-          rotation={[0, 0, -Math.PI / 2]}
-        >
-          {/* 细长三角刻度，指向流程方向（右） */}
-          <coneGeometry args={[0.09, 0.34, 4]} />
-          <meshStandardMaterial
-            color={metalColors.brine}
-            emissive={metalColors.brine}
-            emissiveIntensity={0.6}
-            transparent
-            opacity={0.5}
-            roughness={0.4}
-          />
-        </mesh>
-      ))}
+      <primitive object={instanced} />
     </group>
   );
 }

@@ -47,10 +47,12 @@ export function SceneLoader({
   cameraStageId,
   onSelectStage,
   lang = "zh",
+  paused = false,
 }: {
   cameraStageId: string | null;
   onSelectStage: (id: string) => void;
   lang?: "zh" | "en";
+  paused?: boolean;
 }) {
   const [ready, setReady] = useState(false);
 
@@ -69,6 +71,7 @@ export function SceneLoader({
           cameraStageId={cameraStageId}
           onSelectStage={onSelectStage}
           lang={lang}
+          paused={paused}
           onReady={() => setReady(true)}
         />
       </Suspense>
