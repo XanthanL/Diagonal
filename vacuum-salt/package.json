@@ -7,7 +7,7 @@
     "build": "npm run validate:ports && next build",
     "start": "next start",
     "lint": "next lint",
-    "validate:ports": "node --no-warnings scripts/validate-ports.ts"
+    "validate:ports": "node scripts/validate-ports.js"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

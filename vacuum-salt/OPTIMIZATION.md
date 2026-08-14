@@ -26,7 +26,7 @@
 | `components/three/pipeline/FlowTube.tsx` | 跨环节/单元内管道粒子，已 InstancedMesh |
 | `components/three/pipeline/FlowRail.tsx` | 平台流向轨，已 InstancedMesh |
 | `components/three/pipeline/*Unit.tsx` | 五个环节设备建模与内部动画 |
-| `scripts/validate-ports.ts` | Node 23 直接执行的 TS 端口校验脚本 |
+| `scripts/validate-ports.js` | 用 typescript 包即时转译并执行 `lib/pipelinePorts.ts` 的端口校验脚本（兼容 CI 的 Node 20） |
 
 ## 3. 坐标与状态不变量
 
@@ -66,7 +66,7 @@
 3. **framer-motion 面板 hydration**：`InfoPanel / IntroPanel / RefsPanel / Coachmark` 必须留在 `ClientOnly` 内，否则 SSR/客户端首帧动画状态不一致。
 4. **InstancedMesh 颜色**：`FlowTube` / `FlowRail` 的材质 `color` 必须为 `#ffffff`，实际颜色交给 `instanceColor`；否则实例色会与材质色二次相乘变暗。
 5. **暂停 Context 必须包在 Canvas 内**：`ProcessPausedContext.Provider` 当前位于 `SceneShell` 的 Suspense 内；如果挪出 Canvas，R3F 子树可能取不到 Context。
-6. **端口校验脚本是 TS**：`scripts/validate-ports.ts` 依赖 Node 23 原生 strip-types 和 `tsconfig.json` 的 `allowImportingTsExtensions`；不要改成 CommonJS require 或删掉 tsconfig 选项。
+6. **端口数据仍以 `lib/pipelinePorts.ts` 为唯一来源**：`scripts/validate-ports.js` 会在运行时用 typescript 包转译它。不要在 JS 校验脚本里复制端口常量；CI 使用 Node 20，不能直接运行 `.ts`。
 
 ## 5. 验证命令
 
