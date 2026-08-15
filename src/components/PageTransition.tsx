@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 
 type TransitionPhase = "idle" | "cover" | "reveal";
 
-const COVER_MS = 240; // 旧页被幕布盖住
-const REVEAL_MS = 560; // 新页从幕布后揭开
+const COVER_MS = 300; // 黑色幕布自下而上盖住旧页
+const REVEAL_MS = 520; // 幕布淡出，露出新页
 
 // 独立部署的子项目：主站 App Router 里没有对应路由，必须走整页跳转。
 // 生产静态导出中它们位于 out/vacuum-salt 与 out/salt-plant-3d。
@@ -24,13 +24,13 @@ function isAssetLink(pathname: string) {
 }
 
 /**
- * SWUP 风格的两段式页面过渡：
- * 1. 点击站内链接 → 红色幕布自下而上盖住旧页；
+ * SWUP 风格的两段式页面过渡（统一走黑白幕布，不依赖 View Transitions API，
+ * 保证 Chrome/Safari/Firefox 手感一致）：
+ * 1. 点击站内链接 → 黑色幕布自下而上盖住旧页；
  * 2. 路由在幕布后完成切换；
- * 3. 幕布继续向上揭开，露出新页。
+ * 3. 幕布整体淡出，露出新页。
  *
- * 支持 View Transitions API 的浏览器改走原生快照交叉淡入（更省资源，
- * 且天然保留旧页快照）；独立子项目先播放盖幕动画，再整页跳转。
+ * 独立子项目先播放盖幕动画，再整页跳转。
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -58,7 +58,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
       }
 
       router.push(href);
-      // 若 RSC 加载超过 1s 仍未提交路由，强制揭幕，避免永远被幕布盖住
+      // 若 RSC 加载超过 1s 仍未提交路由，强制淡出，避免永远被幕布盖住
       if (fallbackTimer.current) window.clearTimeout(fallbackTimer.current);
       fallbackTimer.current = window.setTimeout(() => {
         if (phaseRef.current === "cover") setPhase("reveal");
@@ -68,7 +68,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [phase, router]);
 
-  // 幕布完全盖住后，等 App Router 真正提交目标路由再揭幕
+  // 幕布完全盖住后，等 App Router 真正提交目标路由再淡出
   useEffect(() => {
     if (phase !== "cover" || pendingExternal.current) return;
     const currentRoute = `${pathname}${typeof window !== "undefined" ? window.location.search : ""}`;
@@ -101,20 +101,8 @@ export function PageTransition({ children }: { children: ReactNode }) {
         return;
       }
 
-      // 子项目是独立文档，View Transitions 无法跨文档快照；只用盖幕过渡
-      if (
-        !subproject &&
-        typeof document !== "undefined" &&
-        typeof (document as Document & { startViewTransition?: unknown }).startViewTransition === "function"
-      ) {
-        (document as Document & { startViewTransition: (cb: () => void) => unknown }).startViewTransition(
-          () => {
-            router.push(href);
-          }
-        );
-        return;
-      }
-
+      // 独立子项目与普通站内路由都走同一条黑白幕布：
+      // 普通路由在幕布完全盖住后切换，再等路由提交后淡出幕布。
       pendingHref.current = href;
       pendingExternal.current = subproject;
       pendingRoute.current = subproject ? null : `${url.pathname}${url.search}`;
@@ -169,7 +157,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      {/* 两段式红色幕布：idle 时停在下方视口外，不拦截任何交互 */}
+      {/* 两段式黑白幕布：idle 时停在下方视口外且透明，不拦截任何交互 */}
       <div
         aria-hidden="true"
         className={`page-transition-overlay ${
@@ -177,7 +165,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
         }`}
       >
         <div className="page-transition-overlay-inner">
-          <span className="archive-text text-white/80">DIAGONAL</span>
+          <span className="archive-text text-white/90">DIAGONAL</span>
           <div className="page-transition-overlay-slash" />
         </div>
       </div>

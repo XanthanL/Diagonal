@@ -132,9 +132,7 @@ body {
   .animate-scrollBob,
   .animate-atlasProgress,
   .animate-fadeIn,
-  #main-content,
-  ::view-transition-old(page-main),
-  ::view-transition-new(page-main) {
+  #main-content {
     animation: none;
   }
   .page-transition-overlay,
@@ -175,46 +173,36 @@ body {
   animation: pageEnter 0.3s ease-out;
 }
 
-/* —— 页面切换：原生 View Transitions（支持时） —— */
-#main-content {
-  view-transition-name: page-main;
-}
-::view-transition-old(page-main) {
-  animation: vt-page-out 0.18s var(--ease-out) both;
-}
-::view-transition-new(page-main) {
-  animation: vt-page-in 0.36s var(--ease-out) both;
-}
-@keyframes vt-page-out {
-  to {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-}
-@keyframes vt-page-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-}
-
-/* —— 页面切换：SWUP 式红色幕布（不支持 View Transitions 或独立子项目时） —— */
+/* —— 页面切换：SWUP 式黑白幕布 ——
+   第一阶段自下而上盖住旧页，第二阶段整体淡出、露出新页。
+   idle 态必须「透明 + 移出视口」，避免首屏与页面顶部闪现。 */
 .page-transition-overlay {
   position: fixed;
   inset: 0;
   z-index: 90;
-  background: #b33a2a;
+  background: var(--surface-dark);
+  opacity: 0;
   transform: translateY(101%);
   pointer-events: none;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 .page-transition-overlay.pt-cover {
+  opacity: 1;
   transform: translateY(0);
-  transition: transform 240ms var(--ease-out);
+  pointer-events: auto;
+  transition:
+    transform 300ms var(--ease-out),
+    opacity 300ms var(--ease-out);
 }
+/* 揭幕阶段只做「淡出 + 极轻微上移」，用黑幕本身的消退来展示新页，
+   而不是红色幕布那样整块甩出视口 */
 .page-transition-overlay.pt-reveal {
-  transform: translateY(-101%);
-  transition: transform 560ms var(--ease-in-out);
+  opacity: 0;
+  transform: translateY(-5%);
+  pointer-events: auto;
+  transition:
+    opacity 520ms var(--ease-in-out),
+    transform 600ms var(--ease-in-out);
 }
 .page-transition-overlay-inner {
   position: absolute;
@@ -232,8 +220,8 @@ body {
   background: linear-gradient(
     135deg,
     transparent 49.6%,
-    rgba(255, 255, 255, 0.16) 49.6%,
-    rgba(255, 255, 255, 0.16) 50.4%,
+    rgba(255, 255, 255, 0.14) 49.6%,
+    rgba(255, 255, 255, 0.14) 50.4%,
     transparent 50.4%
   );
 }
