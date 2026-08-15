@@ -218,10 +218,23 @@ export function PageTransition({ children }: { children: ReactNode }) {
           </div>
         </div>
         <div className="page-transition-slash-echo" />
-        <div className="page-transition-brand">
-          <span className="page-transition-brand-line archive-text text-white/90">DIAGONAL</span>
-          <span className="page-transition-brand-sub">对角线计划</span>
-        </div>
+      </div>
+
+      {/* 中央字标：单独抽离到 overlay 上方同级，确保绝对位于对角光束之上 */}
+      <div
+        aria-hidden="true"
+        className={`page-transition-brand fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none ${
+          phase === "cover"
+            ? "pt-cover"
+            : phase === "reveal"
+              ? "pt-reveal"
+              : phase === "intro"
+                ? "pt-intro"
+                : ""
+        }`}
+      >
+        <span className="page-transition-brand-line archive-text text-white">DIAGONAL</span>
+        <span className="page-transition-brand-sub">对角线计划</span>
       </div>
     </>
   );

@@ -255,38 +255,39 @@ body {
   background:
     /* 高亮脊线：4px 锐利白芯，整根线的视觉焦点 */
     linear-gradient(
-      135deg,
+      130deg,
       transparent calc(50% - 2px),
       rgba(255, 255, 255, 0.95) calc(50% - 2px),
       rgba(255, 255, 255, 0.95) calc(50% + 2px),
       transparent calc(50% + 2px)
     ),
-    /* 柔光晕：宽幅低透明度，让白线从黑幕上「发光」 */
+    /* 柔光晕：低透明度，让白线从黑幕上「发光」；收窄避免晕染到上下字标 */
     linear-gradient(
-      135deg,
-      transparent 47.6%,
-      rgba(255, 255, 255, 0.18) 48.8%,
-      rgba(255, 255, 255, 0.18) 51.2%,
-      transparent 52.4%
+      130deg,
+      transparent 48.8%,
+      rgba(255, 255, 255, 0.18) 49.4%,
+      rgba(255, 255, 255, 0.18) 50.6%,
+      transparent 51.2%
     );
 }
 .page-transition-slash-echo {
+  z-index: 3; /* 位于铭文带之上 */
   /* 与主光束同款「发光」处理：4px 锐利白芯 + 宽幅柔光晕，
      居中对齐到 54%（主光束正下方），与主光束平行、等距夹住铭文带 */
   background:
     linear-gradient(
-      135deg,
+      130deg,
       transparent calc(54% - 2px),
       rgba(255, 255, 255, 0.95) calc(54% - 2px),
       rgba(255, 255, 255, 0.95) calc(54% + 2px),
       transparent calc(54% + 2px)
     ),
     linear-gradient(
-      135deg,
-      transparent calc(54% - 2.4%),
-      rgba(255, 255, 255, 0.18) calc(54% - 1.2%),
-      rgba(255, 255, 255, 0.18) calc(54% + 1.2%),
-      transparent calc(54% + 2.4%)
+      130deg,
+      transparent calc(54% - 1.2%),
+      rgba(255, 255, 255, 0.18) calc(54% - 0.6%),
+      rgba(255, 255, 255, 0.18) calc(54% + 0.6%),
+      transparent calc(54% + 1.2%)
     );
 }
 /* 盖幕：三者在同一对角方向上以同速生长，铭文紧贴主光束同步长出，
@@ -351,11 +352,6 @@ body {
   opacity: 1;
   transition: none;
 }
-.pt-intro .page-transition-brand {
-  transform: translateY(0);
-  opacity: 1;
-  transition: none;
-}
 
 /* DIAGONAL 铭文带：文字沿对角线方向填充在两根白线之间，
    让 DIAGONAL 这个词本身成为对角线的一部分（低透明度，不抢主光束） */
@@ -365,6 +361,7 @@ body {
   top: -10%;
   width: 140%;
   height: 120%;
+  z-index: 2; /* 位于 slash 之上、slash-echo 之下 */
   overflow: hidden;
   /* 与两线同款隐藏态：收拢于左下角，保证 polygon 插值从第一帧就可动画 */
   clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
@@ -377,7 +374,7 @@ body {
   /* rotate(-45deg) 后文字行与 135° 渐变条纹同向；
      translateY 沿渐变轴把文字推进两线正中的铭文带（带中心 = (50%+54%)/2 = 52% 处，两线等距）：
      2% × 0.707 × (140vw + 120vh) ≈ 1.98vw + 1.7vh */
-  transform: translate(-50%, -50%) rotate(-45deg) translateY(calc(1.98vw + 1.7vh));
+  transform: translate(-50%, -50%) rotate(-40deg) translateY(calc(1.98vw + 1.7vh));
   white-space: nowrap;
   font-family: var(--font-mono);
   font-weight: 700;
@@ -386,19 +383,27 @@ body {
   color: rgba(255, 255, 255, 0.38);
 }
 
-/* 中央字标：盖幕后半段浮出，揭幕时向上离场 */
+/* 中央字标：盖幕后半段浮出，揭幕时向上离场。
+   已从 overlay 内抽离为同级 fixed 层，确保永远浮在对角光束与铭文带之上 */
 .page-transition-brand {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.9rem;
+  gap: 2rem; /* 拉开 DIAGONAL 与 对角线计划 的竖直间距，让中央对角光束从中间穿过 */
   transform: translateY(2.5rem);
   opacity: 0;
 }
-.pt-cover .page-transition-brand {
+.page-transition-brand::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 64vmin;
+  height: 28vmin;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0.28) 45%, transparent 74%);
+  filter: blur(22px);
+  pointer-events: none;
+  z-index: -1;
+}
+.page-transition-brand.pt-cover {
   transform: translateY(0);
   opacity: 1;
   /* 延迟压到 320ms：字标在幕布盖满（660ms）前落位，配合揭幕前的定格停顿 */
@@ -406,23 +411,36 @@ body {
     transform 300ms var(--ease-out) 320ms,
     opacity 260ms var(--ease-out) 320ms;
 }
-.pt-reveal .page-transition-brand {
+.page-transition-brand.pt-reveal {
   transform: translateY(-2.2rem);
   opacity: 0;
   transition:
     transform 260ms var(--ease-in-out),
     opacity 200ms ease-in;
 }
+.page-transition-brand.pt-intro {
+  transform: translateY(0);
+  opacity: 1;
+  transition: none;
+}
 .page-transition-brand-line {
   font-size: clamp(2.2rem, 6vw, 4rem);
-  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+  /* 深色 drop-shadow + 外发光：让白色字形从白色对角光束里彻底脱出 */
+  text-shadow:
+    0 2px 24px rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(0, 0, 0, 0.35);
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.65));
+  transform: translateY(-1.5rem); /* 上移，让中央对角光束从上方穿过 */
 }
 .page-transition-brand-sub {
   font-family: var(--font-serif), var(--font-serif-cjk), serif;
   font-size: 1.05rem;
   letter-spacing: 0.62em;
   text-indent: 0.62em; /* 抵消末字间距，视觉居中 */
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.95); /* 接近纯白，在对角线上方也清晰可读 */
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
+  filter: drop-shadow(0 0 7px rgba(0, 0, 0, 0.6));
+  transform: translateY(0.75rem); /* 下移，与 DIAGONAL 被中央对角光束分隔开 */
 }
 
 /* —— 图片加载过渡 —— */
