@@ -138,6 +138,7 @@ body {
   .page-transition-overlay,
   .page-transition-overlay.pt-cover,
   .page-transition-overlay.pt-reveal,
+  .page-transition-overlay.pt-intro,
   .page-transition-col,
   .page-transition-brand,
   .page-transition-slash,
@@ -180,9 +181,10 @@ body {
 
 /* —— 页面切换：斜切五列幕布（参考 framer-motion stagger / Osmo 列幕布）——
    盖幕：5 根整体斜切(skewX)的竖条左→右错峰升起，红色前缘像一道斜向扫描
-   掠过屏幕盖住旧页；中央 DIAGONAL 字标随后浮出，白色光束斜线从左划入，
-   两根白线之间沿对角线填充低透明度 DIAGONAL 铭文——文字即对角线。
-   揭幕：字标向上离场，竖条右→左错峰升出视口，波浪式露出新页，光束继续向右划出。
+   掠过屏幕盖住旧页；随后白色光束对角线自左下向右上匀速生长，两根白线
+   之间沿对角线同步长出低透明度 DIAGONAL 铭文——文字即对角线。
+   揭幕：字标向上离场，竖条右→左错峰升出视口，波浪式露出新页，
+   光束与铭文的擦除边缘继续向右上推进收拢，方向全程连续。
    idle 态所有元素停在视口外，不拦截任何交互。 */
 .page-transition-overlay {
   position: fixed;
@@ -215,17 +217,17 @@ body {
   border-top: 2px solid #b33a2a; /* 升起/离场时的红色前缘 */
   will-change: transform;
 }
-/* 盖幕：左→右错峰升起 */
+/* 盖幕：左→右错峰升起（480ms + 70ms 错峰，滚动更从容顺滑） */
 .pt-cover .page-transition-col {
   transform: translateY(0);
-  transition: transform 420ms var(--ease-in-out);
-  transition-delay: calc(60ms * var(--col));
+  transition: transform 480ms var(--ease-in-out);
+  transition-delay: calc(70ms * var(--col));
 }
 /* 揭幕：右→左错峰升出视口，波浪穿过屏幕 */
 .pt-reveal .page-transition-col {
   transform: translateY(-104%);
-  transition: transform 480ms var(--ease-in-out);
-  transition-delay: calc(60ms * (4 - var(--col)));
+  transition: transform 560ms var(--ease-in-out);
+  transition-delay: calc(70ms * (4 - var(--col)));
 }
 /* 各列微妙明暗差：像垂幕的竖向褶皱，避免一整块死黑 */
 .page-transition-col:nth-child(1) { background: #0d0d10; }
@@ -234,8 +236,10 @@ body {
 .page-transition-col:nth-child(4) { background: #0f0f13; }
 .page-transition-col:nth-child(5) { background: #0b0b0e; }
 
-/* 白色光束斜线：盖幕时从左划入，揭幕时继续向右划出（方向连续）。
-   分层结构呼应 Hero 区 DiagonalSlash 母题：柔光晕 + 高亮脊线 + 伴随细线 */
+/* 白色光束斜线：用对角 polygon 擦除让两根线与铭文都「从左下长到右上」，
+   擦除边缘与线条方向严格平行，避免水平擦除造成的突兀闪烁。
+   揭幕时边缘继续向右上推进直至收拢于右上角，方向全程连续。
+   分层结构呼应 Hero 区 DiagonalSlash 母题：柔光晕 + 高亮脊线 + 伴随刻线 */
 .page-transition-slash,
 .page-transition-slash-echo {
   position: absolute;
@@ -243,66 +247,114 @@ body {
   top: -10%;
   width: 140%;
   height: 120%;
-  clip-path: inset(0 100% 0 0);
+  /* 收拢于左下角的一点：完全隐藏 */
+  clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
   opacity: 0;
 }
 .page-transition-slash {
   background:
-    /* 高亮脊线：2.4px 锐利白芯，整根线的视觉焦点 */
+    /* 高亮脊线：4px 锐利白芯，整根线的视觉焦点 */
     linear-gradient(
       135deg,
-      transparent calc(50% - 1.2px),
-      rgba(255, 255, 255, 0.95) calc(50% - 1.2px),
-      rgba(255, 255, 255, 0.95) calc(50% + 1.2px),
-      transparent calc(50% + 1.2px)
+      transparent calc(50% - 2px),
+      rgba(255, 255, 255, 0.95) calc(50% - 2px),
+      rgba(255, 255, 255, 0.95) calc(50% + 2px),
+      transparent calc(50% + 2px)
     ),
     /* 柔光晕：宽幅低透明度，让白线从黑幕上「发光」 */
     linear-gradient(
       135deg,
-      transparent 48%,
-      rgba(255, 255, 255, 0.16) 49.2%,
-      rgba(255, 255, 255, 0.16) 50.8%,
-      transparent 52%
+      transparent 47.6%,
+      rgba(255, 255, 255, 0.18) 48.8%,
+      rgba(255, 255, 255, 0.18) 51.2%,
+      transparent 52.4%
     );
 }
 .page-transition-slash-echo {
-  /* 伴随线：与主光束平行、稍粗的白色刻线，与主光束之间留出铭文带 */
-  background: linear-gradient(
-    135deg,
-    transparent 56.5%,
-    rgba(255, 255, 255, 0.5) 56.75%,
-    rgba(255, 255, 255, 0.5) 57%,
-    transparent 57.25%
-  );
+  /* 与主光束同款「发光」处理：4px 锐利白芯 + 宽幅柔光晕，
+     居中对齐到 54%（主光束正下方），与主光束平行、等距夹住铭文带 */
+  background:
+    linear-gradient(
+      135deg,
+      transparent calc(54% - 2px),
+      rgba(255, 255, 255, 0.95) calc(54% - 2px),
+      rgba(255, 255, 255, 0.95) calc(54% + 2px),
+      transparent calc(54% + 2px)
+    ),
+    linear-gradient(
+      135deg,
+      transparent calc(54% - 2.4%),
+      rgba(255, 255, 255, 0.18) calc(54% - 1.2%),
+      rgba(255, 255, 255, 0.18) calc(54% + 1.2%),
+      transparent calc(54% + 2.4%)
+    );
+}
+/* 盖幕：三者在同一对角方向上以同速生长，铭文紧贴主光束同步长出，
+   伴随刻线略微滞后收尾——速度放缓到 680ms，杜绝闪烁感 */
+.pt-cover .page-transition-slash,
+.pt-cover .page-transition-slash-echo,
+.pt-cover .page-transition-wordmark {
+  clip-path: polygon(0 100%, 0 0, 100% 0, 100% 100%);
+  opacity: 1;
 }
 .pt-cover .page-transition-slash {
-  clip-path: inset(0 0 0 0);
-  opacity: 1;
   transition:
-    clip-path 560ms var(--ease-in-out) 280ms,
-    opacity 200ms ease-out 280ms;
+    clip-path 720ms var(--ease-in-out) 240ms,
+    opacity 200ms ease-out 240ms;
+}
+.pt-cover .page-transition-wordmark {
+  transition:
+    clip-path 720ms var(--ease-in-out) 280ms,
+    opacity 240ms ease-out 280ms;
+}
+.pt-cover .page-transition-slash-echo {
+  transition:
+    clip-path 720ms var(--ease-in-out) 360ms,
+    opacity 200ms ease-out 360ms;
+}
+/* 揭幕：边缘继续向右上推进，收拢于右上角的一点 */
+.pt-reveal .page-transition-slash,
+.pt-reveal .page-transition-slash-echo,
+.pt-reveal .page-transition-wordmark {
+  clip-path: polygon(100% 0, 100% 0, 100% 0, 100% 0);
+  opacity: 0;
 }
 .pt-reveal .page-transition-slash {
-  clip-path: inset(0 0 0 100%);
-  opacity: 0;
   transition:
-    clip-path 420ms var(--ease-in-out) 60ms,
+    clip-path 600ms var(--ease-in-out) 60ms,
     opacity 320ms ease-in 60ms;
 }
-/* 伴随细线晚 90ms 划入/划出，形成拖尾层次 */
-.pt-cover .page-transition-slash-echo {
-  clip-path: inset(0 0 0 0);
-  opacity: 1;
+.pt-reveal .page-transition-wordmark {
   transition:
-    clip-path 560ms var(--ease-in-out) 370ms,
-    opacity 200ms ease-out 370ms;
+    clip-path 600ms var(--ease-in-out) 100ms,
+    opacity 320ms ease-in 100ms;
 }
 .pt-reveal .page-transition-slash-echo {
-  clip-path: inset(0 0 0 100%);
-  opacity: 0;
   transition:
-    clip-path 420ms var(--ease-in-out) 150ms,
-    opacity 320ms ease-in 150ms;
+    clip-path 600ms var(--ease-in-out) 180ms,
+    opacity 320ms ease-in 180ms;
+}
+
+/* 首次进入：首帧即被幕布完整覆盖（无过渡），下一帧走标准揭幕——
+   打开网站的第一眼与站内换场是同一套语言 */
+.page-transition-overlay.pt-intro {
+  pointer-events: auto;
+}
+.pt-intro .page-transition-col {
+  transform: translateY(0);
+  transition: none;
+}
+.pt-intro .page-transition-slash,
+.pt-intro .page-transition-slash-echo,
+.pt-intro .page-transition-wordmark {
+  clip-path: polygon(0 100%, 0 0, 100% 0, 100% 100%);
+  opacity: 1;
+  transition: none;
+}
+.pt-intro .page-transition-brand {
+  transform: translateY(0);
+  opacity: 1;
+  transition: none;
 }
 
 /* DIAGONAL 铭文带：文字沿对角线方向填充在两根白线之间，
@@ -314,31 +366,18 @@ body {
   width: 140%;
   height: 120%;
   overflow: hidden;
-  clip-path: inset(0 100% 0 0);
+  /* 与两线同款隐藏态：收拢于左下角，保证 polygon 插值从第一帧就可动画 */
+  clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
   opacity: 0;
-}
-.pt-cover .page-transition-wordmark {
-  clip-path: inset(0 0 0 0);
-  opacity: 1;
-  transition:
-    clip-path 640ms var(--ease-in-out) 300ms,
-    opacity 240ms ease-out 300ms;
-}
-.pt-reveal .page-transition-wordmark {
-  clip-path: inset(0 0 0 100%);
-  opacity: 0;
-  transition:
-    clip-path 420ms var(--ease-in-out) 90ms,
-    opacity 320ms ease-in 90ms;
 }
 .page-transition-wordmark-text {
   position: absolute;
   left: 50%;
   top: 50%;
   /* rotate(-45deg) 后文字行与 135° 渐变条纹同向；
-     translateY 沿渐变轴把文字推进两线中间的铭文带（带中心 ≈ 渐变轴 54% 处）：
-     4% × 0.707 × (140vw + 120vh) ≈ 3.96vw + 3.39vh */
-  transform: translate(-50%, -50%) rotate(-45deg) translateY(calc(3.96vw + 3.39vh));
+     translateY 沿渐变轴把文字推进两线正中的铭文带（带中心 = (50%+54%)/2 = 52% 处，两线等距）：
+     2% × 0.707 × (140vw + 120vh) ≈ 1.98vw + 1.7vh */
+  transform: translate(-50%, -50%) rotate(-45deg) translateY(calc(1.98vw + 1.7vh));
   white-space: nowrap;
   font-family: var(--font-mono);
   font-weight: 700;
@@ -375,12 +414,12 @@ body {
     opacity 200ms ease-in;
 }
 .page-transition-brand-line {
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-size: clamp(2.2rem, 6vw, 4rem);
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
 }
 .page-transition-brand-sub {
   font-family: var(--font-serif), var(--font-serif-cjk), serif;
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   letter-spacing: 0.62em;
   text-indent: 0.62em; /* 抵消末字间距，视觉居中 */
   color: rgba(255, 255, 255, 0.55);

@@ -560,6 +560,15 @@ function init() {
   clock = new THREE.Clock();
   window.addEventListener('resize', onResize);
   animate();
+
+  // 首帧渲染完成后隐去加载遮罩（双 rAF 确保场景已实际绘制一帧）
+  const loaderEl = document.getElementById('loader');
+  if (loaderEl) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      loaderEl.classList.add('hidden');
+      loaderEl.addEventListener('transitionend', () => loaderEl.remove(), { once: true });
+    }));
+  }
 }
 
 // ============================================================
@@ -1476,16 +1485,10 @@ function applyLang() {
   document.getElementById('side-tip').textContent = I.sideTip;
   const legend = document.getElementById('legend');
   if (legend) legend.innerHTML = LEGEND.map((l) => `<span><i style="background:#${l.color.toString(16).padStart(6, '0')}"></i>${state.lang === 'en' ? l.en : l.zh}</span>`).join('');
-  document.getElementById('intro-title').textContent = I.introTitle;
-  document.getElementById('intro-desc').textContent = I.introDesc;
-  document.getElementById('intro-sub').textContent = I.introSub;
-  document.getElementById('intro-enter').textContent = I.introBtn;
   const langBtn = document.getElementById('btn-lang');
   if (langBtn) { langBtn.dataset.lang = state.lang; langBtn.querySelector('.ct').textContent = state.lang === 'zh' ? 'EN' : '中'; }
   const ovBtn = document.getElementById('btn-overview');
   if (ovBtn) ovBtn.textContent = I.btnOverview;
-  const inBtn = document.getElementById('btn-intro');
-  if (inBtn) inBtn.title = I.btnInfo;
   applyNavText();
   refreshControlsText();
   if (currentActive >= 0) showInfo(PROCESS[currentActive]);
@@ -1498,13 +1501,10 @@ function stopTour() {
 }
 
 function bindUI() {
-  document.getElementById('intro-enter').onclick = () => document.getElementById('intro').classList.add('hidden');
   const langBtn = document.getElementById('btn-lang');
   if (langBtn) langBtn.onclick = () => { state.lang = state.lang === 'zh' ? 'en' : 'zh'; applyLang(); };
   const ovBtn = document.getElementById('btn-overview');
   if (ovBtn) ovBtn.onclick = () => { stopTour(); focusOn(0); };
-  const inBtn = document.getElementById('btn-intro');
-  if (inBtn) inBtn.onclick = () => document.getElementById('intro').classList.remove('hidden');
   const playBtn = document.getElementById('btn-play');
   if (playBtn) playBtn.onclick = () => { playing = !playing; refreshControlsText(); };
   const tourBtn = document.getElementById('btn-tour');

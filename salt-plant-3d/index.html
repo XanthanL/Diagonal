@@ -45,7 +45,6 @@
             <button id="btn-overview" class="btn-top" type="button">总览</button>
             <button id="btn-play" class="btn-top" type="button" title="播放 / 暂停动画">动画</button>
             <button id="btn-tour" class="btn-top" type="button" title="自动聚焦导览">自动聚焦</button>
-            <button id="btn-intro" class="btn-top btn-info" type="button" title="关于天车" aria-label="关于天车">ⓘ</button>
             <button id="btn-lang" class="lang-pill" type="button" data-lang="zh" aria-label="切换语言">
               <span class="lang-track"><span class="lang-dot"></span></span>
               <span class="ct">EN</span>
@@ -101,9 +100,9 @@
     </div>
   </section>
 
-  <div id="intro">
-    <div class="intro-card">
-      <div class="intro-mark"><svg viewBox="0 0 32 32" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <div id="loader" role="status" aria-label="加载中">
+    <div class="loader-inner">
+      <div class="loader-mark"><svg viewBox="0 0 32 32" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="16" y1="6.5" x2="3" y2="28"/>
         <line x1="16" y1="6.5" x2="29" y2="28"/>
         <line x1="8" y1="28" x2="16" y2="6.5"/>
@@ -115,10 +114,9 @@
         <circle cx="16" cy="6.5" r="2.4"/>
         <circle cx="16" cy="28" r="3.3"/>
       </svg></div>
-      <h2 id="intro-title">天车</h2>
-      <p id="intro-desc"></p>
-      <p id="intro-sub" class="intro-sub"></p>
-      <button id="intro-enter">进入天车 ▸</button>
+      <div class="loader-word">DIAGONAL</div>
+      <div class="loader-track"><span class="loader-sweep"></span></div>
+      <div class="loader-tip">载入中 · LOADING</div>
     </div>
   </div>
 

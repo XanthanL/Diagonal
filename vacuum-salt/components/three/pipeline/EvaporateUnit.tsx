@@ -361,7 +361,7 @@ function Evaporator({
 
       {/* 管内沸腾气泡 */}
       {bubbles.map((b, i) => (
-        <mesh key={i} ref={(el) => { if (el) bubbleRefs.current[i] = el; }} position={[tubePos[b.tube][0], 0, tubePos[b.tube][1]]}>
+        <mesh key={i} ref={(el) => { if (el) bubbleRefs.current[i] = el; }} position={[tubePos[b.tube][0], 0, tubePos[b.tube][1]]} scale={0.001}>
           <sphereGeometry args={[1, 10, 8]} />
           <meshStandardMaterial color={metalColors.brineLight} transparent opacity={0.5} roughness={0.3} />
         </mesh>
@@ -466,7 +466,7 @@ function Condenser({ x, z }: { x: number; z: number }) {
       </mesh>
       {/* 喷淋冷却水滴：自上而下循环下落，表达“冷凝换热” */}
       {drops.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) dropRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) dropRefs.current[i] = el; }}>
           <sphereGeometry args={[0.05, 8, 6]} />
           <meshStandardMaterial color={metalColors.brineLight} transparent opacity={0.6} roughness={0.2} />
         </mesh>

@@ -244,7 +244,7 @@ function FluidBed({ lang }: { lang: "zh" | "en" }) {
       ))}
       {/* 热风（琥珀，自下而上穿过分布板） */}
       {airs.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) airRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) airRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 8, 6]} />
           <meshStandardMaterial
             color={metalColors.amber}
@@ -257,7 +257,7 @@ function FluidBed({ lang }: { lang: "zh" | "en" }) {
       ))}
       {/* 蒸汽（水分逸出，浅灰上升） */}
       {steams.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) steamRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) steamRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 8, 6]} />
           <meshStandardMaterial color={metalColors.steam} transparent opacity={0.35} />
         </mesh>
@@ -465,7 +465,7 @@ function Cyclone({ lang }: { lang: "zh" | "en" }) {
       </mesh>
       {/* 旋流细盐颗粒 */}
       {swirls.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) swirlRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) swirlRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 8, 6]} />
           <meshStandardMaterial
             color={metalColors.brine}

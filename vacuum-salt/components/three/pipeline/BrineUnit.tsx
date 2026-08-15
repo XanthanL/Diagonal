@@ -203,7 +203,7 @@ function WellSection() {
 
       {/* 上升卤水粒子（黄褐） */}
       {Array.from({ length: UP }).map((_, i) => (
-        <mesh key={i} position={[X_PROD, 0, -0.04]} ref={(el) => { if (el) upRefs.current[i] = el; }}>
+        <mesh key={i} position={[X_PROD, 0, -0.04]} scale={0.001} ref={(el) => { if (el) upRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 10, 8]} />
           <meshStandardMaterial
             color={C.raw}
@@ -216,7 +216,7 @@ function WellSection() {
       ))}
       {/* 下行注水粒子（浅蓝） */}
       {Array.from({ length: DOWN }).map((_, i) => (
-        <mesh key={i} position={[X_INJ, 0, -0.04]} ref={(el) => { if (el) downRefs.current[i] = el; }}>
+        <mesh key={i} position={[X_INJ, 0, -0.04]} scale={0.001} ref={(el) => { if (el) downRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 10, 8]} />
           <meshStandardMaterial
             color={C.water}
@@ -382,7 +382,7 @@ function Reactor() {
 
       {/* 絮凝物（Mg(OH)₂ / CaCO₃） */}
       {flocs.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) flocRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) flocRefs.current[i] = el; }}>
           <dodecahedronGeometry args={[1, 0]} />
           <meshStandardMaterial color={C.floc} roughness={0.85} transparent opacity={0.9} />
         </mesh>
@@ -446,7 +446,7 @@ function Reactor() {
       ))}
       {/* 药剂粉体下落 */}
       {doses.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) doseRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) doseRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 8, 6]} />
           <meshStandardMaterial color={C.floc} roughness={0.9} transparent opacity={0.9} />
         </mesh>
@@ -583,14 +583,14 @@ function Clarifier() {
 
       {/* 沉降中的钙镁泥 */}
       {muds.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) mudRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) mudRefs.current[i] = el; }}>
           <dodecahedronGeometry args={[1, 0]} />
           <meshStandardMaterial color={C.mud} roughness={0.9} transparent opacity={0.9} />
         </mesh>
       ))}
       {/* 上清液环流 */}
       {Array.from({ length: 6 }).map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) overflowRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) overflowRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 10, 8]} />
           <meshStandardMaterial
             color={C.clear}
@@ -749,13 +749,13 @@ function SandFilter() {
 
       {/* 下渗（浑浊）与滤后（精卤）粒子 */}
       {Array.from({ length: 6 }).map((_, i) => (
-        <mesh key={`in${i}`} ref={(el) => { if (el) inRefs.current[i] = el; }}>
+        <mesh key={`in${i}`} scale={0.001} ref={(el) => { if (el) inRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 8, 6]} />
           <meshStandardMaterial color={C.turbid} transparent roughness={0.6} />
         </mesh>
       ))}
       {Array.from({ length: 5 }).map((_, i) => (
-        <mesh key={`out${i}`} ref={(el) => { if (el) outRefs.current[i] = el; }}>
+        <mesh key={`out${i}`} scale={0.001} ref={(el) => { if (el) outRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 10, 8]} />
           <meshStandardMaterial
             color={C.pure}

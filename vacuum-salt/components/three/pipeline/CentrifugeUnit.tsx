@@ -138,7 +138,7 @@ function Hydrocyclone() {
 
       {/* 旋流颗粒 */}
       {swirls.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) swirlRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) swirlRefs.current[i] = el; }}>
           <sphereGeometry args={[1, 8, 6]} />
           <meshStandardMaterial
             color={metalColors.salt}
@@ -314,7 +314,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
 
         {/* 盐饼（挂壁） */}
         {cakes.map((_, i) => (
-          <mesh key={i} ref={(el) => { if (el) cakeRefs.current[i] = el; }}>
+          <mesh key={i} scale={0.001} ref={(el) => { if (el) cakeRefs.current[i] = el; }}>
             <boxGeometry args={[1, 1, 1]} />
             <meshStandardMaterial
               color={metalColors.salt}
@@ -326,7 +326,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
         ))}
         {/* 母液（穿滤网） */}
         {liqs.map((_, i) => (
-          <mesh key={i} ref={(el) => { if (el) liqRefs.current[i] = el; }}>
+          <mesh key={i} scale={0.001} ref={(el) => { if (el) liqRefs.current[i] = el; }}>
             <sphereGeometry args={[1, 8, 6]} />
             <meshStandardMaterial color={metalColors.brine} transparent roughness={0.3} />
           </mesh>
@@ -371,7 +371,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
 
       {/* 湿盐卸出颗粒 */}
       {disch.map((_, i) => (
-        <mesh key={i} ref={(el) => { if (el) dischargeRefs.current[i] = el; }}>
+        <mesh key={i} scale={0.001} ref={(el) => { if (el) dischargeRefs.current[i] = el; }}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial
             color={metalColors.salt}

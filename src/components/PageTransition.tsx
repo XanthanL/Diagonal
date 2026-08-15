@@ -3,11 +3,11 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
-type TransitionPhase = "idle" | "cover" | "reveal";
+type TransitionPhase = "idle" | "intro" | "cover" | "reveal";
 
-const COVER_MS = 680; // 五列幕布错峰升起盖满屏幕：420ms 动画 + 4×60ms 错峰
+const COVER_MS = 760; // 五列幕布错峰升起盖满屏幕：480ms 动画 + 4×70ms 错峰
 const HOLD_MS = 180; // 盖满后的定格停顿，让 DIAGONAL 字标可读
-const REVEAL_MS = 760; // 幕布反向错峰升出视口：480ms 动画 + 4×60ms 错峰
+const REVEAL_MS = 860; // 幕布反向错峰升出视口：560ms 动画 + 4×70ms 错峰
 
 // 独立部署的子项目：主站 App Router 里没有对应路由，必须走整页跳转。
 // 生产静态导出中它们位于 out/vacuum-salt 与 out/salt-plant-3d。
@@ -28,15 +28,17 @@ function isAssetLink(pathname: string) {
  * 斜切五列幕布页面过渡（参考 framer-motion stagger / Osmo 式列幕布，
  * 不依赖 View Transitions API，保证 Chrome/Safari/Firefox 手感一致）：
  * 1. 点击站内链接 → 5 根整体斜切的竖条左→右错峰升起，红色前缘扫过屏幕盖住旧页；
+ *    随后白色光束对角线自左下向右上匀速生长，铭文与两线同步长出；
  * 2. 路由在幕布后完成切换；
  * 3. 竖条右→左错峰升出视口（波浪式），露出新页——进出方向连续。
  *
- * 独立子项目先播放盖幕动画，再整页跳转。
+ * 独立子项目先播放盖幕动画，再整页跳转（phase 停在 cover）；
+ * 从子项目返回时若命中 bfcache（pageshow.persisted），重放揭幕防止幕布卡屏。
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [phase, setPhase] = useState<TransitionPhase>("idle");
+  const [phase, setPhase] = useState<TransitionPhase>("intro");
   const phaseRef = useRef<TransitionPhase>("idle");
   phaseRef.current = phase;
   const pendingHref = useRef<string | null>(null);
@@ -95,6 +97,32 @@ export function PageTransition({ children }: { children: ReactNode }) {
     }, REVEAL_MS);
     return () => window.clearTimeout(timer);
   }, [phase]);
+
+  // 首次加载：首帧被幕布完整覆盖（pt-intro 无过渡），下一帧播放标准揭幕，
+  // 让「打开网站的第一眼」与站内换场共享同一套动画语言
+  useEffect(() => {
+    if (phase !== "intro") return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setPhase(reduced ? "idle" : "reveal");
+      })
+    );
+    return () => cancelAnimationFrame(raf);
+  }, [phase]);
+
+  // bfcache 修复：进入独立子项目是整页跳转，本组件冻结在 cover 相位；
+  // 从子项目返回时浏览器可能从 bfcache 恢复本页（pageshow.persisted），
+  // 幕布会永远盖住屏幕。此处直接重放揭幕动画露出页面。
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted || phaseRef.current === "idle") return;
+      if (fallbackTimer.current) window.clearTimeout(fallbackTimer.current);
+      setPhase("reveal");
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   const navigate = useCallback(
     (href: string) => {
@@ -168,7 +196,13 @@ export function PageTransition({ children }: { children: ReactNode }) {
       <div
         aria-hidden="true"
         className={`page-transition-overlay ${
-          phase === "cover" ? "pt-cover" : phase === "reveal" ? "pt-reveal" : ""
+          phase === "cover"
+            ? "pt-cover"
+            : phase === "reveal"
+              ? "pt-reveal"
+              : phase === "intro"
+                ? "pt-intro"
+                : ""
         }`}
       >
         <div className="page-transition-cols">

@@ -69,6 +69,10 @@ export default function RootLayout({
     <html lang="zh-CN" className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable}`}>
       <head>
         <meta name="referrer" content="strict-origin-when-cross-origin" />
+        {/* JS 禁用时撤下首次加载的过渡幕布，保证内容可读 */}
+        <noscript>
+          <style>{`.page-transition-overlay{display:none!important}`}</style>
+        </noscript>
       </head>
       <body className="antialiased min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
         <Providers>
