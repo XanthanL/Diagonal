@@ -211,7 +211,7 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: calc(100% / 5 + 1px); /* +1px 防斜切后列间漏缝 */
+  width: calc(100% / 5 + 4px); /* +4px 防斜切后列间漏缝（1px 在分数宽度下会被取整吃掉） */
   left: calc(100% / 5 * var(--col));
   transform: translateY(102%);
   border-top: 2px solid #b33a2a; /* 升起/离场时的红色前缘 */
