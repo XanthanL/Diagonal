@@ -26,19 +26,21 @@ export default function Home() {
 
   return (
     <div className="relative overflow-hidden pt-24 min-h-screen">
-      {/* 视觉核心：巨大的对角斜线装饰（仅覆盖 Hero 区域） */}
-      <div className="absolute top-0 left-0 w-full h-screen pointer-events-none z-0">
-        <motion.div
-          initial={{ opacity: 0, scaleY: 0.6 }}
-          animate={{ opacity: 0.05, scaleY: 1 }}
-          transition={{ duration: 0.9, ease: EASE_OUT }}
-          className="absolute inset-0 bg-gradient-to-br from-transparent via-black to-transparent transform skew-y-12"
-        />
-      </div>
-
       {/* Hero Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-32">
-        <div className="max-w-4xl space-y-14">
+        {/* 扫描线：覆盖整个 Hero（含完整介绍段落），底部 mask 渐隐融入下个板块，无硬边。
+            framer-motion 只动 opacity——若让它碰 transform 会覆盖 skew 类，导致斜切失效 */}
+        <motion.div
+          aria-hidden="true"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.9, ease: EASE_OUT }}
+          className="absolute inset-0 pointer-events-none"
+        >
+          <div className="absolute -inset-y-[12%] inset-x-0 bg-gradient-to-br from-transparent via-black/[0.05] to-transparent skew-y-6 [mask-image:linear-gradient(to_bottom,black_0%,black_58%,transparent_86%)]" />
+        </motion.div>
+
+        <div className="relative max-w-4xl space-y-14">
           <motion.h1
             initial={{ opacity: 0, transform: "translateX(-20px)" }}
             animate={{ opacity: 1, transform: "translateX(0px)" }}
@@ -73,17 +75,24 @@ export default function Home() {
       </section>
 
       {/* Documents Section (Formerly Archive Box) */}
-      <section id="archive" className="relative z-10 max-w-7xl mx-auto px-6 py-40 border-t border-black/5">
-        <div className="flex flex-col md:flex-row justify-between items-baseline mb-24 gap-8">
+      <section id="archive" className="relative z-10 border-t border-black/10">
+        <div className="max-w-7xl mx-auto px-6 py-28 md:py-40">
+        {/* 章节头：三板块统一模板（红编号标签 + 同款大标题 + 右侧 meta） */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-20 md:mb-28 gap-8 md:gap-12">
           <motion.div
             {...groupItem}
             transition={{ duration: 0.5, ease: EASE_OUT }}
-            className="space-y-4"
+            className="space-y-5 md:space-y-6"
           >
-            <h2 className="text-6xl font-black tracking-tighter uppercase italic">{t(lang, "documentsTitle")}</h2>
+            <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l-2 border-diagonal-red pl-4">
+              {t(lang, "documentsLabel")}
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
+              {t(lang, "documentsTitle")}
+            </h2>
           </motion.div>
 
-          <div className="archive-text text-[10px] space-y-1 opacity-60">
+          <div className="archive-text text-[10px] space-y-1 opacity-60 md:text-right md:pb-2">
             <div>{t(lang, "totalRecords")}: {archiveData.length}</div>
             <div>{t(lang, "axis")}</div>
           </div>
@@ -107,27 +116,27 @@ export default function Home() {
             {t(lang, "loadFullIndex")}
           </Link>
         </div>
+        </div>
       </section>
 
       {/* Atlas Section - 统一浅色，与全站视觉一致（暗室焦点改为纸面展墙） */}
-      <section id="atlas" className="relative z-10 bg-background py-40 border-t-2 border-diagonal-red">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-32 gap-12">
+      <section id="atlas" className="relative z-10 bg-background border-t border-black/10">
+        <div className="max-w-7xl mx-auto px-6 py-28 md:py-40">
+          {/* 章节头：三板块统一模板（红编号标签 + 同款大标题 + 右侧 meta） */}
+          <div className="flex flex-col md:flex-row justify-between items-end mb-20 md:mb-28 gap-8 md:gap-12">
             <motion.div
-              initial={{ opacity: 0, transform: "translateX(-20px)" }}
-              whileInView={{ opacity: 1, transform: "translateX(0px)" }}
-              viewport={{ once: true, margin: "-80px" }}
+              {...groupItem}
               transition={{ duration: 0.5, ease: EASE_OUT }}
-              className="space-y-8"
+              className="space-y-5 md:space-y-6"
             >
-              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l border-diagonal-red pl-4">
+              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l-2 border-diagonal-red pl-4">
                 {t(lang, "atlasLabel")}
               </div>
-              <h2 className="text-6xl font-black tracking-tighter uppercase italic leading-none">
+              <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
                 {t(lang, "atlasTitle")}
               </h2>
             </motion.div>
-            <div className="max-w-xs space-y-6">
+            <div className="max-w-xs space-y-6 md:pb-2">
               <p className="text-sm opacity-50 leading-relaxed italic">
                 {t(lang, "atlasIntro")}
               </p>
@@ -152,24 +161,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* THE LAB Section - 实验性质，置于 Atlas 之后、页面末尾的低调版块 */}
-      <section id="lab" className="relative z-10 max-w-7xl mx-auto px-6 py-24 border-t border-black/5">
-        <div className="flex flex-col md:flex-row justify-between items-baseline mb-14 gap-6">
+      {/* THE LAB Section - 实验性质，置于 Atlas 之后、页面末尾 */}
+      <section id="lab" className="relative z-10 border-t border-black/10">
+        <div className="max-w-7xl mx-auto px-6 py-28 md:py-40">
+        {/* 章节头：三板块统一模板（红编号标签 + 同款大标题 + 右侧 meta） */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-20 md:mb-28 gap-8 md:gap-12">
           <motion.div
             {...groupItem}
             transition={{ duration: 0.5, ease: EASE_OUT }}
-            className="space-y-3"
+            className="space-y-5 md:space-y-6"
           >
-            <div className="archive-text text-[10px] text-black/40 font-bold tracking-widest border-l border-black/20 pl-4">
+            <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l-2 border-diagonal-red pl-4">
               {t(lang, "labLabel")}
-              <span className="ml-2 text-diagonal-red/60">· DEMO</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-none">
+            <h2 className="text-5xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
               {t(lang, "labTitle")}
             </h2>
           </motion.div>
-          <div className="max-w-xs space-y-4">
-            <p className="text-xs opacity-40 leading-relaxed italic">
+          <div className="max-w-xs space-y-6 md:pb-2">
+            <p className="text-sm opacity-50 leading-relaxed italic">
               {t(lang, "labIntro")}
             </p>
           </div>
@@ -269,6 +279,7 @@ export default function Home() {
         <p className="mt-10 archive-text text-[10px] opacity-30 tracking-widest">
           EXPERIMENTAL · 实验性质 · 非档案主体内容
         </p>
+        </div>
       </section>
 
       {/* Scroll Indicator（CSS animation，不占主线程） */}

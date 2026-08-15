@@ -13,11 +13,12 @@ export const translations = {
     heroIntro:
       "对角线计划，缘起从东北到西南的身体游走，游走构成了中国版图上一条从“草原森林平原”地区到“山地高地”地区的对应线，这条线也与当年胡焕庸的从东北黑河到西南腾冲线呼应。从自然地理到人文经济，从近百年前到当代社会，从农业传统到工业繁荣，我们试图寻找和关联共同的意象、符号、理念与精神，以艺术的形式呈现两个地区的多样风貌，实践与理论结合，并尝试总结一些有效的方法，以促进和影响在地生态的演进。",
     documentsTitle: "The Documents",
+    documentsLabel: "01 · FIELD_RECORDS / 文献系统",
     documentsSubtitle: "文献展示系统 V1.2 // FIELD_RECORDS",
     totalRecords: "TOTAL_RECORDS",
     axis: "AXIS: SW_TO_NE",
     loadFullIndex: "LOAD FULL INDEX+",
-    atlasLabel: "VISUAL_MAPPING / THE_ATLAS",
+    atlasLabel: "02 · VISUAL_MAPPING / 图集",
     atlasTitle: "THE ATLAS",
     atlasIntro:
       "“地图集”通过视觉碎片记录现场考察、物质遗存与空间叙事，构建起从西南到东北的艺术地理图谱。",
@@ -32,7 +33,7 @@ export const translations = {
     vacuumSaltNav: "真空制盐",
 
     // THE LAB（与 Documents / Atlas 并列的实验/展示板块）
-    labLabel: "交互实验 · 实验场",
+    labLabel: "03 · INTERACTIVE / 实验场 · DEMO",
     labTitle: "THE LAB",
     labIntro:
       "实验场汇集对角线计划的交互式作品与可视化实验：真空制盐全流程 3D 解构、盐粒子模拟等。每项均可独立进入，作为可把玩的研究对象。",
@@ -83,11 +84,12 @@ export const translations = {
     heroIntro:
       "The Diagonal, which originated from the body from the northeast to the southwest, formed a corresponding line from the \"grassland, forest plain\" to the \"mountain highland\" area on the Chinese map, and this line also echoed Hu Huanyong's Tengchong line from the Heihe in the northeast to the southwest. From physical geography to human economy, from nearly a hundred years ago to contemporary society, from agricultural tradition to industrial prosperity, we try to find and relate common images, symbols, ideas and spirits, present the diverse features of the two regions in the form of art, combine practice and theory, and try to summarize some effective methods to promote and influence the evolution of local ecology. ",
     documentsTitle: "The Documents",
+    documentsLabel: "01 · FIELD_RECORDS / DOCUMENTS",
     documentsSubtitle: "DOCUMENT DISPLAY SYSTEM V1.2 // FIELD_RECORDS",
     totalRecords: "TOTAL_RECORDS",
     axis: "AXIS: SW_TO_NE",
     loadFullIndex: "LOAD FULL INDEX+",
-    atlasLabel: "VISUAL_MAPPING / THE_ATLAS",
+    atlasLabel: "02 · VISUAL_MAPPING / ATLAS",
     atlasTitle: "THE ATLAS",
     atlasIntro:
       "“The Atlas” records field investigations, material remnants, and spatial narratives through visual fragments, constructing an artistic geography from the southwest to the northeast.",
@@ -102,7 +104,7 @@ export const translations = {
     vacuumSaltNav: "Vacuum Salt",
 
     // THE LAB（与 Documents / Atlas 并列的实验/展示板块）
-    labLabel: "INTERACTIVE EXPERIMENTS · THE LAB",
+    labLabel: "03 · INTERACTIVE / LAB · DEMO",
     labTitle: "THE LAB",
     labIntro:
       "The Lab gathers Diagonal's interactive works and visualization experiments — the 3D deconstruction of vacuum salt-making, the salt-particle simulation, and more. Each opens independently as a playable object of study.",
