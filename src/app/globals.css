@@ -255,7 +255,7 @@ body {
   background:
     /* 高亮脊线：4px 锐利白芯，整根线的视觉焦点 */
     linear-gradient(
-      125deg,
+      145deg,
       transparent calc(51% - 2px),
       rgba(255, 255, 255, 0.95) calc(51% - 2px),
       rgba(255, 255, 255, 0.95) calc(51% + 2px),
@@ -263,7 +263,7 @@ body {
     ),
     /* 柔光晕：低透明度，让白线从黑幕上「发光」；收窄避免晕染到上下字标 */
     linear-gradient(
-      125deg,
+      145deg,
       transparent 49.8%,
       rgba(255, 255, 255, 0.18) 50.4%,
       rgba(255, 255, 255, 0.18) 51.6%,
@@ -276,14 +276,14 @@ body {
      居中对齐到 53%，与主光束平行、把铭文带（~52%）夹紧在中间 */
   background:
     linear-gradient(
-      125deg,
+      145deg,
       transparent calc(53% - 2px),
       rgba(255, 255, 255, 0.95) calc(53% - 2px),
       rgba(255, 255, 255, 0.95) calc(53% + 2px),
       transparent calc(53% + 2px)
     ),
     linear-gradient(
-      125deg,
+      145deg,
       transparent calc(53% - 1.2%),
       rgba(255, 255, 255, 0.18) calc(53% - 0.6%),
       rgba(255, 255, 255, 0.18) calc(53% + 0.6%),
@@ -371,7 +371,8 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  /* rotate(-35deg) 后文字行与 125° 渐变条纹同向（更贴近 X 轴）；
+  /* rotate(-35deg) 后文字行与 145° 渐变条纹同向（更贴近 X 轴）；
+     关系：线渐变角 = 180° - |文字旋转角|。
      translateY 沿梯度轴把文字推进两线正中的铭文带（中心 ~52%，被 51% / 53% 两线夹紧） */
   transform: translate(-50%, -50%) rotate(-35deg) translateY(calc(1.98vw + 1.7vh));
   white-space: nowrap;
