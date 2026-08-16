@@ -413,8 +413,8 @@ body {
 }
 .page-transition-brand-line {
   position: absolute;
-  top: 14vh;
-  left: 7vw;
+  top: 20vh;
+  left: 12vw;
   font-size: clamp(2.2rem, 6vw, 4rem);
   /* 深色 text-shadow + 外发光：让白色字形在黑幕角落里清晰可读 */
   text-shadow:
@@ -425,8 +425,8 @@ body {
 }
 .page-transition-brand-sub {
   position: absolute;
-  bottom: 14vh;
-  right: 7vw;
+  bottom: 20vh;
+  right: 12vw;
   font-family: var(--font-serif), var(--font-serif-cjk), serif;
   font-size: 1.05rem;
   letter-spacing: 0.62em;
