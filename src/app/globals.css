@@ -383,25 +383,13 @@ body {
   color: rgba(255, 255, 255, 0.38);
 }
 
-/* 中央字标：盖幕后半段浮出，揭幕时向上离场。
-   已从 overlay 内抽离为同级 fixed 层，确保永远浮在对角光束与铭文带之上 */
+/* 字标：盖幕后半段浮出，揭幕时向上离场。
+   已从 overlay 内抽离为同级 fixed 层，永远浮在对角光束与铭文带之上。
+   DIAGONAL 置于对角线左上、对角线计划置于右下，二者落在对角带两侧、
+   不与中央斜向铭文带重叠 */
 .page-transition-brand {
-  gap: 2rem; /* 拉开 DIAGONAL 与 对角线计划 的竖直间距，让中央对角光束从中间穿过 */
   transform: translateY(2.5rem);
   opacity: 0;
-}
-.page-transition-brand::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 96vmin;
-  height: 48vmin;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.62) 28%, rgba(0, 0, 0, 0.22) 58%, transparent 86%);
-  filter: blur(44px);
-  pointer-events: none;
-  z-index: -1;
 }
 .page-transition-brand.pt-cover {
   transform: translateY(0);
@@ -424,26 +412,30 @@ body {
   transition: none;
 }
 .page-transition-brand-line {
+  position: absolute;
+  top: 14vh;
+  left: 7vw;
   font-size: clamp(2.2rem, 6vw, 4rem);
-  /* 深色 drop-shadow + 外发光：让白色字形从白色对角光束里彻底脱出 */
+  /* 深色 text-shadow + 外发光：让白色字形在黑幕角落里清晰可读 */
   text-shadow:
     0 0 5px rgba(0, 0, 0, 0.95),
     0 0 14px rgba(0, 0, 0, 0.85),
     0 0 32px rgba(0, 0, 0, 0.55);
   filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.85));
-  transform: translateY(-5.5rem); /* 上移，使 DIAGONAL 脱离中央斜线核心区 */
 }
 .page-transition-brand-sub {
+  position: absolute;
+  bottom: 14vh;
+  right: 7vw;
   font-family: var(--font-serif), var(--font-serif-cjk), serif;
   font-size: 1.05rem;
   letter-spacing: 0.62em;
   text-indent: 0.62em; /* 抵消末字间距，视觉居中 */
-  color: rgba(255, 255, 255, 0.95); /* 接近纯白，在对角线上方也清晰可读 */
+  color: rgba(255, 255, 255, 0.95); /* 接近纯白，在黑幕角落也清晰可读 */
   text-shadow:
     0 0 4px rgba(0, 0, 0, 0.92),
     0 0 12px rgba(0, 0, 0, 0.72);
   filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.82));
-  transform: translateY(3.5rem); /* 下移，让斜线从 DIAGONAL 与副标题之间穿过 */
 }
 
 /* —— 图片加载过渡 —— */

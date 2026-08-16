@@ -223,7 +223,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
       {/* 中央字标：单独抽离到 overlay 上方同级，确保绝对位于对角光束之上 */}
       <div
         aria-hidden="true"
-        className={`page-transition-brand fixed inset-0 z-[100] flex flex-col items-center justify-center pointer-events-none ${
+        className={`page-transition-brand fixed inset-0 z-[100] pointer-events-none ${
           phase === "cover"
             ? "pt-cover"
             : phase === "reveal"
