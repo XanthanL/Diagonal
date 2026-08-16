@@ -256,38 +256,38 @@ body {
     /* 高亮脊线：4px 锐利白芯，整根线的视觉焦点 */
     linear-gradient(
       125deg,
-      transparent calc(50% - 2px),
-      rgba(255, 255, 255, 0.95) calc(50% - 2px),
-      rgba(255, 255, 255, 0.95) calc(50% + 2px),
-      transparent calc(50% + 2px)
+      transparent calc(51% - 2px),
+      rgba(255, 255, 255, 0.95) calc(51% - 2px),
+      rgba(255, 255, 255, 0.95) calc(51% + 2px),
+      transparent calc(51% + 2px)
     ),
     /* 柔光晕：低透明度，让白线从黑幕上「发光」；收窄避免晕染到上下字标 */
     linear-gradient(
       125deg,
-      transparent 48.8%,
-      rgba(255, 255, 255, 0.18) 49.4%,
-      rgba(255, 255, 255, 0.18) 50.6%,
-      transparent 51.2%
+      transparent 49.8%,
+      rgba(255, 255, 255, 0.18) 50.4%,
+      rgba(255, 255, 255, 0.18) 51.6%,
+      transparent 52.2%
     );
 }
 .page-transition-slash-echo {
   z-index: 3; /* 位于铭文带之上 */
-  /* 与主光束同款「发光」处理：4px 锐利白芯 + 宽幅柔光晕，
-     居中对齐到 54%（主光束正下方），与主光束平行、等距夹住铭文带 */
+  /* 与主光束同款「发光」处理：4px 锐利白芯 + 窄幅柔光晕，
+     居中对齐到 53%，与主光束平行、把铭文带（~52%）夹紧在中间 */
   background:
     linear-gradient(
       125deg,
-      transparent calc(54% - 2px),
-      rgba(255, 255, 255, 0.95) calc(54% - 2px),
-      rgba(255, 255, 255, 0.95) calc(54% + 2px),
-      transparent calc(54% + 2px)
+      transparent calc(53% - 2px),
+      rgba(255, 255, 255, 0.95) calc(53% - 2px),
+      rgba(255, 255, 255, 0.95) calc(53% + 2px),
+      transparent calc(53% + 2px)
     ),
     linear-gradient(
       125deg,
-      transparent calc(54% - 1.2%),
-      rgba(255, 255, 255, 0.18) calc(54% - 0.6%),
-      rgba(255, 255, 255, 0.18) calc(54% + 0.6%),
-      transparent calc(54% + 1.2%)
+      transparent calc(53% - 1.2%),
+      rgba(255, 255, 255, 0.18) calc(53% - 0.6%),
+      rgba(255, 255, 255, 0.18) calc(53% + 0.6%),
+      transparent calc(53% + 1.2%)
     );
 }
 /* 盖幕：三者在同一对角方向上以同速生长，铭文紧贴主光束同步长出，
@@ -372,7 +372,7 @@ body {
   left: 50%;
   top: 50%;
   /* rotate(-35deg) 后文字行与 125° 渐变条纹同向（更贴近 X 轴）；
-     translateY 沿梯度轴把文字推进两线正中的铭文带（中心 52%，两线等距） */
+     translateY 沿梯度轴把文字推进两线正中的铭文带（中心 ~52%，被 51% / 53% 两线夹紧） */
   transform: translate(-50%, -50%) rotate(-35deg) translateY(calc(1.98vw + 1.7vh));
   white-space: nowrap;
   font-family: var(--font-mono);
