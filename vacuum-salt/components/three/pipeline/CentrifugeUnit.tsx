@@ -33,8 +33,7 @@ const X_HYDRO = -2.7; // 水力旋流器（左）
 const X_BOWL = 0; // 转鼓（中）
 
 // 真剖面：与环节 2（蒸发）一致，用世界空间裁剪面（保留 z<=0 半边）从相机侧干净剖开，
-// 内部转鼓 / 筛网 / 盐饼 / 母液完整可见；盐饼、母液、颗粒不加裁剪，保持实体。
-const CENT_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+// 容器完整渲染，不做剖切。
 
 // ---------- 1. 水力旋流器（预增浓） ----------
 const H_BODY_TOP = 1.2;
@@ -98,8 +97,7 @@ function Hydrocyclone() {
           transparent
           opacity={0.4}
           side={THREE.DoubleSide}
-          clippingPlanes={[CENT_CLIP]}
-        />
+                 />
       </mesh>
       {/* 锥体（半剖，底流收口） */}
       <mesh position={[0, (H_BODY_BOT + H_CONE_BOT) / 2, 0]} castShadow>
@@ -111,8 +109,7 @@ function Hydrocyclone() {
           transparent
           opacity={0.45}
           side={THREE.DoubleSide}
-          clippingPlanes={[CENT_CLIP]}
-        />
+                 />
       </mesh>
 
       {/* 顶部进料管（盐浆进口） */}
@@ -267,8 +264,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
           transparent
           opacity={0.32}
           side={THREE.DoubleSide}
-          clippingPlanes={[CENT_CLIP]}
-        />
+                 />
       </mesh>
         {/* 筛网（滤网，线框表达孔隙） */}
       <mesh position={[0, (B_SKIRT_TOP + B_BOT) / 2, 0]}>
@@ -281,8 +277,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
           transparent
           opacity={0.28}
           side={THREE.DoubleSide}
-          clippingPlanes={[CENT_CLIP]}
-        />
+                 />
       </mesh>
         {/* 顶部法兰环 */}
         <mesh position={[0, B_SKIRT_TOP, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -296,7 +291,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
         </mesh>
         <mesh position={[0, B_SKIRT_TOP, 0]}>
           <coneGeometry args={[0.34, 0.4, 20, 1, true]} />
-          <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.4} side={THREE.DoubleSide} clippingPlanes={[CENT_CLIP]} />
+          <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.4} side={THREE.DoubleSide} />
         </mesh>
         {/* 排料锥（湿盐出口） */}
       <mesh position={[0, (B_BOT + B_DISCH_BOT) / 2, 0]}>
@@ -308,8 +303,7 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
           transparent
           opacity={0.4}
           side={THREE.DoubleSide}
-          clippingPlanes={[CENT_CLIP]}
-        />
+                 />
       </mesh>
 
         {/* 盐饼（挂壁） */}
@@ -361,12 +355,11 @@ function CentrifugeBowl({ focused, lang }: { focused: boolean; lang: "zh" | "en"
           transparent
           opacity={0.5}
           side={THREE.DoubleSide}
-          clippingPlanes={[CENT_CLIP]}
-        />
+                 />
       </mesh>
       <mesh position={[0, PAN_BOT, 0]}>
         <cylinderGeometry args={[PAN_R, PAN_R, 0.06, 36]} />
-        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.4} roughness={0.7} clippingPlanes={[CENT_CLIP]} />
+        <meshStandardMaterial color={metalColors.alloyMid} metalness={0.4} roughness={0.7} />
       </mesh>
 
       {/* 湿盐卸出颗粒 */}

@@ -30,8 +30,7 @@ import { STAGE_X } from "./layout";
  */
 
 const GROUND = -2.4;
-// 真剖面：与环节 2（蒸发）一致（保留 z<=0 半边），从相机侧剖开包装机看充填封口
-const PACK_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+// 容器完整渲染，不做剖切。
 const X_CONV = -1.6; // 进料输送（左）
 const X_PACKER = 0.0; // 定量包装机（中）
 const X_BELT = 1.0; // 包装输出皮带
@@ -298,12 +297,12 @@ function Packer() {
       {/* 机壳（真剖面：剖开看充填封口） */}
       <mesh position={[0, 0.45, 0]} castShadow>
         <boxGeometry args={[1.1, 1.5, 0.9]} />
-        <meshStandardMaterial color={metalColors.alloy} metalness={0.45} roughness={0.4} clippingPlanes={[PACK_CLIP]} />
+        <meshStandardMaterial color={metalColors.alloy} metalness={0.45} roughness={0.4} />
       </mesh>
       {/* 料斗（顶部：正漏斗——宽口朝上接提升管，锥尖向下喂入袋口） */}
       <mesh position={[0, 1.4, 0]} rotation={[Math.PI, 0, 0]} castShadow>
         <coneGeometry args={[0.45, 0.6, 20, 1, true]} />
-        <meshStandardMaterial color={metalColors.alloyLight} metalness={0.5} side={THREE.DoubleSide} roughness={0.4} clippingPlanes={[PACK_CLIP]} />
+        <meshStandardMaterial color={metalColors.alloyLight} metalness={0.5} side={THREE.DoubleSide} roughness={0.4} />
       </mesh>
       {/* 下料 spout（料斗锥尖 → 袋口） */}
       <mesh position={[0, 1.0, 0]}>

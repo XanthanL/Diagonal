@@ -43,8 +43,7 @@ export function localEffectX(i: number): number {
 }
 
 // 裁剪面（世界空间，不随单元 x 平移改变 z）
-const EVAP_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0); // 四效：保留 z<=0
-const COND_CLIP = new THREE.Plane(new THREE.Vector3(0, 0, -1), -1.4); // 冷凝器：保留 z<=-1.4
+// 容器完整渲染，不做剖切。
 
 // 垂直布局基准（相对坐标）
 const GROUND = -2.4;
@@ -233,8 +232,7 @@ function Evaporator({
           transparent
           opacity={0.42}
           side={THREE.DoubleSide}
-          clippingPlanes={[EVAP_CLIP]}
-        />
+                 />
       </mesh>
       {/* 中央降液管（自然循环：管内沸腾 → 中心回流） */}
       <mesh position={[0, HEATER_CY, 0]}>
@@ -279,8 +277,7 @@ function Evaporator({
           transparent
           opacity={0.2}
           side={THREE.DoubleSide}
-          clippingPlanes={[EVAP_CLIP]}
-        />
+                 />
       </mesh>
       {/* 沸腾微辉光（剧烈度随效递减） */}
       <mesh ref={boilRef} position={[0, (LIQ_TOP + LIQ_BOT) / 2, 0]}>
@@ -319,7 +316,7 @@ function Evaporator({
       {/* 锥顶 + 蒸汽出口 */}
       <mesh position={[0, CHAMBER_CY + CHAMBER_H / 2 + TOP_CONE_H / 2, 0]}>
         <coneGeometry args={[CHAMBER_R, TOP_CONE_H, 40]} />
-        <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.35} side={THREE.DoubleSide} clippingPlanes={[EVAP_CLIP]} />
+        <meshStandardMaterial color={metalColors.alloy} metalness={0.5} roughness={0.35} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0, STEAM_TOP, 0]}>
         <cylinderGeometry args={[0.24, 0.24, 0.4, 18]} />
@@ -342,8 +339,7 @@ function Evaporator({
           transparent
           opacity={0.4}
           side={THREE.DoubleSide}
-          clippingPlanes={[EVAP_CLIP]}
-        />
+                 />
       </mesh>
       {/* 盐浆出口短管（末效连离心机；其余仅示意） */}
       <mesh position={[0, DISCHARGE_Y - 0.05, 0]}>
@@ -442,8 +438,7 @@ function Condenser({ x, z }: { x: number; z: number }) {
           transparent
           opacity={0.38}
           side={THREE.DoubleSide}
-          clippingPlanes={[COND_CLIP]}
-        />
+                 />
       </mesh>
       {/* 内部冷却喷淋管（水平） */}
       {[-0.7, -0.1, 0.5, 1.0].map((y, i) => (
