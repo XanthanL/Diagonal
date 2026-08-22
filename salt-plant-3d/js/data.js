@@ -35,8 +35,8 @@ export const PROCESS = [
     },
     equipment: ['束柱（多杉并束、竹篾成箍）', '大车（提卤绞盘）', '地辊（转向定滑轮）', '碓架（冲击顿钻）', '风篾（防风拉索）', '汲卤筒（提卤桶）', '铁箍（关键节点锁紧）', '盐工寮棚 + 井台竹笆'],
     equipmentEn: ['Bundle column (lashed fir trunks)', 'Cart (draw-wheel)', 'Ground roller (deflector)', 'Duijia (percussion rig)', 'Wind stays (guy lines)', 'Bailer (draw bucket)', 'Iron hoops (joint lock)', 'Brine-shed + bamboo screen'],
-    params: ['天车高约 18 m（燊海井实制）', '束柱 6→2 根渐束', '篾箍 ≈0.7 m/道，铁箍每 3 道', '大车直径约 4.5 m', '风篾 12 根放射拉索'],
-    paramsEn: ['Derrick ~18 m (Shenhai Well)', 'Bundle 6→2 trunks', 'Bamboo hoop ~0.7 m, iron every 3rd', 'Cart Ø ~4.5 m', '12 radiating wind stays'],
+    params: ['天车高约 18 m（燊海井实制）', '束柱 6→2 根渐束', '篾箍 ≈0.5 m/道，铁箍每 4 道', '大车直径约 4.5 m', '风篾 18 根放射拉索（避让布置）'],
+    paramsEn: ['Derrick ~18 m (Shenhai Well)', 'Bundle 6→2 trunks', 'Bamboo hoop ~0.5 m, iron every 4th', 'Cart Ø ~4.5 m', '18 radiating wind stays (avoidance-routed)'],
     output: '提汲卤水（制盐原料）；维系井场工匠的日常',
     outputEn: 'Drawn brine (salt-making feed); the daily life of well-yard craftsmen',
   },
@@ -45,7 +45,7 @@ export const PROCESS = [
   {
     id: 'column', index: 1, name: '束柱', subtitle: '多杉并束 · 竹篾成箍',
     nameEn: 'Bundle Columns', subtitleEn: 'Lashed Fir Trunks',
-    color: 0x8C755A, position: [-0.6, 0, 0.2],
+    color: 0x77634C, position: [-0.6, 0, 0.2],
     cam: [8, 9, 17], target: [-0.6, 7, 0.2],
     halo: [-0.6, 7.5, 0.2, 3.6],
     principle:
@@ -56,22 +56,22 @@ export const PROCESS = [
       zh: [
         '多根杉木围轴并束，并非单根整木',
         '错缝搭接：短木对接，弱面错开不同高度',
-        '竹篾螺旋密缠成箍（≈0.7 m/道）',
-        '每 3 道篾箍换 1 道铁箍锁紧节点',
+        '竹篾螺旋密缠成箍（≈0.5 m/道）',
+        '每 4 道篾箍换 1 道铁箍锁紧节点',
         '并束根数 6→2 递减，越上越细',
         '收分即束柱截面的逐级收缩',
       ],
       en: [
         'Several fir trunks bundled around an axis — not one log',
         'Offset splices: short logs joined, weak faces staggered in height',
-        'Bamboo-cord rings wound helically (~0.7 m pitch)',
-        'One iron hoop every 3rd bamboo ring locks the node',
+        'Bamboo-cord rings wound helically (~0.5 m pitch)',
+        'One iron hoop every 4th bamboo ring locks the node',
         'Trunk count tapers 6→2, thinner upward',
         'The taper is the progressive shrink of the bundle',
       ],
     },
-    params: ['主天车 6 根并束', '副天车 4 根并束', '篾箍 ≈0.7 m/道', '铁箍每 3 道', '收分 顶半宽≈底×0.32'],
-    paramsEn: ['Main derrick 6 trunks', 'Sub derrick 4 trunks', 'Bamboo hoop ~0.7 m', 'Iron hoop every 3rd', 'Taper top half ≈ 0.32× base'],
+    params: ['主天车 6 根并束', '副天车 4 根并束', '篾箍 ≈0.5 m/道', '铁箍每 4 道', '收分 正面顶半宽≈底×0.16 · 进深≈底×0.44'],
+    paramsEn: ['Main derrick 6 trunks', 'Sub derrick 4 trunks', 'Bamboo hoop ~0.5 m', 'Iron hoop every 4th', 'Taper front top half ≈ 0.16× base, depth ≈ 0.44×'],
   },
 
   // 2 —— 天辊 · 风篾
@@ -88,23 +88,23 @@ export const PROCESS = [
     reaction: {
       zh: [
         '天辊带槽，防止提卤绳脱槽',
-        '风篾 12 根伞状放射',
+        '风篾 18 根伞状放射（避让相邻装置）',
         '地桩入土夯固，承拉不承剪',
         '篾绳节点无金属，全靠绞紧',
-        '放射角约 45°，决定抗风能力',
+        '挂点 ≈0.9 塔高，伞面开阔',
         '风篾随高度收紧，越上越密',
       ],
       en: [
         'Grooved sky roller keeps the rope on track',
-        '12 wind stays radiate like an umbrella',
+        '18 wind stays radiate like an umbrella',
         'Earth pegs take tension, not shear',
         'Cord joints are metal-free, held by tension',
-        '~45° splay sets the wind resistance',
+        'Attach at ~0.9 H opens the umbrella',
         'Stays tighten with height, denser above',
       ],
     },
-    params: ['天辊 Ø ≈2.4 m', '风篾 12 根', '放射角 ≈45°', '地桩夯土固定', '篾绳无金属节点'],
-    paramsEn: ['Sky roller Ø ≈2.4 m', '12 wind stays', 'Splay ≈45°', 'Pegs in earth', 'Cord joints metal-free'],
+    params: ['天辊 Ø ≈1.3 m', '风篾 18 根（主 10 · 副 8）', '挂点 ≈0.9 塔高', '地桩夯土固定', '篾绳无金属节点'],
+    paramsEn: ['Sky roller Ø ≈1.3 m', '18 wind stays (10 + 8)', 'Attach ≈0.9 H', 'Pegs in earth', 'Cord joints metal-free'],
   },
 
   // 3 —— 大车
@@ -275,7 +275,7 @@ export const PROCESS = [
 
 // 材料 / 构件图例（颜色 + 中英文名称）
 export const LEGEND = [
-  { color: 0x8C755A, zh: '杉木（束柱）', en: 'Fir bundle' },
+  { color: 0x77634C, zh: '杉木（束柱）', en: 'Fir bundle' },
   { color: 0xA9AC82, zh: '竹篾（箍）', en: 'Bamboo' },
   { color: 0x6B6259, zh: '铁箍（节点）', en: 'Iron hoop' },
   { color: 0x9A8455, zh: '茅草（寮棚）', en: 'Thatch' },
