@@ -3,6 +3,11 @@
 /Diagonal-content-backup/
 /content/
 
+# 3D 子项目的本地参考资料与技能工作目录（按约不入库，验收后删除）
+/salt-plant-3d/images/
+/salt-plant-3d/.img2threejs/
+/xiqin-hall-3d/docs/reference/
+
 # WorkBuddy agent internal data (not part of the project)
 /.workbuddy/
 
