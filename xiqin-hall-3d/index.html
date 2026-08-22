@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>西秦会馆 3D 解构 · 武圣宫大门</title>
+  <meta property="og:title" content="西秦会馆 3D 解构 · 武圣宫大门 | DIAGONAL" />
+  <meta property="og:description" content="对角线计划子项目：体素风格解构自贡西秦会馆武圣宫大门——四重檐牌楼门与献技诸楼复合建筑。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.diagonal-art.com/xiqin-hall-3d/" />
+  <meta property="og:site_name" content="DIAGONAL" />
+  <meta property="og:image" content="https://www.diagonal-art.com/images/diagonal-logo.jpg" />
+  <meta property="og:image:secure_url" content="https://www.diagonal-art.com/images/diagonal-logo.jpg" />
+  <meta property="og:image:width" content="640" />
+  <meta property="og:image:height" content="640" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://www.diagonal-art.com/images/diagonal-logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./js/vendor/three.module.js",
+      "three/addons/": "./js/vendor/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="scene-root"></div>
+  <div id="diag" hidden></div>
+
+  <header id="topbar">
+    <div class="bar-inner">
+      <div class="bar-row">
+        <a id="brand-home" class="brand" href="https://www.diagonal-art.com/" title="返回 DIAGONAL 官网首页">
+          <span class="brand-word">DIAGONAL</span>
+          <span class="brand-sub">/ 西秦会馆</span>
+        </a>
+        <div class="bar-right">
+          <div id="legend" class="legend"></div>
+          <div class="top-ctrls">
+            <button id="btn-overview" class="btn-top" type="button">总览</button>
+            <button id="btn-play" class="btn-top" type="button" title="播放 / 暂停动画">动画</button>
+            <button id="btn-tour" class="btn-top" type="button" title="自动聚焦导览">自动聚焦</button>
+            <button id="btn-lang" class="lang-pill" type="button" data-lang="zh" aria-label="切换语言">
+              <span class="lang-track"><span class="lang-dot"></span></span>
+              <span class="ct">EN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <aside id="sidebar">
+    <div id="side-title" class="side-title">武圣宫大门 · 复合门楼</div>
+    <div id="nav-list"></div>
+    <div id="side-tip" class="side-tip">点击构件聚焦视角 · 拖拽旋转 · 滚轮缩放</div>
+  </aside>
+
+  <section id="infopanel" aria-expanded="false">
+    <div class="ip-head" role="button" tabindex="0" aria-controls="ip-body" aria-expanded="false" title="展开 / 收起详情">
+      <span id="ip-color" class="ip-color"></span>
+      <div class="ip-head-text">
+        <div id="ip-index" class="ip-index">构件</div>
+        <h2 id="ip-name">构件名称</h2>
+        <div id="ip-sub" class="ip-sub">Subtitle</div>
+      </div>
+      <button class="ip-toggle" type="button" aria-label="展开详情" aria-expanded="false">
+        <span class="ip-toggle-hint" data-hint="info">详情</span>
+        <svg class="ip-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+    </div>
+    <div class="ip-body" id="ip-body">
+      <div class="ip-block">
+        <h3 id="ip-title">建筑形制</h3>
+        <p id="ip-principle"></p>
+      </div>
+      <div class="ip-block">
+        <h3 id="ip-reaction-title">结构 · 营建要点</h3>
+        <div id="ip-reaction" class="ip-reaction"></div>
+      </div>
+      <div class="ip-block" id="ip-equip-block">
+        <h3 id="ip-equip-title">建筑构成</h3>
+        <ul id="ip-equip" class="ip-equip"></ul>
+      </div>
+      <div class="ip-block">
+        <h3 id="ip-params-title">关键形制</h3>
+        <div id="ip-params" class="ip-params"></div>
+      </div>
+      <div class="ip-block ip-out" id="ip-output-block">
+        <h3 id="ip-output-title">大门职能</h3>
+        <div id="ip-output" class="ip-output"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="loader" role="status" aria-label="加载中">
+    <div class="loader-inner">
+      <div class="loader-mark"><svg viewBox="0 0 32 32" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="16" y1="6.5" x2="3" y2="28"/>
+        <line x1="16" y1="6.5" x2="29" y2="28"/>
+        <line x1="8" y1="28" x2="16" y2="6.5"/>
+        <line x1="24" y1="28" x2="16" y2="6.5"/>
+        <line x1="11" y1="20.5" x2="21" y2="20.5"/>
+        <line x1="12.6" y1="13.5" x2="19.4" y2="13.5"/>
+        <line x1="11" y1="20.5" x2="19.4" y2="13.5"/>
+        <line x1="21" y1="20.5" x2="12.6" y2="13.5"/>
+        <circle cx="16" cy="6.5" r="2.4"/>
+        <circle cx="16" cy="28" r="3.3"/>
+      </svg></div>
+      <div class="loader-word">DIAGONAL</div>
+      <div class="loader-track"><span class="loader-sweep"></span></div>
+      <div class="loader-tip">载入中 · LOADING</div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
