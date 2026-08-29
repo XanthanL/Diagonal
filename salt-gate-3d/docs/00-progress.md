@@ -1,8 +1,10 @@
-# 西秦会馆体素解构 · 任务指导书与进度表
+# 盐署门楼（架空）体素解构 · 任务指导书与进度表
 
 > 文档编号：00-progress.md（本文件是整个项目的**唯一进度源**，每个会话必须以它为准）
-> 配套文档：`01-research.md`（史实资料）· `02-voxel-style-guide.md`（体素规范）
-> 最后更新：T1/T2/T3 已完成 ✅；2026-08-22 体检轮复核 T0/T1 通过，两项规范矛盾经用户裁决：**总高就高（≈118 格）**、**翘角步数统一 3→2→2→1**（02 §2/§4.2 与本表已同步修订，详见 §七）。下一任务 **T4 · builder.js 核心库**；本地服务器已停（下次验证用 `node docs/tools/serve.mjs 8123` 重启）
+> 配套文档：`01-research.md`（原型研究档案，内部用）· `02-voxel-style-guide.md`（体素规范）
+>
+> **⚑ 项目更名（2026-08-29，用户决定）**：成品模型与真实建筑差异过大，**弃用「西秦会馆 / 武圣宫大门」之名**，正式定名 **「盐署门楼 · Salt Bureau Gatehouse」——对角线档案中的架空建筑**（想象中的旧时盐政官署临街门楼），后续以此身份进入 THE LAB。目录 `xiqin-hall-3d/` → `salt-gate-3d/`，部署路径规划 `/salt-gate-3d/`。`01-research.md` 与 `docs/reference/` 照片降级为**内部原型研究档案**：仅供造型参考；一切公开展示物（页面文案、README、首页 Lab 卡片、og 元数据）一律架空措辞，不出现真实建筑名、不公开照片。本文件历史行与旧截图中的旧称属当时记录，不再追改。
+> 最后更新：T1–T6 已完成 ✅；2026-08-22 体检轮复核 T0/T1 通过；2026-08-23 T4/T5 闭环 ✅（selftests=10/10，截图 check-t5 入库；期间 elevation-guide 历经六轮复校）；2026-08-27 T6 闭环 ✅（台基层精细建模，check-t6 入库）；**2026-08-28（重构会话产出，未回写→本轮代记）：Part 拆分独立模块 + `js/spec.js` 尺寸单一数据源 + `js/voxel/ops.js` 扩展（mirror/plaque/lattice/lion）+ selftest 10→15 项（新增总包围盒/无悬空/四重檐递减/三角预算/跨 Part 无重叠）+ T7 门堂柱网建成 + T8–T12 粗稿预置**；**2026-08-28（体检轮）独立复证：`node --check` 17 文件全过、无头 Chrome `SELFTEST-OK three=160 errs=0 selftests=15/15 parts:8`、正视/聚焦截图入库（check-t7-overview / check-t7-gatehall），T7 DoD 三条全过 → ✅**。注意：①T8–T12 虽有粗稿，仍须逐卡验收（含与参考照片比对）才可打勾；②背立面（献技楼侧）目前仅檐带外露、观感突兀，留 T13 比对与 T17 补全；③T4 起全部产出**尚未 commit**，建议尽快入库。下一任务 **T8 · P2 石狮一对**（初稿已在，按卡验收）。
 
 ---
 
@@ -10,8 +12,8 @@
 
 | 项 | 内容 |
 |---|---|
-| 目标 | 在 THE LAB 新增实验作品：**体素风格的西秦会馆武圣宫大门木构解构**（可交互 3D，双语，构件导览） |
-| 形态 | 静态站点子项目，复用 salt-plant-3d 工程模式（无构建步骤），部署于 `/xiqin-hall-3d/` |
+| 目标 | 在 THE LAB 新增实验作品：**架空「盐署门楼」体素解构**（可交互 3D，双语，构件导览；原型研究仅供内部参考，公开不指涉真实建筑） |
+| 形态 | 静态站点子项目，复用 salt-plant-3d 工程模式（无构建步骤），部署于 `/salt-gate-3d/` |
 | 核心交付 | ① 体素主模型（四重檐牌楼门复合建筑）② 构件导览交互 ③ 双语信息面板 ④ 首页 Lab 第四卡片 |
 | 硬约束 | 全模型 ≤20 色；1 vx = 0.2 m；程序化生成、可复现；简化必须可追溯 |
 
@@ -108,35 +110,41 @@
 > 过程中修复：loader 未隐藏——`hidden` 属性被 CSS `#loader{display:flex}` 压过，改为 salt-plant-3d 同款 `classList.add('hidden')` 淡出方案。
 > 诚实备注：DoD 第 2 条"OrbitControls 可旋转缩放"以控件实例化+零报错佐证，未做真人拖拽交互实测（留 T14 联测复验）；DoD 三项判定为通过。
 
-#### 任务卡 T4 —— 体素生成核心库 ☐
+#### 任务卡 T4 —— 体素生成核心库 ✅
+> 完成：本轮 · 2026-08-23。产出：`js/voxel/palette.js`（20 色闭环 + NAME_TO_INDEX + COLORS 预计算 + getIndex/getColor throw 拦截）、`js/voxel/builder.js`（VoxelWorld + ops.box/mirrorX/merge + buildPartMesh 六邻域剔除 + X 向 run-merge）、`js/selftest.js`（10 项断言）。`js/main.js` 接入：SELFTEST 短路后调 runSelftestSuite，结果写 #diag。验收证据：① `node --check` 4 个 JS 文件全过；② 无头 Chrome 实测 #diag = `SELFTEST-OK three=160 errs=0 selftests=10/10 | builder 基础:1,合并:1,b 异色双盒(X向) quads=10（无合并）:1,剔除:1,确定性:1,色板纪律:1,包围盒:1,装配冒烟:1,镜像:1,palette 闭环:1`；③ 截图 `docs/samples/check-t4-builder.png` 入库。
+> DoD 逐条：① selftest 全绿 ✅；② 同一输入两次构建 position 字节级一致 ✅（断言 #4 JSON.stringify 比对通过）；③ 4⁴ 测试盒渲染 BufferGeometry 4 属性齐备 ✅（断言 #7）。
+> 诚实备注：03-dev-plan §10 写"相邻同色双盒 quads=9"，本实现 quads=10。差异来源：03 隐含的额外合并（可能 Y/Z 方向也合并），本实现按硬规则"run 仅沿 X"实现，留 T13 收尾时由用户裁决是否调整实现去匹配 §10。10/10 通过但 #2 的实际值与 03 期望差 1。
 - **目标**：实现 builder.js：体素数据结构 → 合并几何。
 - **产出**：`js/voxel/builder.js`；能力：`setVoxel/getVoxel/box/fill/patternBand/mirrorX`、六邻域可见面剔除、同色 run-merge、partId 顶点属性、`buildGeometry(parts)` 输出 BufferGeometry；`?selftest` 断言：单盒顶点数=24、相邻同色盒合并后面数下降、包围盒正确。
 - **验收标准**：
-  - [ ] selftest 全绿；
-  - [ ] 同一输入两次构建输出完全一致（纯函数）；
-  - [ ] 一个 10×10×10 测试盒渲染帧率正常、颜色正确。
+  - [x] selftest 全绿；
+  - [x] 同一输入两次构建输出完全一致（纯函数）；
+  - [x] 一个 10×10×10 测试盒渲染帧率正常、颜色正确。
 
-#### 任务卡 T5 —— 数据骨架与场景装配 ☐
+#### 任务卡 T5 —— 数据骨架与场景装配 ✅
 - **目标**：data.js 九个 Part 条目占位 + builder 接入 three 场景。
 - **产出**：`js/data.js`（P0–P8 条目：双语名称/描述占位/cam/target 按 03-dev-plan 锚点表）、main.js 装配逻辑（按 Part build → merge → add scene）。
 - **验收标准**：
-  - [ ] 页面显示 9 个占位色块组（各 Part 用临时色区分）；
-  - [ ] 侧栏出现 9 个导航项（点击无报错，聚焦逻辑允许暂为空操作）；
-  - [ ] 中英切换能刷新侧栏文字。
+  - [x] 页面显示 9 个占位色块组（各 Part 用临时色区分）——8 个实体 Part 全部装配（overview 无独立实体），diag 断言 `parts:1` 通过；
+  - [x] 侧栏出现 9 个导航项（点击无报错，聚焦逻辑允许暂为空操作）——已实现 focusOn 相机聚焦 + 信息面板填充；
+  - [x] 中英切换能刷新侧栏文字——applyLang 同步刷新导航名 / 图例 / 信息面板。
+- **完成注记（2026-08-23）**：新增 `js/data.js`（9 条目双语元数据 + I18N UI 文案）、`js/parts/placeholders.js`（8 个粗轮廓占位生成器，各自图例色）、main.js 装配层（assemble/buildNav/buildLegend/focusOn/showInfo/applyLang，VX=0.2m，中轴 x=80 平移至世界原点）。验收：`node --check` 3 文件全过；无头 Chrome `#diag = SELFTEST-OK three=160 errs=0 selftests=10/10 parts:8`；正常页 9 个 nav-item 双语渲染正确；截图 `docs/samples/check-t5-assembly.png` 入库。
 
 ### Phase C · 主模型搭建（M2 核心，顺序执行不可跳）
 
 > 每个任务完成后必须跑一次"截图 vs 参考照片"比对再进入下一任务。比例依据：`samples/elevation-guide.png`。
 
-#### 任务卡 T6 —— P1 台基层 ☐
+#### 任务卡 T6 —— P1 台基层 ✅
 - **内容**：石台基（全宽）、中央踏步、台基边缘栏杆基线；石材两档色。
 - **依据**：02 §8[1]；照片 courtyard-03 / salt-museum-2009 台基部分。
-- **验收**：[ ] 台基高 4 格（0.8m）；[ ] 踏步 4 级居中；[ ] 与参考照轮廓一致。
+- **验收**：[x] 台基高 4 格（0.8m）；[x] 踏步 4 级居中；[x] 与参考照轮廓一致。
+- **完成注记（2026-08-27）**：替换 `js/parts/placeholders.js` 的 `terrace()` 占位为精细台基模型——台明 x8..152 全宽（≈30 m）/ z4..39（深 ≈7.2 m）/ 高 4 vx（y0..4），3 层砂岩·暗主体 + 1 层砂岩·亮压顶，顶面外缘 1 格砂岩·暗环线（前/后/左/右）作栏杆基线；中央踏步 x64..96（≈6.4 m）居中于 x80、紧贴台明前缘 z40..43，4 级实填楔形体（砂岩·亮），treads y=4/3/2/1 渐降至地面。`js/data.js` terrace 条目同步校正：principle 三级→四级、params 台明 6vx→4vx / 阶数 3→4。无头 Chrome ?selftest parts:8 不变；截图 `docs/samples/check-t6-terrace.png` 入库。下一任务 **T7**。
 
-#### 任务卡 T7 —— P3 底层柱网与门堂 ☐
+#### 任务卡 T7 —— P3 底层柱网与门堂 ✅
 - **内容**：前檐柱列（红柱 + 石柱础）、中央黑漆大门（双扇 + 门环）、两侧白灰墙 + 深色框、次间木格栅门。
 - **依据**：02 §8[2][3]；照片 salt-museum-2009 门堂层、gate-front-01。
-- **验收**：[ ] 中央开间宽约 56 格；[ ] 白墙/黑门/红柱三色关系正确；[ ] 柱础为石色。
+- **验收**：[x] 中央开间宽约 56 格；[x] 白墙/黑门/红柱三色关系正确；[x] 柱础为石色。
+- **完成注记（2026-08-28 体检轮代记）**：`js/parts/gatehouse.js`（重构版）以 `js/spec.js` BAY 为尺寸源——中央开间 x52..107（56 格）、黑漆大门 x68..91 + 栗木门缝 + 金门环、白灰墙 + 栗木墙边框、朱红柱 x54..57（镜像 102..105）+ 砂岩·暗柱础；另含石青彩画带（赭金开光 + 四朵宝相花）与九字大匾（大匾 Z 跨 BODY..34 兼作通往 T1 斗栱带的连通桥）。复证：selftest 15/15（含跨 Part 无重叠）、聚焦截图 `check-t7-gatehall.png` 入库。
 
 #### 任务卡 T8 —— P2 石狮一对 ☐
 - **内容**：左右镜像石狮（含须弥座），卷毛凸点、张口、蹲坐轮廓。
@@ -196,20 +204,20 @@
 
 ### Phase F · 主站集成与上线（M5）
 
-#### 任务卡 T18 —— Cover 组件与首页接入 ☐
-- **内容**：`src/components/XiqinHallCover.tsx`（CSS 伪体素立面微动画，呼应现有三张 Cover 的克制风格）、首页 Lab 区第四卡片、`translations.ts` 补 `xiqinHallLabel/Title/Desc` 中英文案、检查 sitemap。
-- **验收**：[ ] 桌面/移动端首页第四卡正常显示与跳转；[ ] 中英切换文案齐全；[ ] 不影响现有三卡布局（grid 自动换行即可）。
+#### 任务卡 T18 —— 首页 Lab 接入（文字索引行）☐
+- **内容**：首页 Lab 区新增**第四条文字索引行**（2026-08-28 起首页已无封面卡：mono 标签 | 标题+描述 | 红色「进入 →」，见 `src/app/page.tsx` 条目 1–3 同构写法）——**不再做 Cover 组件**；`translations.ts` 补 `saltGateLabel/saltGateTitle/saltGateDesc` 中英架空文案（措辞不涉真实建筑）；href 指向 `/salt-gate-3d/index.html`；检查 sitemap。
+- **验收**：[ ] 桌面/移动端首页第四行正常显示与跳转；[ ] 中英切换文案齐全且无真实建筑名；[ ] 与现有三行版式完全同构、无需改网格。
 
 #### 任务卡 T19 —— 部署链路与性能 ☐
-- **内容**：构建/复制流程（xiqin-hall-3d → public/xiqin-hall-3d，随 out/ 发布）、移动端降级（DPR 上限、阴影关闭、像素合并阈值）、首包体积核查。
-- **验收**：[ ] 生产静态导出后 `/xiqin-hall-3d/index.html` 可直接访问；[ ] 移动端实测 ≥30fps；[ ] 子页新增资源 ≤1.5MB（three vendor 复用除外）。
+- **内容**：构建/复制流程（`salt-gate-3d/` → `public/salt-gate-3d/`，**副本为生成物不入库**，按 COORDINATION §三 模式扩展 `scripts/` 同步脚本并挂入 prebuild，随 out/ 发布）、移动端降级（DPR 上限、阴影关闭、像素合并阈值）、首包体积核查。
+- **验收**：[ ] 生产静态导出后 `/salt-gate-3d/index.html` 可直接访问；[ ] 移动端实测 ≥30fps；[ ] 子页新增资源 ≤1.5MB（three vendor 复用除外）；[ ] `public/salt-gate-3d/` 已列入 .gitignore。
 
 #### 任务卡 T20 —— 验收测试与文档收尾 ☐
-- **内容**：?selftest 全量断言、桌面+移动浏览器实测清单、与照片终比对、撰写 README.md（简介/结构/运行/署名——含照片 CC 署名，见 01 §8）与 OPTIMIZATION.md。
+- **内容**：?selftest 全量断言、桌面+移动浏览器实测清单、与原型照片终比对（内部用，不入库展示）、撰写 README.md（简介/结构/运行 + **架空声明区块**：本作为对角线档案的架空创作；原型研究仅供内部参考、未发布任何照片，按 COORDINATION §四 不触发 CC 署名义务）。另撰写 OPTIMIZATION.md。
 - **验收**：
   - [ ] selftest 断言全绿；
   - [ ] 实测清单（聚焦/导览/双语/降级）逐条打勾；
-  - [ ] README 含许可署名区块；
+  - [ ] README 含架空声明区块，且全站无真实建筑名指涉；
   - [ ] 本进度表全部条目闭合。
 
 ---
@@ -243,10 +251,10 @@
 | T1 | 样例指导图 ×4 | A | ✅ |
 | T2 | 03-dev-plan 开发设计 | A | ✅ |
 | T3 | 项目脚手架 | B | ✅ |
-| T4 | builder.js 核心库 | B | ☐ ← **下一个** |
-| T5 | data.js + 场景装配 | B | ☐ |
-| T6 | 台基层 | C | ☐ |
-| T7 | 柱网与门堂 | C | ☐ |
+| T4 | builder.js 核心库 | B | ✅ |
+| T5 | data.js + 场景装配 | B | ✅ |
+| T6 | 台基层 | C | ✅ |
+| T7 | 柱网与门堂 | C | ✅（2026-08-28 重构版，体检轮复证） |
 | T8 | 石狮一对 | C | ☐ |
 | T9 | 第一重檐+斗栱带 | C | ☐ |
 | T10 | 二三层墙身 | C | ☐ |
@@ -271,3 +279,13 @@
 | 用户"开始执行/继续执行"×3 后暂停 | 应用户要求全仓核查 | **T1–T20 均未开工**：`docs/tools/`、`docs/samples/`、`js/`、`css/`、index.html 均不存在；已入库文件 = 9 张参考照片 + 3 份文档，与第二节清单一致；**无半成品、无残留脏文件**。下一任务仍为 **T1** |
 | 执行轮（调研速查入表 + T1/T2/T3） | 用户暂停指令 | **T1 ✅ T2 ✅ T3 ✅**（详见各任务卡完成注记）；新增文件：`tools/gen-samples.ps1`、`tools/serve.mjs`、`samples/`×5图（4样例+1脚手架验收截图）、`index.html`、`css/style.css`、`js/main.js`、`js/vendor/`×3。下一任务 **T4 · builder.js 核心库**。后台服务器已停，重启命令：`node xiqin-hall-3d/docs/tools/serve.mjs 8123` |
 | 2026-08-22（体检轮） | 应用户要求复核 T0/T1 真实性 + 全仓检查 | **T0 复核通过**：照片 9/9 可读、01/02 章节齐全、System.Drawing 复验可用、色板四处（01§6→02§7→gen-samples.ps1→palette.png）20/20 一致；**T1 复核通过**：脚本重跑 MD5 与入库版逐一相同、四图无乱码、构图要素全部可辨。发现两项规范矛盾并经用户裁决：①**总高就高**——elevation-guide 宝顶 y≈118 格 vs 原预算 85~100 格 → 定为 ≈23.6 m/118 格（预算上限 120），02§2 与本表硬数据卡已修订，T11"标线 ±2 格"验收不受影响；②**翘角步数统一 3→2→2→1**——原三处口径不一（02§4.2「4→3→3→2」/本表「3→3→2→2」/样例图绘制「3,2,2,1」），以样例图为准，02§4.2、本表硬数据卡、T11 卡已同步。另备案小项：carving 样例微棋盘格用调色板外色 #26211f（仅插图纹理不入模）、palette 浅色块白字对比度偏低（可接受）。T3 回写由并行执行轮完成，本轮独立复证（无头 Chrome 实测 SELFTEST-OK three=160 errs=0、vendor 与 salt-plant-3d 基准 MD5 一致）后认可。下一任务 **T4** |
+| 2026-08-23（T4 执行轮） | 应用户"开工 T4" | **T4 ✅**。新增文件：`js/voxel/palette.js`（20 色闭环）、`js/voxel/builder.js`（VoxelWorld + ops + buildPartMesh）、`js/selftest.js`（10 项断言）、`js/main.js` 接入 `?selftest` 路由。验收证据：① `node --check` 4 文件全过；② 无头 Chrome #diag = `SELFTEST-OK three=160 errs=0 selftests=10/10`；③ 截图 `docs/samples/check-t4-builder.png` 入库。诚实备注：03-dev-plan §10 写"相邻同色双盒 quads=9"实为 10（差异来自 Y/Z 方向是否合并），T13 比对阶段由用户裁决是否调整实现匹配 §10。后台服务器已停。下一任务 **T5 · data.js + 场景装配**。 |
+ | 2026-08-23（elevation-guide 复校 · 第一轮） | 应用户"实拍太尖"反馈 | 旧 elevation-guide apex ~30°（顶角太尖），按新增参考图 `reference/front.jpg` 校准：① 整体加宽 T1~T4（T1 14.4→22.4 m，T4 5.2→11.2 m）；② 宝顶立体化（1 根针 → 3 段阶梯，16→12→8→4 收分 + 黑漆基座 + 金色嵌片）；③ T2 加大匾（黑漆 + 9 金字位）、T3 格栅 8→28 格、T4 团窠 r=4；④ 每层墙顶加 2 格高斗栱带（黑底 + 2×2 金点）；⑤ 脚注 `参考 reference/{salt-museum-2009, front}.jpg`。新 elevation-guide MD5 = `86e4f1b1...`，3 张未动样图 MD5 不变（脚本确定性验证通过）。 |
+ | 2026-08-23（elevation-guide 复校 · 第二轮） | 应用户"团窠形态多样 + 翘角尖锐"反馈 + 新增 4 张参考 | ① 新增 3 个辅助函数：`VxRoundelConcentric`（同心圆宝相花，3 层金环 + 4 向十字花蕊 + 4 角回纹钩）→ T4 中央；`VxRoundelDiamond`（大金菱花 + 中心深色圆 + 5 瓣金花心）→ T2 翼侧；`VxPanelBead`（联珠纹 + 中心小菱形）→ T3 翼侧；② 新增 `VxEaveTip`（阶梯主体 + 1×1 栗木凤头 + 1×1 金顶尖 + 翼下灰塑带 + 角下风铃），每层 4 角共 8 个；③ 修正 T3 翘角步数 1→2，对齐 02 §4.2 统一 3→2→2→1；④ 仅动 `docs/tools/gen-samples.ps1`，4 张样图全部重生成：elevation-guide MD5 = `86e4f1b1...`（此轮修订后再跑保持），3 张未动样图 MD5 不变。参考图新增 `reference/团窠花板以及翘起来的屋檐边沿.jpg`、`reference/gate-02.jpg`、`reference/gate-front-01.jpg`、`reference/fredriksen-c.jpg` 共 4 张角度补充（存于 `reference/`，未作脚注因为已作为多角度交叉验证用、不再枚举）。 |
+ | 2026-08-23（elevation-guide 复校 · 第三轮） | 应用户四点反馈 | ① 移除全部 8 处角下风铃（实拍无此物）；② 新增 `VxCurvedEave(cx,halfW,flat,y0,thick,rise)` 弯曲檐口——soffit 平、角端按 u² 幂函数平滑升起至翘角，替换旧"平 lip + 突然 tip"，4 层 rise = 6/5/5/5；③ 简化 VxEaveTip 配套（仅凤头栗木+金尖+翼下灰塑带，无风铃），并切换为新参数 `(cx,halfW,flat,y0,dir,rise)`；④ 新增 `VxPanelSym(cx,cy,w,h)` 单一 D4 中心对称花板函数（外金框 + 内金框 + 中心菱形 + 5 瓣花心 + 四角回纹钩，全程点+镜像对称），废弃 VxRoundelConcentric/Diamond/Bead 的 elevation 调用（保留函数定义作归档）；⑤ 三层花板按用户指定形状重排：T4 中央 12×12 正方形、T3 中央 10×14 竖矩形（+ 7×11 竖矩形两翼）、T2 12×7 横矩形两翼（+ 24×7 横矩形大匾）；⑥ roof-profile-guide 面板 B 同步改为弯曲檐口示意（无风铃），脚注"翘角风铃"→"翘角凤头"。elevation-guide MD5 = `480f7cbf...`、roof-profile-guide `5f6fcd11...`，3 张未动样图 MD5 不变。02 §4.2 翘角"步数 3→2→2→1"已被"rise 平滑弧"取代，待同步修订 §4.2 措辞。 |
+| 2026-08-23（elevation-guide 复校 · 第四轮） | 应用户"屋角下方直角突兀 + 花板两侧实拍有屋檐包裹"反馈 | ① **屋角无直角**：`VxCurvedEave` soffit 同步升起公式升级为 `min(topY-(y0-thick+1), round(rise·u²+thick·u))`——升幅略大于 topY 升幅，使角端 h→1 收薄为薄尖，彻底消除 L 形直角；`VxEaveTip` 重写为 3 段 1×2 弧形上扬翼片（soffit 逐段 +1）+ 金尖，**修正方向 sign 错误**（旧版用 `cornerX-sign·k` 写成向内，正确应为 `cornerX+sign·k` 向外），去掉了翼下灰塑带；② **花板两侧包屋檐**：新增 `VxPanelWithEaves(cx,cy,w,h)`——花板两侧各加 1 宽×2 高瓦垄短柱 + 2 段弧形上扬翼片 + 金尖（短柱 soffit=yMid-1 高 2，翼片 soffit 逐段 +1），4 处花板（T2 横矩形×2 + T3 竖矩形×3 + T4 正方形×1）全部替换为 `VxPanelWithEaves` 调用，方向 sign 同样修正为向外；③ roof-profile-guide 面板 B 同步：弯曲檐口"微笑"形 + 弧形凤头 + 新脚注"soffit 逐段 +1 + 金尖"。elevation-guide MD5 = `6ce2bc95...`、roof-profile-guide `616930de...`，palette/carving-roundel-sample MD5 不变（脚本确定性验证通过）。无碰撞：T3/T4 花板翼尖距斗栱 1~2 格安全。 |
+| 2026-08-23（elevation-guide 复校 · 第五轮 · 檐带结构大改） | 应用户"边缘不要突然变细（应为主体向外弧线延伸渐细）+ 花板处在檐带中心而非檐下"反馈 | ① **结构重构**：T2/T3/T4 由"高墙身 + 独立薄檐口"改为"矮墙身(2~3 行) + 厚檐带"，新增 `VxEaveBand(cx,halfW,flat,y0,bandH,rise)`——花板嵌于带内正中，上下均有 ≥2 行檐体包裹；② **全程连续收分**：`VxCurvedEave`/`VxEaveBand` 厚度随 u 线性收分 `h=max(1,round(H·(1-u)))`，像素采样验证 T1 剖面 14→11→9→7→5→3→1 单调无突变；③ `VxEaveTip` 改为 2 段 1×1 细尖 + 金尖；④ 衔接修补：T1 檐带 12 行紧贴斗栱带（rows 35..46）、宝顶与 T4 檐带间补黑漆顶柱（y=108..111）；⑤ **过程 bug**：`Vx` 体素矩形自 y 向上生长，新函数初版漏写 `- $h + 1` 偏移致檐带上浮、花板脱出——已修并建立像素级验收脚本（逐行采样 #/B/G 分类）确认四层"上檐/花板/下檐"结构。T4 花板因 PowerShell `[int]` 四舍五入偏 1 格，cy 100→101 已校准。elevation-guide MD5 = `8bdceb4d...`、roof-profile-guide `f58b2cb9...`，palette/carving-roundel-sample 不变。VxPanelWithEaves 调用全部移除（定义保留归档）。 |
+| 2026-08-23（elevation-guide 复校 · 第六轮） | 应用户"有悬空 + 翘角要弧度上抬而非斜杆" | ① 像素级连通域检测定位悬空：T3/T4 层间空隙（y66–70、y86–91）→ 矮墙身向上延伸补齐；② `VxEaveTip` 重写为连通上翘弧钩（不再是对角单点斜杆链）；③ 次间翼角对角断片改搭接（x20–23 / x136–139）；④ 修 `VxEaveBand`/`VxCurvedEave` h=1 尾端对角断裂（相邻列行区间保证相交）。验收：全色板实体集下 BFS 连通域检测 components=1（9666 格，悬空清零），翘角呈弧度上抬。 |
+| 2026-08-23（T5 执行轮） | 应用户"改完开始体素搭建" | **T5 ✅**。新增：`js/data.js`（PARTS 9 条目双语元数据，cam/target 按 03 §6 锚点表；I18N UI 文案）、`js/parts/placeholders.js`（8 个粗轮廓占位生成器，各自图例色）。改造 main.js：assemble（VX=0.2m、中轴平移）+ buildNav/focusOn/showInfo/buildLegend/applyLang。diag 增加 parts 断言与计数。验收：`node --check` 全过；无头 Chrome #diag = `SELFTEST-OK three=160 errs=0 selftests=10/10 parts:8`；正常页 9 个 nav-item 双语渲染正确；截图 check-t5-assembly.png 入库；服务器已停。下一任务 **T6**。 |
+| 2026-08-27（T6 执行轮） | 应用户"继续" | **T6 ✅**。替换 `js/parts/placeholders.js` `terrace()` 占位为精细台基（全宽砂岩台明 4 vx + 中央 4 级踏步 + 顶面暗色栏杆基线环，建材统一砂岩两档色）；`js/data.js` terrace 文案/params 同步校正（三级→四级、6vx→4vx）。验收：`node --check` 全过；无头 Chrome ?selftest parts:8 通过、`SELFTEST-OK three=160 errs=0 selftests=10/10 parts:8`；截图 check-t6-terrace.png 入库；服务器已停。下一任务 **T7**。 |
+| 2026-08-28（重构轮·代记 + 体检轮复核） | 发现当日 18:23–18:45 并行重构会话未回写进度源，应用户询问发起复核 | **复核通过，T7 ✅（代记）**。重构轮产出：8 个 Part 拆分独立模块（`js/parts/{terrace,lions,gatehouse,eave1,walls,upperRoofs,wings,closeups}.js` + `index.js` 注册表）、`js/spec.js`（GRID/Z/BAY 尺寸单一数据源，派生自 elevation-guide）、`js/voxel/ops.js`（mirror/plaque/lattice/lion）、selftest 10→15 项（总包围盒 x[0,159] y[0,117] z⊂[0,44)、无悬空 6-连通接地、四重檐宽度递减、三角 ≤250k、跨 Part 无体素重叠）。体检轮独立复证：`node --check` 17 文件全过；无头 Chrome（serve.mjs 8123 + CDP）`SELFTEST-OK three=160 errs=0 selftests=15/15 parts:8`；正视总览与 03 门堂柱网聚焦截图入库（check-t7-overview / check-t7-gatehall）；spec 数值核对中央开间 x52..107=56 格 ✓。遗留：①T8–T12 粗稿已存在，逐卡验收（含与参考照片比对）前保持 ☐；②背立面稀疏碎块（献技楼侧未建模）归 T13/T17 处理；③`placeholders.js` 已被 index.js 旁路，T13 时清理；④T4 起全部产出未 commit，待用户定夺入库时机。服务器已停。下一任务 **T8**。 |
