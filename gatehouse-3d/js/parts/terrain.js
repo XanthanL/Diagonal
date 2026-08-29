@@ -1,8 +1,8 @@
-// P9 绿水青山（门赖以拄其间 · 魔幻架空）：苔绿地坪、绕门碧水、石梁桥、层叠青山、点状乔木。
-// 尺寸全部取自 spec.js（ENV/RIVER/BRIDGE/MOUNT/TREES），无本地魔数；纯函数、确定性。
+// P9 绿水青山（门赖以拄其间 · 魔幻架空）：苔绿地坪、绕门碧水、石梁桥、层叠青山、锥状石峰、点状乔木。
+// 尺寸全部取自 spec.js（ENV/RIVER/BRIDGE/MOUNT/KARST/TREES），无本地魔数；纯函数、确定性。
 // 坐标可越出建筑界（x 可为负）：#10 建筑包围盒断言排除本 Part。
 import { VoxelWorld, ops } from '../voxel/builder.js';
-import { ENV, RIVER, BRIDGE, MOUNT, TREES } from '../spec.js';
+import { ENV, RIVER, BRIDGE, MOUNT, KARST, TREES } from '../spec.js';
 
 export function build() {
   const w = new VoxelWorld();
@@ -51,6 +51,18 @@ export function build() {
     const mz = m.z[1] - m.z[0] + 1;
     ops.box(w, m.x[0], m.y[0], m.z[0], mx, my, mz, m.body);
     ops.box(w, m.x[0], m.y[1], m.z[0], mx, 1, mz, m.top);
+  }
+
+  // ---- 锥状石峰（桂林式）：逐层向心收分成尖，末层冠色 ----
+  for (const k of KARST) {
+    const tiers = Math.max(5, Math.round(k.h / 7));
+    for (let i = 0; i < tiers; i++) {
+      const y0 = Math.round((i * k.h) / tiers);
+      const y1 = Math.round(((i + 1) * k.h) / tiers);
+      const r = Math.max(1, Math.round(k.half * (1 - Math.pow(i / tiers, 1.7))));
+      ops.box(w, k.cx - r, y0, k.cz - r, 2 * r + 1, y1 - y0, 2 * r + 1,
+        i === tiers - 1 ? k.cap : k.body);
+    }
   }
 
   // ---- 点状乔木：树干栗木、树冠黛绿/松绿叠团 + 青翠顶 ----
