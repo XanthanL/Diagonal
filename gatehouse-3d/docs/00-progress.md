@@ -4,7 +4,7 @@
 > 配套文档：`01-research.md`（原型研究档案，内部用）· `02-voxel-style-guide.md`（体素规范）
 >
 > **⚑ 项目更名（2026-08-29，用户决定）**：成品模型与真实建筑差异过大，**弃用「西秦会馆 / 武圣宫大门」之名**，正式定名 **「门楼 · The Gatehouse」**（无名义、无官署归属的一座架空门，回归「门」本身；曾短暂定名「盐署门楼」，同日均被用户否决），后续以此身份进入 THE LAB。目录 `xiqin-hall-3d/` → `gatehouse-3d/`，部署路径规划 `/gatehouse-3d/`。`01-research.md` 与 `docs/reference/` 照片降级为**内部原型研究档案**：仅供造型参考；一切公开展示物（页面文案、README、首页 Lab 卡片、og 元数据）一律架空措辞，不出现真实建筑名、不公开照片。本文件历史行与旧截图中的旧称属当时记录，不再追改。
-> 最后更新：T1–T6 已完成 ✅；2026-08-22 体检轮复核 T0/T1 通过；2026-08-23 T4/T5 闭环 ✅（selftests=10/10，截图 check-t5 入库；期间 elevation-guide 历经六轮复校）；2026-08-27 T6 闭环 ✅（台基层精细建模，check-t6 入库）；**2026-08-28（重构会话产出，未回写→本轮代记）：Part 拆分独立模块 + `js/spec.js` 尺寸单一数据源 + `js/voxel/ops.js` 扩展（mirror/plaque/lattice/lion）+ selftest 10→15 项（新增总包围盒/无悬空/四重檐递减/三角预算/跨 Part 无重叠）+ T7 门堂柱网建成 + T8–T12 粗稿预置**；**2026-08-28（体检轮）独立复证：`node --check` 17 文件全过、无头 Chrome `SELFTEST-OK three=160 errs=0 selftests=15/15 parts:8`、正视/聚焦截图入库（check-t7-overview / check-t7-gatehall），T7 DoD 三条全过 → ✅**。注意：①T8–T12 虽有粗稿，仍须逐卡验收（含与参考照片比对）才可打勾；②背立面（献技楼侧）目前仅檐带外露、观感突兀，留 T13 比对与 T17 补全；③T4 起全部产出**尚未 commit**，建议尽快入库。下一任务 **T8 · P2 石狮一对**（初稿已在，按卡验收）。
+> 最后更新：T1–T6 已完成 ✅；2026-08-22 体检轮复核 T0/T1 通过；2026-08-23 T4/T5 闭环 ✅（selftests=10/10，截图 check-t5 入库；期间 elevation-guide 历经六轮复校）；2026-08-27 T6 闭环 ✅（台基层精细建模，check-t6 入库）；**2026-08-28（重构会话产出，未回写→本轮代记）：Part 拆分独立模块 + `js/spec.js` 尺寸单一数据源 + `js/voxel/ops.js` 扩展（mirror/plaque/lattice/lion）+ selftest 10→15 项（新增总包围盒/无悬空/四重檐递减/三角预算/跨 Part 无重叠）+ T7 门堂柱网建成 + T8–T12 粗稿预置**；**2026-08-28（体检轮）独立复证：`node --check` 17 文件全过、无头 Chrome `SELFTEST-OK three=160 errs=0 selftests=15/15 parts:8`、正视/聚焦截图入库（check-t7-overview / check-t7-gatehall），T7 DoD 三条全过 → ✅**。注意：①T8–T12 虽有粗稿，仍须逐卡验收（含与参考照片比对）才可打勾；②背立面（献技楼侧）目前仅檐带外露、观感突兀，留 T13 比对与 T17 补全；③T4 起产出已于 2026-08-29 入库。2026-08-29：**二次更名定稿「门楼 · The Gatehouse」**（目录 `gatehouse-3d/`，回归门本身）；**T8 执行轮 ✅**（重写 lion：头朝中轴＋头大身蹲，单狮 10×12×6，symFails=0，check-t8 双截图入库）。下一任务 **T9 · P4 第一重檐＋斗栱带**（粗稿已在，按卡验收）。
 
 ---
 
@@ -146,10 +146,11 @@
 - **验收**：[x] 中央开间宽约 56 格；[x] 白墙/黑门/红柱三色关系正确；[x] 柱础为石色。
 - **完成注记（2026-08-28 体检轮代记）**：`js/parts/gatehouse.js`（重构版）以 `js/spec.js` BAY 为尺寸源——中央开间 x52..107（56 格）、黑漆大门 x68..91 + 栗木门缝 + 金门环、白灰墙 + 栗木墙边框、朱红柱 x54..57（镜像 102..105）+ 砂岩·暗柱础；另含石青彩画带（赭金开光 + 四朵宝相花）与九字大匾（大匾 Z 跨 BODY..34 兼作通往 T1 斗栱带的连通桥）。复证：selftest 15/15（含跨 Part 无重叠）、聚焦截图 `check-t7-gatehall.png` 入库。
 
-#### 任务卡 T8 —— P2 石狮一对 ☐
+#### 任务卡 T8 —— P2 石狮一对 ✅
 - **内容**：左右镜像石狮（含须弥座），卷毛凸点、张口、蹲坐轮廓。
 - **依据**：02 §6.3 六段搭建法；照片 salt-museum-2009 / hall-jpg 石狮。
-- **验收**：[ ] 单只 ≤14×12×16 格；[ ] 缩到 25% 仍可辨"狮"的剪影（头大身蹲）；[ ] 左右对称、头朝模型中心。
+- **验收**：[x] 单只 ≤14×12×16 格；[x] 缩到 25% 仍可辨"狮"的剪影（头大身蹲）；[x] 左右对称、头朝模型中心。
+- **完成注记（2026-08-29 执行轮）**：重构粗稿两处不达标——头在左端（面朝外，违"头朝中心"）、通高 14 超预算保守解读 → 本轮重写 `ops.lion()`：大头 4×4 移至 +x 端（镜像后双狮头相向朝中轴）、蹲身 6×4 低伏成头大身蹲比例、卷毛改头顶行暗色镶嵌。终尺单狮 10 宽×12 高×6 深；无头 Chrome 实测 `selftests=15/15 parts:8` + 逐体素镜像校验 symFails=0 + 左狮 bbox [10,12,6]；截图 check-t8-lions.png / check-t8-overview.png 入库。诚实备注：远景（25%）可辨"座+兽"剪影，卷毛镶嵌细节远景不可感知，属可接受简化；石狮聚焦锚点（§6 P2）取景偏左，锚点微调归 T14 联测。下一任务 **T9**。
 
 #### 任务卡 T9 —— P4 第一重檐 + 斗栱带 ☐
 - **内容**：跨度最大的一层檐：如意斗栱程序化带 → 檐口瓦当线 → 三段举折坡面 → 两端翘角（3 步）→ 角尖风铃。
@@ -255,7 +256,7 @@
 | T5 | data.js + 场景装配 | B | ✅ |
 | T6 | 台基层 | C | ✅ |
 | T7 | 柱网与门堂 | C | ✅（2026-08-28 重构版，体检轮复证） |
-| T8 | 石狮一对 | C | ☐ |
+| T8 | 石狮一对 | C | ✅（2026-08-29 执行轮，重写 lion） |
 | T9 | 第一重檐+斗栱带 | C | ☐ |
 | T10 | 二三层墙身 | C | ☐ |
 | T11 | 二~四重檐+脊饰 | C | ☐ |
@@ -289,3 +290,4 @@
 | 2026-08-23（T5 执行轮） | 应用户"改完开始体素搭建" | **T5 ✅**。新增：`js/data.js`（PARTS 9 条目双语元数据，cam/target 按 03 §6 锚点表；I18N UI 文案）、`js/parts/placeholders.js`（8 个粗轮廓占位生成器，各自图例色）。改造 main.js：assemble（VX=0.2m、中轴平移）+ buildNav/focusOn/showInfo/buildLegend/applyLang。diag 增加 parts 断言与计数。验收：`node --check` 全过；无头 Chrome #diag = `SELFTEST-OK three=160 errs=0 selftests=10/10 parts:8`；正常页 9 个 nav-item 双语渲染正确；截图 check-t5-assembly.png 入库；服务器已停。下一任务 **T6**。 |
 | 2026-08-27（T6 执行轮） | 应用户"继续" | **T6 ✅**。替换 `js/parts/placeholders.js` `terrace()` 占位为精细台基（全宽砂岩台明 4 vx + 中央 4 级踏步 + 顶面暗色栏杆基线环，建材统一砂岩两档色）；`js/data.js` terrace 文案/params 同步校正（三级→四级、6vx→4vx）。验收：`node --check` 全过；无头 Chrome ?selftest parts:8 通过、`SELFTEST-OK three=160 errs=0 selftests=10/10 parts:8`；截图 check-t6-terrace.png 入库；服务器已停。下一任务 **T7**。 |
 | 2026-08-28（重构轮·代记 + 体检轮复核） | 发现当日 18:23–18:45 并行重构会话未回写进度源，应用户询问发起复核 | **复核通过，T7 ✅（代记）**。重构轮产出：8 个 Part 拆分独立模块（`js/parts/{terrace,lions,gatehouse,eave1,walls,upperRoofs,wings,closeups}.js` + `index.js` 注册表）、`js/spec.js`（GRID/Z/BAY 尺寸单一数据源，派生自 elevation-guide）、`js/voxel/ops.js`（mirror/plaque/lattice/lion）、selftest 10→15 项（总包围盒 x[0,159] y[0,117] z⊂[0,44)、无悬空 6-连通接地、四重檐宽度递减、三角 ≤250k、跨 Part 无体素重叠）。体检轮独立复证：`node --check` 17 文件全过；无头 Chrome（serve.mjs 8123 + CDP）`SELFTEST-OK three=160 errs=0 selftests=15/15 parts:8`；正视总览与 03 门堂柱网聚焦截图入库（check-t7-overview / check-t7-gatehall）；spec 数值核对中央开间 x52..107=56 格 ✓。遗留：①T8–T12 粗稿已存在，逐卡验收（含与参考照片比对）前保持 ☐；②背立面稀疏碎块（献技楼侧未建模）归 T13/T17 处理；③`placeholders.js` 已被 index.js 旁路，T13 时清理；④T4 起全部产出未 commit，待用户定夺入库时机。服务器已停。下一任务 **T8**。 |
+| 2026-08-29（更名二轮 + T8 执行轮） | 应用户「抛开盐元素，回归门本身；开始下一任务」 | ① **二次更名定稿**：门楼 · The Gatehouse（无名义、无官署归属的架空门；曾短暂定名「盐署门楼」同日被否），目录 `salt-gate-3d` → `gatehouse-3d`，前台 og/侧栏/总览叙事/匾文（留白不题名）全部同步；② **T8 ✅**：粗稿判不合格（头朝外、通高 14）→ 重写 `ops.lion()`（头 4×4 置 +x 端、镜像后双狮相向，蹲身 6×4，卷毛镶嵌，座上枋修正到座顶），终尺 10×12×6；实测 `SELFTEST-OK three=160 errs=0 selftests=15/15 parts:8`、逐体素镜像校验 symFails=0、check-t8 双截图入库；石狮聚焦锚点取景偏左记 T14。服务器已停。下一任务 **T9**。 |

@@ -61,8 +61,8 @@ export const PARTS = [
       zh: ['整料圆雕，与门枕石连体', '后足与台基榫接抗倾覆'],
       en: ['Full-round carving from single blocks, integral with door sockets', 'Hind legs tenoned into terrace against overturning'],
     },
-    params: ['通高 ≈1.8 m（9 vx）', '数量 2', '参考值：川南青石'],
-    paramsEn: ['Height ≈1.8 m (9 vx)', 'Count: 2', 'Ref: southern Sichuan bluestone'],
+    params: ['含须弥座通高 ≈2.4 m（12 vx）', '数量 2', '材质参考值：青石·砂岩两档'],
+    paramsEn: ['Height incl. pedestal ≈2.4 m (12 vx)', 'Count: 2', 'Ref: bluestone / sandstone, two tones'],
     build: null,
   },
   {
