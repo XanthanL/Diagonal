@@ -130,9 +130,12 @@ export function buildPartMesh(world, opts = {}) {
   const colors = [];
   const indices = [];
 
-  // ①按 (y,z) 分组：紧凑整数 key
+  // ①按 (y,z) 分组：紧凑整数 key；同时记录全局最低层 yMin（最低层底面永不可见，省去不发）
   const yzGroups = new Map();
+  let yMin = Infinity, yMax = -Infinity;
   for (const [x, y, z, idx] of world.entries()) {
+    if (y < yMin) yMin = y;
+    if (y > yMax) yMax = y;
     const key = y * 1048576 + z;  // z 留 20 bits 足够
     let arr = yzGroups.get(key);
     if (!arr) { arr = []; yzGroups.set(key, arr); }
@@ -141,6 +144,7 @@ export function buildPartMesh(world, opts = {}) {
 
   // ②每行 X 排序 + 同色 run 合并
   for (const row of yzGroups.values()) {
+    const rowY = row[0].y;
     row.sort((a, b) => a.x - b.x);
     let i = 0;
     while (i < row.length) {
@@ -163,7 +167,7 @@ export function buildPartMesh(world, opts = {}) {
         const c = row[k];
         if (!world.has(c.x, c.y + 1, c.z))
           emitFace('py', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);
-        if (!world.has(c.x, c.y - 1, c.z))
+        if (!world.has(c.x, c.y - 1, c.z) && !(rowY === yMin && yMax > yMin))
           emitFace('ny', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);
         if (!world.has(c.x, c.y, c.z + 1))
           emitFace('pz', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);

@@ -62,9 +62,9 @@ export function runSelftest() {
     const verts = g.getAttribute('position').count;
     const idx = g.getIndex().count;
     const quads = idx / 6;
-    // 期望：外层 6 × 9 = 54 quad = 216 verts = 324 indices
-    ok('#3 剔除：3³ 同色盒 quads=54 verts=216',
-       verts === 216 && quads === 54,
+    // 期望：外层 6 × 9 = 54 quad；底面优化后最低层 9 个底面省去 → 45 quad = 180 verts
+    ok('#3 剔除：3³ 同色盒 quads=45 verts=180（底面省去）',
+       verts === 180 && quads === 45,
        `verts=${verts} idx=${idx} quads=${quads}`);
   }
 
