@@ -14,7 +14,7 @@
 
 以下文件是两工地的共同雷区，**先完成集成的一方先动，后集成者负责 rebase 并解决冲突**：
 
-- `src/app/page.tsx` —— Lab 卡片（天车卡片③的文案/封面更新 vs 西秦 T18 新增卡片④）
+- `src/app/page.tsx` —— Lab 卡片（天车卡片③的文案更新 vs 西秦 T18 新增卡片④）。注意：2026-08-28 首页已改为**文字索引行**版式（无封面缩略图），新增条目按同款行语言接入（mono 标签 | 标题+描述 | 红色「进入 →」）
 - `src/lib/translations.ts` —— 双语文案
 - `package.json` / `scripts/*` / `.github/workflows/*` —— 构建与部署管线
 
@@ -24,9 +24,8 @@
 
 - **只编辑根目录源**（如 `salt-plant-3d/`）；`public/<subsite>/` 一律视为生成物。
 - 同步已自动化：`npm run dev` 与 `npm run build`（prebuild 钩子，CI 同样生效）都会把 root 复制进 public；手动同步用 `npm run sync:salt-plant`。
-- 提交时 **root 源与 public 副本放进同一个 commit**，不留半边。
+- `public/salt-plant-3d/` 已转为**不入库生成物**（.gitignore 已登记，2026-08-28）：提交只需根目录源，public 副本不再入库。
 - 同步排除表（见 `scripts/copy-salt-plant.js`）：`images/`、`.img2threejs/`、`tools/` 不进部署物。
-- 收尾后待办：把 `public/salt-plant-3d` 整体转为不入库的生成物（prebuild 已能保证 CI 侧生成，届时消灭"两侧都要提交"）。
 
 ## 四、资料与照片政策
 
