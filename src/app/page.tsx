@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { archiveData, atlasData, getLocalizedArchiveItem, getLocalizedAtlasItem } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
@@ -69,12 +69,12 @@ function SectionDock() {
             key={it.id}
             onClick={() => jump(it.id)}
             aria-current={active === it.id ? "true" : undefined}
-            className={`press relative py-3.5 archive-text text-[10px] tracking-widest transition-colors ${
-              active === it.id ? "text-diagonal-red" : "opacity-50"
+            className={`press archive-text relative py-3.5 text-[10px] tracking-widest transition-opacity ${
+              active === it.id ? "opacity-100" : "opacity-40"
             }`}
           >
             <span
-              className={`absolute left-1/2 top-0 h-[2px] -translate-x-1/2 bg-diagonal-red transition-[width] duration-300 ease-out-strong ${
+              className={`absolute left-1/2 top-0 h-[2px] -translate-x-1/2 bg-foreground transition-[width] duration-300 ease-out-strong ${
                 active === it.id ? "w-10" : "w-0"
               }`}
             />
@@ -86,39 +86,140 @@ function SectionDock() {
   );
 }
 
-// 章节分界：全宽发丝线（比索引行内的行线略强）+ 内容左缘一枚红色斜切刻线，
-// 对角母题的轻量版——行线弱、章节线带刻痕，板块衔接由此区分层级
-function SectionRule() {
+// 章节头：沿用 /about 的语言——发丝顶线 + 小字号 mono 编号标签 + 中号衬线标题，
+// 右侧可挂一段引言；不再用巨型黑体斜体标题压场
+function SectionHeading({
+  code,
+  title,
+  aside,
+}: {
+  code: string;
+  title: string;
+  aside?: ReactNode;
+}) {
   return (
-    <div aria-hidden="true" className="relative h-px bg-black/20">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="relative h-px">
-          <span className="absolute -top-[7px] left-0 h-[15px] w-[2px] rotate-[24deg] bg-diagonal-red" />
+    <motion.div
+      {...groupItem}
+      transition={{ duration: 0.5, ease: EASE_OUT }}
+      className="border-t border-black/10 pt-8 mb-10 md:mb-12"
+    >
+      <div className="md:flex md:items-end md:justify-between md:gap-16">
+        <div className="space-y-4">
+          <div className="archive-text text-[10px] opacity-50" style={{ letterSpacing: "0.3em" }}>
+            {code}
+          </div>
+          <h2 className="font-serif text-2xl md:text-4xl font-bold uppercase leading-none tracking-tight">
+            {title}
+          </h2>
         </div>
+        {aside && <div className="mt-8 md:mt-0 md:max-w-xs md:pb-1">{aside}</div>}
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+// 索引行：左缘 mono 编号列 + 右侧衬线条目，行之间只用最轻的发丝线分隔。
+// 加重只用在章节头，可进入的条目标题保持衬线常规字重——层级靠字号与留白，不靠字重
+function IndexRow({
+  href,
+  code,
+  title,
+  desc,
+  artist,
+  tags,
+  trailing,
+  status,
+}: {
+  href: string;
+  code: ReactNode;
+  title: string;
+  desc?: string;
+  artist?: string;
+  tags?: ReactNode;
+  trailing?: ReactNode;
+  status?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="press group block border-b border-black/5 py-5 md:grid md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-10"
+    >
+      <div className="archive-text flex justify-between gap-3 text-[10px] opacity-45 md:block md:space-y-1">
+        {code}
+      </div>
+      <div className="mt-2 min-w-0 md:mt-0">
+        <h3 className="font-serif text-lg leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-xl">
+          {title}
+          {status && (
+            <span className="archive-text ml-3 inline-flex translate-y-[-2px] items-center gap-1.5 border border-black/15 px-2 py-[3px] align-baseline text-[8px] tracking-[0.2em] opacity-70 no-underline">
+              <span className="h-1 w-1 shrink-0 bg-diagonal-red" />
+              {status}
+            </span>
+          )}
+        </h3>
+        {desc && (
+          <p className="mt-1.5 max-w-2xl font-serif text-sm leading-relaxed opacity-55">{desc}</p>
+        )}
+        {(artist || tags) && (
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            {artist && <span className="font-serif text-sm italic opacity-50">{artist}</span>}
+            {tags && (
+              <span className="archive-text flex flex-wrap gap-x-3 text-[9px] opacity-35">{tags}</span>
+            )}
+          </div>
+        )}
+      </div>
+      {trailing && (
+        <div className="archive-text mt-2 text-[9px] opacity-35 transition-opacity group-hover:opacity-70 md:mt-0 md:text-right">
+          {trailing}
+        </div>
+      )}
+    </Link>
   );
 }
 
 export default function Home() {
   const { lang } = useI18n();
 
+  const labEntries: {
+    href: string;
+    code: string;
+    title: string;
+    desc: string;
+    status?: string;
+  }[] = [
+    {
+      href: "/vacuum-salt/",
+      code: t(lang, "vacuumSaltLabel"),
+      title: t(lang, "vacuumSaltTitle"),
+      desc: t(lang, "labVacuumDesc"),
+    },
+    {
+      href: "/lab/salt-particle",
+      code: "INTERACTIVE",
+      title: t(lang, "labSaltTitle"),
+      desc: t(lang, "labSaltDesc"),
+    },
+    {
+      href: "/salt-plant-3d/index.html",
+      code: t(lang, "labSaltPlantLabel"),
+      title: t(lang, "labSaltPlantTitle"),
+      desc: t(lang, "labSaltPlantDesc"),
+      status: t(lang, "labWip"),
+    },
+    {
+      href: "/gatehouse-3d/index.html",
+      code: t(lang, "gatehouseLabel"),
+      title: t(lang, "gatehouseTitle"),
+      desc: t(lang, "gatehouseDesc"),
+      status: t(lang, "labWip"),
+    },
+  ];
+
   return (
     <div className="relative overflow-hidden pt-24 min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section —— 原样保留（字标 / 斜切母题 / 介绍 / 右缘 meta） */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-10 md:py-20">
-        {/* 扫描线：覆盖整个 Hero（含完整介绍段落），底部 mask 渐隐融入下个板块，无硬边。
-            framer-motion 只动 opacity——若让它碰 transform 会覆盖 skew 类，导致斜切失效 */}
-        <motion.div
-          aria-hidden="true"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.9, ease: EASE_OUT }}
-          className="absolute inset-0 pointer-events-none"
-        >
-          <div className="absolute -inset-y-[12%] inset-x-0 bg-gradient-to-br from-transparent via-black/[0.05] to-transparent skew-y-6 [mask-image:linear-gradient(to_bottom,black_0%,black_58%,transparent_86%)]" />
-        </motion.div>
-
         <div className="relative space-y-8 md:space-y-12">
           <motion.h1
             initial={{ opacity: 0, transform: "translateX(-20px)" }}
@@ -169,101 +270,78 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Documents Section (Formerly Archive Box) */}
+      {/* Documents */}
       <section id="archive" className="relative z-10 scroll-mt-14">
-        <SectionRule />
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-24">
-        {/* 章节头：三板块统一模板（红编号标签 + 同款大标题 + 右侧 meta） */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-14 gap-4 md:gap-8">
-          <motion.div
-            {...groupItem}
-            transition={{ duration: 0.5, ease: EASE_OUT }}
-            className="space-y-3 md:space-y-4"
-          >
-            <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l-2 border-diagonal-red pl-4">
-              {t(lang, "documentsLabel")}
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
-              {t(lang, "documentsTitle")}
-            </h2>
-          </motion.div>
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          <SectionHeading code={t(lang, "documentsLabel")} title={t(lang, "documentsTitle")} />
 
-          <div className="archive-text text-[10px] space-y-1 opacity-60 md:text-right md:pb-2">
-            <div>{t(lang, "totalRecords")}: {archiveData.length}</div>
-            <div>{t(lang, "axis")}</div>
-          </div>
-        </div>
-
-        {/* 文字索引：首页不给每条内容配封面，以档案索引行呈现内容总览，
-            标题完整换行不裁切，桌面/手机都能一屏扫读 */}
-        <div>
-          {archiveData.slice(0, 10).map((item, index) => {
-            const localized = getLocalizedArchiveItem(item, lang);
-            return (
-              <motion.div
-                key={item.id}
-                {...groupItem}
-                transition={{ duration: 0.4, ease: EASE_OUT, delay: Math.min(index * 0.04, 0.24) }}
-              >
-                <Link
-                  href={`/archive/${item.id}`}
-                  className="press group block border-t border-black/10 py-4 md:grid md:grid-cols-[12rem_1fr_auto] md:items-baseline md:gap-8 md:py-3.5"
+          <div>
+            {archiveData.slice(0, 4).map((item, index) => {
+              const localized = getLocalizedArchiveItem(item, lang);
+              return (
+                <motion.div
+                  key={item.id}
+                  {...groupItem}
+                  transition={{ duration: 0.4, ease: EASE_OUT, delay: Math.min(index * 0.04, 0.24) }}
                 >
-                  <div className="archive-text text-[9px] opacity-50 flex justify-between gap-3 md:block md:space-y-1">
-                    <span className="md:block">{item.id} // {localized.location.code}</span>
-                    <span className="md:block">{localized.year}</span>
-                  </div>
-                  <h3 className="mt-2 text-lg font-bold leading-snug tracking-tight decoration-diagonal-red decoration-2 underline-offset-4 group-hover:underline md:mt-0 md:text-xl">
-                    {localized.title}
-                  </h3>
-                  <div className="mt-2 flex items-center gap-3 md:mt-0 md:max-w-[16rem] md:justify-end">
-                    <span className="font-serif text-sm italic opacity-60">{localized.artist}</span>
-                    <span className="archive-text shrink-0 bg-black px-2 py-0.5 text-[9px] text-white">{localized.type}</span>
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
-        </div>
+                  <IndexRow
+                    href={`/archive/${item.id}`}
+                    title={localized.title}
+                    artist={localized.artist}
+                    code={
+                      <>
+                        <span className="md:block">{item.id}</span>
+                        <span className="md:block">{localized.year}</span>
+                      </>
+                    }
+                    tags={
+                      <>
+                        <span>{localized.type}</span>
+                        <span>{localized.location.code}</span>
+                      </>
+                    }
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
 
-        <div className="mt-10 md:mt-20 pt-8 border-t border-black flex justify-center">
-          <Link href="/archive" className="press archive-text text-sm font-bold border border-black px-12 py-4 hover:bg-black hover:text-white">
-            {t(lang, "loadFullIndex")}
-          </Link>
-        </div>
+          {/* 全索引入口：描边按钮 + hover 填满红，首页只给 4 条时它必须显眼 */}
+          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <Link
+              href="/archive"
+              className="press group archive-text flex items-center gap-3 border border-diagonal-red px-8 py-3.5 text-[11px] font-bold text-diagonal-red hover:bg-diagonal-red hover:text-background"
+            >
+              {t(lang, "loadFullIndex")}
+              <span className="transition-transform group-hover:translate-x-1.5">→</span>
+            </Link>
+            <span className="archive-text text-[10px] opacity-45">
+              {t(lang, "totalRecords")}: {archiveData.length}
+            </span>
+          </div>
         </div>
       </section>
 
-      {/* Atlas Section - 统一浅色，与全站视觉一致（暗室焦点改为纸面展墙） */}
-      <section id="atlas" className="relative z-10 bg-black/[0.02] scroll-mt-14">
-        <SectionRule />
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-24">
-          {/* 章节头：三板块统一模板（红编号标签 + 同款大标题 + 右侧 meta） */}
-          <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-14 gap-4 md:gap-8">
-            <motion.div
-              {...groupItem}
-              transition={{ duration: 0.5, ease: EASE_OUT }}
-              className="space-y-3 md:space-y-4"
-            >
-              <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l-2 border-diagonal-red pl-4">
-                {t(lang, "atlasLabel")}
-              </div>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
-                {t(lang, "atlasTitle")}
-              </h2>
-            </motion.div>
-            <div className="max-w-xs space-y-6 md:pb-2">
-              <p className="text-sm opacity-50 leading-relaxed italic">
-                {t(lang, "atlasIntro")}
-              </p>
-              {/* 红色进度条装饰（CSS animation，不占主线程） */}
-              <div className="w-full h-px bg-black/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-diagonal-red w-1/4 animate-atlasProgress" />
-              </div>
-            </div>
-          </div>
+      {/* Atlas */}
+      <section id="atlas" className="relative z-10 scroll-mt-14">
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          <SectionHeading
+            code={t(lang, "atlasLabel")}
+            title={t(lang, "atlasTitle")}
+            aside={
+              <>
+                <p className="font-serif text-sm italic leading-relaxed opacity-55">
+                  {t(lang, "atlasIntro")}
+                </p>
+                {/* 流动线：CSS animation，不占主线程 */}
+                <div className="relative mt-6 h-px w-full overflow-hidden bg-black/10">
+                  <div className="animate-atlasProgress absolute inset-0 w-1/4 bg-diagonal-red" />
+                </div>
+              </>
+            }
+          />
 
-          {/* 图版索引：小缩略图仅作视觉锚点，信息以文字完整呈现 */}
+          {/* 图版索引：小缩略图作视觉锚点，信息仍以文字完整呈现 */}
           <div>
             {atlasData.map((item, index) => {
               const localized = getLocalizedAtlasItem(item, lang);
@@ -276,7 +354,7 @@ export default function Home() {
                 >
                   <Link
                     href={`/atlas/${item.id}`}
-                    className="press group flex items-start gap-5 border-t border-black/10 py-5"
+                    className="press group flex items-start gap-5 border-b border-black/5 py-6 md:gap-8"
                   >
                     {item.cover && (
                       <div className="relative h-14 w-14 shrink-0 overflow-hidden border border-black/10 bg-neutral-100 md:h-16 md:w-16">
@@ -291,14 +369,11 @@ export default function Home() {
                       </div>
                     )}
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="archive-text flex justify-between gap-3 text-[9px] opacity-50">
-                        <span>{item.id}</span>
-                        <span>LOC: {item.location.code}</span>
-                      </div>
-                      <h3 className="text-xl font-bold leading-snug tracking-tight decoration-diagonal-red decoration-2 underline-offset-4 group-hover:underline md:text-2xl">
+                      <div className="archive-text text-[10px] opacity-45">{item.id}</div>
+                      <h3 className="font-serif text-xl leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-2xl">
                         {localized.title}
                       </h3>
-                      <div className="archive-text flex flex-wrap gap-x-3 gap-y-1 text-[9px] opacity-40">
+                      <div className="archive-text flex flex-wrap gap-x-3 text-[9px] opacity-35">
                         <span>{localized.category}</span>
                         <span>{localized.location.city}</span>
                         {subs > 0 && <span>SUB-COLLECTIONS ×{subs}</span>}
@@ -312,115 +387,37 @@ export default function Home() {
         </div>
       </section>
 
-      {/* THE LAB Section - 实验性质，置于 Atlas 之后、页面末尾 */}
+      {/* Lab —— 实验性质，置于最后 */}
       <section id="lab" className="relative z-10 scroll-mt-14">
-        <SectionRule />
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-24">
-        {/* 章节头：三板块统一模板（红编号标签 + 同款大标题 + 右侧 meta） */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-8 md:mb-14 gap-4 md:gap-8">
-          <motion.div
-            {...groupItem}
-            transition={{ duration: 0.5, ease: EASE_OUT }}
-            className="space-y-3 md:space-y-4"
-          >
-            <div className="archive-text text-[10px] text-diagonal-red font-bold tracking-widest border-l-2 border-diagonal-red pl-4">
-              {t(lang, "labLabel")}
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
-              {t(lang, "labTitle")}
-            </h2>
-          </motion.div>
-          <div className="max-w-xs space-y-6 md:pb-2">
-            <p className="text-sm opacity-50 leading-relaxed italic">
-              {t(lang, "labIntro")}
-            </p>
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          <SectionHeading
+            code={t(lang, "labLabel")}
+            title={t(lang, "labTitle")}
+            aside={
+              <p className="font-serif text-sm italic leading-relaxed opacity-55">{t(lang, "labIntro")}</p>
+            }
+          />
+
+          <div>
+            {labEntries.map((entry, index) => (
+              <motion.div
+                key={entry.href}
+                {...groupItem}
+                transition={{ duration: 0.4, ease: EASE_OUT, delay: index * 0.05 }}
+              >
+                <IndexRow
+                  href={entry.href}
+                  code={entry.code}
+                  title={entry.title}
+                  desc={entry.desc}
+                  status={entry.status}
+                  trailing={t(lang, "labEnter")}
+                />
+              </motion.div>
+            ))}
           </div>
         </div>
-
-        {/* 实验场索引行：纯文字，与 Documents 同构；「进入」提示为行动 affordance */}
-        <div>
-          {/* 条目 1：真空制盐 3D 解构 → /vacuum-salt/ */}
-          <motion.div
-            {...groupItem}
-            transition={{ duration: 0.4, ease: EASE_OUT }}
-          >
-            <Link
-              href="/vacuum-salt/"
-              className="press group block border-t border-black/10 py-4 md:grid md:grid-cols-[12rem_1fr_auto] md:items-baseline md:gap-8 md:py-3.5"
-            >
-              <div className="archive-text flex justify-between gap-3 text-[9px] opacity-50">
-                <span>{t(lang, "vacuumSaltLabel")}</span>
-                <span className="text-diagonal-red md:hidden">{t(lang, "labEnter")}</span>
-              </div>
-              <div className="mt-2 space-y-1 md:mt-0">
-                <h3 className="text-lg font-bold tracking-tight decoration-diagonal-red decoration-2 underline-offset-4 group-hover:underline md:text-xl">
-                  {t(lang, "vacuumSaltTitle")}
-                </h3>
-                <p className="text-sm leading-relaxed text-black/60">{t(lang, "labVacuumDesc")}</p>
-              </div>
-              <div className="archive-text hidden text-[9px] text-diagonal-red md:block">{t(lang, "labEnter")}</div>
-            </Link>
-          </motion.div>
-
-          {/* 条目 2：盐粒子模拟 → /lab/salt-particle */}
-          <motion.div
-            {...groupItem}
-            transition={{ duration: 0.4, ease: EASE_OUT, delay: 0.05 }}
-          >
-            <Link
-              href="/lab/salt-particle"
-              className="press group block border-t border-black/10 py-4 md:grid md:grid-cols-[12rem_1fr_auto] md:items-baseline md:gap-8 md:py-3.5"
-            >
-              <div className="archive-text flex justify-between gap-3 text-[9px] opacity-50">
-                <span>INTERACTIVE · 实时模拟</span>
-                <span className="text-diagonal-red md:hidden">{t(lang, "labEnter")}</span>
-              </div>
-              <div className="mt-2 space-y-1 md:mt-0">
-                <h3 className="text-lg font-bold tracking-tight decoration-diagonal-red decoration-2 underline-offset-4 group-hover:underline md:text-xl">
-                  {t(lang, "labSaltTitle")}
-                </h3>
-                <p className="text-sm leading-relaxed text-black/60">{t(lang, "labSaltDesc")}</p>
-              </div>
-              <div className="archive-text hidden text-[9px] text-diagonal-red md:block">{t(lang, "labEnter")}</div>
-            </Link>
-          </motion.div>
-
-          {/* 条目 3：天车 3D 解构 → /salt-plant-3d/ */}
-          <motion.div
-            {...groupItem}
-            transition={{ duration: 0.4, ease: EASE_OUT, delay: 0.1 }}
-          >
-            <Link
-              href="/salt-plant-3d/index.html"
-              className="press group block border-t border-black/10 py-4 md:grid md:grid-cols-[12rem_1fr_auto] md:items-baseline md:gap-8 md:py-3.5"
-            >
-              <div className="archive-text flex justify-between gap-3 text-[9px] opacity-50">
-                <span>{t(lang, "labSaltPlantLabel")}</span>
-                <span className="text-diagonal-red md:hidden">{t(lang, "labEnter")}</span>
-              </div>
-              <div className="mt-2 space-y-1 md:mt-0">
-                <h3 className="text-lg font-bold tracking-tight decoration-diagonal-red decoration-2 underline-offset-4 group-hover:underline md:text-xl">
-                  {t(lang, "labSaltPlantTitle")}
-                </h3>
-                <p className="text-sm leading-relaxed text-black/60">{t(lang, "labSaltPlantDesc")}</p>
-              </div>
-              <div className="archive-text hidden text-[9px] text-diagonal-red md:block">{t(lang, "labEnter")}</div>
-            </Link>
-          </motion.div>
-        </div>
-
-        <p className="mt-8 archive-text text-[10px] opacity-30 tracking-widest">
-          EXPERIMENTAL · 实验性质 · 非档案主体内容
-        </p>
-        </div>
       </section>
-
-      {/* Scroll Indicator（CSS animation，不占主线程） */}
-      <div
-        className="fixed bottom-10 right-10 archive-text text-[9px] opacity-30 tracking-widest vertical-rl hidden md:block mix-blend-difference animate-scrollBob"
-      >
-        {t(lang, "scrollToDiscover")}
-      </div>
 
       {/* 移动端吸底章节跳转条 */}
       <SectionDock />

@@ -40,18 +40,77 @@
   .press-card:active {
     transform: translateY(var(--lift)) scale(0.99);
   }
+
+  /* —— 移动端抽屉导航 ——
+     面板底色与页面一致，靠遮罩压暗背景来分层。
+     展开是「卷轴」：clip-path 自上而下推进，收起原路回卷——
+     不动 height、不缩放内容，所以文字不会在铺开途中被压扁。
+     关闭态必须延后 visibility:hidden，否则不可见的链接仍能被 Tab 聚焦。 */
+  .nav-drawer {
+    --bar-h: 3.5rem;
+    clip-path: inset(var(--bar-h) 0 100% 0);
+    visibility: hidden;
+    transition:
+      clip-path 240ms var(--ease-in-out),
+      visibility 0s linear 240ms;
+  }
+  .nav-drawer[data-open="true"] {
+    clip-path: inset(var(--bar-h) 0 0 0);
+    visibility: visible;
+    transition: clip-path 420ms var(--ease-wipe);
+  }
+  /* 条目错峰入场：位移自上而下，与卷轴同向；
+     delay 只写在展开态，收起时统一快速退场，避免倒着排队 */
+  .nav-drawer-item {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition:
+      opacity 140ms var(--ease-out),
+      transform 140ms var(--ease-out);
+  }
+  .nav-drawer[data-open="true"] .nav-drawer-item {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 260ms var(--ease-out) calc(var(--i) * 26ms + 100ms),
+      transform 300ms var(--ease-out) calc(var(--i) * 26ms + 100ms);
+  }
+  /* 抽屉左缘：发丝线 + 顶部一枚暗朱刻痕，与转场前缘同一套记号 */
+  .nav-drawer-edge {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: rgba(26, 26, 26, 0.14);
+  }
+  /* 刻痕做长：顶栏（z-80）压在抽屉之上且展开时同为纸色，会吃掉上缘约 56px */
+  .nav-drawer-edge::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 132px;
+    background: var(--diagonal-red);
+  }
 }
 
 :root {
   --background: #FAFAF8;
   --foreground: #1A1A1A;
   --surface-dark: #0c0c0e;
+  /* 暗朱（铁氧化物红）：纯 CSS 规则用此令牌；Tailwind 侧仍保留字面量以支持 /alpha 修饰 */
+  --diagonal-red: #B33A2A;
 
   /* —— 动效曲线令牌 —— */
   /* 浏览器内置 ease-out 太弱，UI 动效统一用这三条 */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* 进入 / 退出 / 按压 */
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* 屏幕内位移、形变 */
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);   /* 抽屉 / 面板 */
+  /* 横扫：必须接近匀速才读得出「一张纸掠过屏幕」；
+     --ease-in-out 是指数曲线，实测 240ms 就已盖满 88%，翻页变成了闪断 */
+  --ease-wipe: cubic-bezier(0.62, 0, 0.3, 1);
 }
 
 body {
@@ -103,14 +162,6 @@ body {
 }
 
 /* —— CSS Animations（替代 Framer Motion infinite，不占主线程）—— */
-@keyframes scrollBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(10px); }
-}
-.animate-scrollBob {
-  animation: scrollBob 2s ease-in-out infinite;
-}
-
 @keyframes atlasProgress {
   from { transform: translateX(-100%); }
   to { transform: translateX(400%); }
@@ -127,23 +178,27 @@ body {
   animation: fadeIn 0.15s ease-out forwards;
 }
 
-/* reduced-motion: 去掉位移类动画，但保留「界面有回应」的反馈 */
+/* reduced-motion: 去掉位移类动画，但保留「界面有回应」的反馈。
+   ⚠️ 本区块写在 pageEnter / 转场规则之前，同特异性下会被后面的声明覆盖，
+   因此这里的复位一律带 !important（原 #main-content{animation:none} 就是漏了它才一直没生效） */
 @media (prefers-reduced-motion: reduce) {
-  .animate-scrollBob,
   .animate-atlasProgress,
   .animate-fadeIn,
   #main-content {
-    animation: none;
+    animation: none !important;
+    transition: none !important;
   }
-  .page-transition-overlay,
-  .page-transition-overlay.pt-cover,
-  .page-transition-overlay.pt-reveal,
-  .page-transition-overlay.pt-intro,
-  .page-transition-col,
-  .page-transition-brand,
-  .page-transition-slash,
-  .page-transition-slash-echo,
-  .page-transition-wordmark {
+  /* 纸面不再掠过：承载层停在视口外（JS 侧同样跳过 cover / reveal 相位） */
+  .pt-carriage {
+    transition: none !important;
+  }
+  /* 兜底自动揭幕必须保留（无 JS 时它是唯一的出路），只把滑动压成瞬时 */
+  .pt-intro .pt-carriage {
+    animation-duration: 1ms;
+  }
+  /* 抽屉：瞬时开合，不做滑入与错峰入场 */
+  .nav-drawer,
+  .nav-drawer-item {
     transition: none !important;
   }
 
@@ -164,28 +219,28 @@ body {
   }
 }
 
-/* —— 全局页面进入动画 —— */
+/* —— 全局页面进入动画 ——
+   旧页不做退场：纸面物理性地盖住它已经足够，淡出只会让尚未被覆盖的半边变成死白。
+   新页在纸面右移揭幕的同时上浮入场，两层动作叠出纵深。 */
 @keyframes pageEnter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-#main-content {
-  animation: pageEnter 0.3s ease-out;
+#main-content[data-nav="idle"],
+#main-content[data-nav="reveal"] {
+  animation: pageEnter 460ms var(--ease-out);
 }
 
-/* —— 页面切换：斜切五列幕布（参考 framer-motion stagger / Osmo 列幕布）——
-   盖幕：5 根整体斜切(skewX)的竖条左→右错峰升起，红色前缘像一道斜向扫描
-   掠过屏幕盖住旧页；随后白色光束对角线自左下向右上匀速生长，两根白线
-   之间沿对角线同步长出低透明度 DIAGONAL 铭文——文字即对角线。
-   揭幕：字标向上离场，竖条右→左错峰升出视口，波浪式露出新页，
-   光束与铭文的擦除边缘继续向右上推进收拢，方向全程连续。
-   idle 态所有元素停在视口外，不拦截任何交互。 */
+/* —— 页面切换：斜切纸面翻页 ——
+   一张比视口大一圈的暖纸面板斜切后左右掠过：先行发丝线跑在纸面前缘之前，
+   纸面紧随其后盖住旧页；路由在纸下切换；承载层保持同一方向继续右移揭开新页。
+   纸面与页面同色，转场读作「翻过一页纸」而非关灯——全程只动 transform。 */
 .page-transition-overlay {
   position: fixed;
   inset: 0;
@@ -193,249 +248,147 @@ body {
   overflow: hidden;
   pointer-events: none;
 }
+/* 转场进行中拦住点击，避免纸面下误触下一次导航 */
 .page-transition-overlay.pt-cover,
-.page-transition-overlay.pt-reveal {
-  pointer-events: auto;
-}
-
-/* 斜切列容器：水平方向大幅外扩，保证 skew 后四角不露底 */
-.page-transition-cols {
-  position: absolute;
-  top: -10vh;
-  bottom: -10vh;
-  left: -30vw;
-  width: 160vw;
-  transform: skewX(-12deg);
-}
-.page-transition-col {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: calc(100% / 5 + 4px); /* +4px 防斜切后列间漏缝（1px 在分数宽度下会被取整吃掉） */
-  left: calc(100% / 5 * var(--col));
-  transform: translateY(102%);
-  border-top: 2px solid #b33a2a; /* 升起/离场时的红色前缘 */
-  will-change: transform;
-}
-/* 盖幕：左→右错峰升起（480ms + 70ms 错峰，滚动更从容顺滑） */
-.pt-cover .page-transition-col {
-  transform: translateY(0);
-  transition: transform 480ms var(--ease-in-out);
-  transition-delay: calc(70ms * var(--col));
-}
-/* 揭幕：右→左错峰升出视口，波浪穿过屏幕 */
-.pt-reveal .page-transition-col {
-  transform: translateY(-104%);
-  transition: transform 560ms var(--ease-in-out);
-  transition-delay: calc(70ms * (4 - var(--col)));
-}
-/* 各列微妙明暗差：像垂幕的竖向褶皱，避免一整块死黑 */
-.page-transition-col:nth-child(1) { background: #0d0d10; }
-.page-transition-col:nth-child(2) { background: #101014; }
-.page-transition-col:nth-child(3) { background: #0c0c0f; }
-.page-transition-col:nth-child(4) { background: #0f0f13; }
-.page-transition-col:nth-child(5) { background: #0b0b0e; }
-
-/* 白色光束斜线：用对角 polygon 擦除让两根线与铭文都「从左下长到右上」，
-   擦除边缘与线条方向严格平行，避免水平擦除造成的突兀闪烁。
-   揭幕时边缘继续向右上推进直至收拢于右上角，方向全程连续。
-   分层结构呼应 Hero 区 DiagonalSlash 母题：柔光晕 + 高亮脊线 + 伴随刻线 */
-.page-transition-slash,
-.page-transition-slash-echo {
-  position: absolute;
-  left: -20%;
-  top: -10%;
-  width: 140%;
-  height: 120%;
-  /* 收拢于左下角的一点：完全隐藏 */
-  clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
-  opacity: 0;
-}
-.page-transition-slash {
-  background:
-    /* 高亮脊线：4px 锐利白芯，整根线的视觉焦点 */
-    linear-gradient(
-      145deg,
-      transparent calc(51% - 2px),
-      rgba(255, 255, 255, 0.95) calc(51% - 2px),
-      rgba(255, 255, 255, 0.95) calc(51% + 2px),
-      transparent calc(51% + 2px)
-    ),
-    /* 柔光晕：低透明度，让白线从黑幕上「发光」；收窄避免晕染到上下字标 */
-    linear-gradient(
-      145deg,
-      transparent 49.8%,
-      rgba(255, 255, 255, 0.18) 50.4%,
-      rgba(255, 255, 255, 0.18) 51.6%,
-      transparent 52.2%
-    );
-}
-.page-transition-slash-echo {
-  z-index: 3; /* 位于铭文带之上 */
-  /* 与主光束同款「发光」处理：4px 锐利白芯 + 窄幅柔光晕，
-     居中对齐到 53%，与主光束平行、把铭文带（~52%）夹紧在中间 */
-  background:
-    linear-gradient(
-      145deg,
-      transparent calc(53% - 2px),
-      rgba(255, 255, 255, 0.95) calc(53% - 2px),
-      rgba(255, 255, 255, 0.95) calc(53% + 2px),
-      transparent calc(53% + 2px)
-    ),
-    linear-gradient(
-      145deg,
-      transparent calc(53% - 1.2%),
-      rgba(255, 255, 255, 0.18) calc(53% - 0.6%),
-      rgba(255, 255, 255, 0.18) calc(53% + 0.6%),
-      transparent calc(53% + 1.2%)
-    );
-}
-/* 盖幕：三者在同一对角方向上以同速生长，铭文紧贴主光束同步长出，
-   伴随刻线略微滞后收尾——速度放缓到 680ms，杜绝闪烁感 */
-.pt-cover .page-transition-slash,
-.pt-cover .page-transition-slash-echo,
-.pt-cover .page-transition-wordmark {
-  clip-path: polygon(0 100%, 0 0, 100% 0, 100% 100%);
-  opacity: 1;
-}
-.pt-cover .page-transition-slash {
-  transition:
-    clip-path 720ms var(--ease-in-out) 240ms,
-    opacity 200ms ease-out 240ms;
-}
-.pt-cover .page-transition-wordmark {
-  transition:
-    clip-path 720ms var(--ease-in-out) 280ms,
-    opacity 240ms ease-out 280ms;
-}
-.pt-cover .page-transition-slash-echo {
-  transition:
-    clip-path 720ms var(--ease-in-out) 360ms,
-    opacity 200ms ease-out 360ms;
-}
-/* 揭幕：边缘继续向右上推进，收拢于右上角的一点 */
-.pt-reveal .page-transition-slash,
-.pt-reveal .page-transition-slash-echo,
-.pt-reveal .page-transition-wordmark {
-  clip-path: polygon(100% 0, 100% 0, 100% 0, 100% 0);
-  opacity: 0;
-}
-.pt-reveal .page-transition-slash {
-  transition:
-    clip-path 600ms var(--ease-in-out) 60ms,
-    opacity 320ms ease-in 60ms;
-}
-.pt-reveal .page-transition-wordmark {
-  transition:
-    clip-path 600ms var(--ease-in-out) 100ms,
-    opacity 320ms ease-in 100ms;
-}
-.pt-reveal .page-transition-slash-echo {
-  transition:
-    clip-path 600ms var(--ease-in-out) 180ms,
-    opacity 320ms ease-in 180ms;
-}
-
-/* 首次进入：首帧即被幕布完整覆盖（无过渡），下一帧走标准揭幕——
-   打开网站的第一眼与站内换场是同一套语言 */
+.page-transition-overlay.pt-reveal,
 .page-transition-overlay.pt-intro {
   pointer-events: auto;
 }
-.pt-intro .page-transition-col {
-  transform: translateY(0);
-  transition: none;
+
+/* 承载层：纸面与两条先行线挂在同一层上，相对位置恒定，只需一次平移。
+   --veil-overflow：纸面必须向两侧外扩——vw 项补视口余量，vh 项抵掉 skewX 的水平位移。
+   斜切位移与 vh 成正比（约 0.2126 × 50vh ≈ 10.6vh），只按 vw 外扩的话，
+   手机这类窄长屏（390×844 下 10.6vh ≈ 23vw）纸角会盖不满、露出旧页。 */
+.pt-carriage {
+  --veil-overflow: calc(12vw + 11vh);
+  --rule-lead: 7vw;
+  /* 「完全离场」要走多远，隐藏态 / 揭幕 / 兜底动画共用一个出处 */
+  --pt-travel: calc(100% + var(--veil-overflow) + var(--rule-lead) + 12vh);
+  position: absolute;
+  inset: 0;
+  /* 隐藏态：整块停在视口左侧外，需越过最外层的先行线及其斜移 */
+  transform: translate3d(calc(-1 * var(--pt-travel)), 0, 0);
+  will-change: transform;
 }
-.pt-intro .page-transition-slash,
-.pt-intro .page-transition-slash-echo,
-.pt-intro .page-transition-wordmark {
-  clip-path: polygon(0 100%, 0 0, 100% 0, 100% 100%);
-  opacity: 1;
+/* 盖页：接近匀速扫入，让「一张纸掠过」读得出来 */
+.pt-cover .pt-carriage {
+  transform: translate3d(0, 0, 0);
+  transition: transform 460ms var(--ease-wipe);
+}
+/* 揭幕：同方向继续右移，方向全程连续、不回卷 */
+.pt-reveal .pt-carriage {
+  transform: translate3d(var(--pt-travel), 0, 0);
+  transition: transform 600ms var(--ease-wipe);
+}
+/* 首次进入：SSR 首帧即「已被纸面盖满」，随后走标准揭幕 */
+.pt-intro .pt-carriage {
+  transform: translate3d(0, 0, 0);
   transition: none;
+  /* 兜底：JS 没跑起来（脚本被拦截 / bundle 报错 / 标签页被挂起）时，
+     纯 CSS 也会在 2.6s 后自行揭幕，页面绝不会永远压在纸面下。
+     正常路径上 JS 远早于此就切到 pt-reveal，动画随之撤销，不会二次触发 */
+  animation: ptIntroLift 620ms var(--ease-wipe) 2600ms forwards;
+}
+@keyframes ptIntroLift {
+  to {
+    transform: translate3d(var(--pt-travel), 0, 0);
+  }
 }
 
-/* DIAGONAL 铭文带：文字沿对角线方向填充在两根白线之间，
-   让 DIAGONAL 这个词本身成为对角线的一部分（低透明度，不抢主光束） */
-.page-transition-wordmark {
+/* 纸面：与页面同色（用户要求），所以翻页全靠边缘读——投影与先行线是唯一的线索 */
+.pt-sheet {
   position: absolute;
-  left: -20%;
-  top: -10%;
-  width: 140%;
-  height: 120%;
-  z-index: 2; /* 位于 slash 之上、slash-echo 之下 */
-  overflow: hidden;
-  /* 与两线同款隐藏态：收拢于左下角，保证 polygon 插值从第一帧就可动画 */
-  clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
-  opacity: 0;
+  top: -20vh;
+  bottom: -20vh;
+  left: calc(-1 * var(--veil-overflow));
+  right: calc(-1 * var(--veil-overflow));
+  background: var(--background);
+  transform: skewX(-12deg);
+  /* 纸边落在页面上的投影：同色之下它就是「一张纸」的唯一物证，必须够宽够深 */
+  box-shadow: 0 0 70px 24px rgba(26, 26, 26, 0.14);
 }
-.page-transition-wordmark-text {
+
+/* 先行线：各领先自己方向上的纸边 --rule-lead——全站对角母题在这里充当转场指针。
+   盖页时看右那条，揭幕时看左那条；盖满瞬间两条都在视口外。
+   同色方案里这条线是运动的主角，所以给到 2px / 45% 墨，不能省 */
+.pt-rule {
   position: absolute;
-  left: 50%;
+  top: -20vh;
+  bottom: -20vh;
+  right: calc(-1 * (var(--veil-overflow) + var(--rule-lead)));
+  width: 2px;
+  background: rgba(26, 26, 26, 0.45);
+  transform: skewX(-12deg);
+}
+.pt-rule-lead {
+  right: auto;
+  left: calc(-1 * (var(--veil-overflow) + var(--rule-lead)));
+}
+/* 线上的一枚暗朱刻痕：转场里唯一的红，只作结构信号 */
+.pt-rule::after {
+  content: "";
+  position: absolute;
+  top: 22%;
+  left: 0;
+  width: 2px;
+  height: 88px;
+  background: var(--diagonal-red);
+}
+
+/* 字标：随纸面一起横穿屏幕。放在纸面竖直中心——该处 skewX 位移恒为 0，
+   无需按视口高度补偿。只在盖页/定格期间淡入，揭幕即淡掉，免得脱离纸面浮在新页上 */
+.pt-mark {
+  position: absolute;
   top: 50%;
-  /* rotate(-35deg) 后文字行与 145° 渐变条纹同向（更贴近 X 轴）；
-     关系：线渐变角 = 180° - |文字旋转角|。
-     translateY 沿梯度轴把文字推进两线正中的铭文带（中心 ~52%，被 51% / 53% 两线夹紧） */
-  transform: translate(-50%, -50%) rotate(-35deg) translateY(calc(1.98vw + 1.7vh));
+  left: calc(var(--veil-overflow) + 6vw);
+  transform: translateY(-50%);
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: clamp(11px, 1.05vw, 15px);
-  letter-spacing: 0.55em;
-  color: rgba(255, 255, 255, 0.38);
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.45);
+  opacity: 0;
+  transition: opacity 180ms var(--ease-out);
+}
+.pt-cover .pt-mark,
+.pt-intro .pt-mark {
+  opacity: 1;
+  transition-delay: 240ms;
 }
 
-/* 字标：盖幕后半段浮出，揭幕时向上离场。
-   已从 overlay 内抽离为同级 fixed 层，永远浮在对角光束与铭文带之上。
-   DIAGONAL 置于对角线左上、对角线计划置于右下，二者落在对角带两侧、
-   不与中央斜向铭文带重叠 */
-.page-transition-brand {
-  transform: translateY(2.5rem);
-  opacity: 0;
-}
-.page-transition-brand.pt-cover {
-  transform: translateY(0);
-  opacity: 1;
-  /* 延迟压到 320ms：字标在幕布盖满（660ms）前落位，配合揭幕前的定格停顿 */
-  transition:
-    transform 300ms var(--ease-out) 320ms,
-    opacity 260ms var(--ease-out) 320ms;
-}
-.page-transition-brand.pt-reveal {
-  transform: translateY(-2.2rem);
-  opacity: 0;
-  transition:
-    transform 260ms var(--ease-in-out),
-    opacity 200ms ease-in;
-}
-.page-transition-brand.pt-intro {
-  transform: translateY(0);
-  opacity: 1;
-  transition: none;
-}
-.page-transition-brand-line {
+/* 加载指示：一条发丝轨道 + 沿轨滑动的暗朱滑块 + mono 小标签。
+   挂在纸面上、不绑相位类——纸面在场即指示在场，所以冷启动 hydration
+   还没跑完时它就已经在转了（这正是用户最需要「还在加载」反馈的时刻）。
+   位置紧贴字标下方：字标在纸面竖直中心，此处偏移仅 20px，skew 位移可忽略 */
+.pt-loading {
   position: absolute;
-  top: 20vh;
-  left: 12vw;
-  font-size: clamp(2.2rem, 6vw, 4rem);
-  /* 深色 text-shadow + 外发光：让白色字形在黑幕角落里清晰可读 */
-  text-shadow:
-    0 0 5px rgba(0, 0, 0, 0.95),
-    0 0 14px rgba(0, 0, 0, 0.85),
-    0 0 32px rgba(0, 0, 0, 0.55);
-  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.85));
+  top: calc(50% + 20px);
+  left: calc(var(--veil-overflow) + 6vw);
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.page-transition-brand-sub {
+.pt-loading-track {
+  position: relative;
+  width: 180px;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(26, 26, 26, 0.12);
+}
+.pt-loading-bar {
   position: absolute;
-  bottom: 20vh;
-  right: 12vw;
-  font-family: var(--font-serif), var(--font-serif-cjk), serif;
-  font-size: 1.05rem;
-  letter-spacing: 0.62em;
-  text-indent: 0.62em; /* 抵消末字间距，视觉居中 */
-  color: rgba(255, 255, 255, 0.95); /* 接近纯白，在黑幕角落也清晰可读 */
-  text-shadow:
-    0 0 4px rgba(0, 0, 0, 0.92),
-    0 0 12px rgba(0, 0, 0, 0.72);
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.82));
+  inset: 0;
+  width: 25%;
+  background: var(--diagonal-red);
+}
+.pt-loading-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.4);
+  white-space: nowrap;
 }
 
 /* —— 图片加载过渡 —— */
