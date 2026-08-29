@@ -105,10 +105,10 @@ function SectionHeading({
     >
       <div className="md:flex md:items-end md:justify-between md:gap-16">
         <div className="space-y-4">
-          <div className="archive-text text-[10px] opacity-50" style={{ letterSpacing: "0.3em" }}>
+          <div className="archive-text text-[11px] opacity-60" style={{ letterSpacing: "0.3em" }}>
             {code}
           </div>
-          <h2 className="font-serif text-2xl md:text-4xl font-bold uppercase leading-none tracking-tight">
+          <h2 className="font-serif text-3xl md:text-5xl font-bold uppercase leading-none tracking-tight">
             {title}
           </h2>
         </div>
@@ -144,11 +144,11 @@ function IndexRow({
       href={href}
       className="press group block border-b border-black/5 py-5 md:grid md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-10"
     >
-      <div className="archive-text flex justify-between gap-3 text-[10px] opacity-45 md:block md:space-y-1">
+      <div className="archive-text flex justify-between gap-3 text-[11px] opacity-55 md:block md:space-y-1">
         {code}
       </div>
       <div className="mt-2 min-w-0 md:mt-0">
-        <h3 className="font-serif text-lg leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-xl">
+        <h3 className="font-serif text-xl font-medium leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-2xl">
           {title}
           {status && (
             <span className="archive-text ml-3 inline-flex translate-y-[-2px] items-center gap-1.5 border border-black/15 px-2 py-[3px] align-baseline text-[8px] tracking-[0.2em] opacity-70 no-underline">
@@ -162,15 +162,15 @@ function IndexRow({
         )}
         {(artist || tags) && (
           <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            {artist && <span className="font-serif text-sm italic opacity-50">{artist}</span>}
+            {artist && <span className="font-serif text-[15px] italic opacity-60">{artist}</span>}
             {tags && (
-              <span className="archive-text flex flex-wrap gap-x-3 text-[9px] opacity-35">{tags}</span>
+              <span className="archive-text flex flex-wrap gap-x-3 text-[10px] opacity-45">{tags}</span>
             )}
           </div>
         )}
       </div>
       {trailing && (
-        <div className="archive-text mt-2 text-[9px] opacity-35 transition-opacity group-hover:opacity-70 md:mt-0 md:text-right">
+        <div className="archive-text mt-2 text-[10px] opacity-45 transition-opacity group-hover:opacity-70 md:mt-0 md:text-right">
           {trailing}
         </div>
       )}
@@ -310,12 +310,12 @@ export default function Home() {
           <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
             <Link
               href="/archive"
-              className="press group archive-text flex items-center gap-3 border border-diagonal-red px-8 py-3.5 text-[11px] font-bold text-diagonal-red hover:bg-diagonal-red hover:text-background"
+              className="press group archive-text flex items-center gap-3 border border-diagonal-red px-8 py-3.5 text-xs font-bold text-diagonal-red hover:bg-diagonal-red hover:text-background"
             >
               {t(lang, "loadFullIndex")}
               <span className="transition-transform group-hover:translate-x-1.5">→</span>
             </Link>
-            <span className="archive-text text-[10px] opacity-45">
+            <span className="archive-text text-[11px] opacity-55">
               {t(lang, "totalRecords")}: {archiveData.length}
             </span>
           </div>
@@ -369,11 +369,11 @@ export default function Home() {
                       </div>
                     )}
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="archive-text text-[10px] opacity-45">{item.id}</div>
-                      <h3 className="font-serif text-xl leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-2xl">
+                      <div className="archive-text text-[11px] opacity-55">{item.id}</div>
+                      <h3 className="font-serif text-xl font-medium leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-2xl">
                         {localized.title}
                       </h3>
-                      <div className="archive-text flex flex-wrap gap-x-3 text-[9px] opacity-35">
+                      <div className="archive-text flex flex-wrap gap-x-3 text-[10px] opacity-45">
                         <span>{localized.category}</span>
                         <span>{localized.location.city}</span>
                         {subs > 0 && <span>SUB-COLLECTIONS ×{subs}</span>}
