@@ -73,7 +73,13 @@ export function eaveBand(w, p) {
   }
 
   for (let i = 0; i < n; i++) {
-    roofBox(w, cx - halfW + i, tops[i] - hh[i] + 1, z0, 1, hh[i], dz);
+    const x = cx - halfW + i;
+    const dx = Math.abs(x - cx + 0.5);
+    const u = denom > 0 ? clamp((dx - flat) / denom, 0, 1) : 0;
+    // 牛角铁律：角部深度随 u 向中轴收拢（平段全深，越出挑越窄，末端成尖）
+    const D = Math.max(1, Math.round(dz * Math.pow(1 - u, 1.15)));
+    const zs = Math.round((z0 + z1) / 2 - (D - 1) / 2);
+    roofBox(w, x, tops[i] - hh[i] + 1, zs, 1, hh[i], D);
   }
   return w;
 }
@@ -88,10 +94,14 @@ export function eaveTip(w, p) {
   const sign = dir === 'L' ? -1 : 1;
   const cornerX = dir === 'L' ? cx - halfW : cx + halfW - 1;
   const topY = yTop + rise;
-  const dz = z1 - z0 + 1;
-  roofBox(w, cornerX + sign, topY, z0, 1, 2, dz);                       // rows topY..topY+1
-  roofBox(w, cornerX + sign * 2, topY + 1, z0, 1, 3, dz);               // rows topY+1..topY+3
-  box(w, cornerX + sign * 3, topY + 3, z0, 1, 2, dz, '金·主体');         // 金尖 rows topY+3..topY+4
+  const cz = Math.round((z0 + z1) / 2);   // 角尾向檐带中轴收拢成牛角尖
+  const seg = (x, y, h, D, col) => {
+    const zs = Math.round(cz - (D - 1) / 2);
+    if (col) box(w, x, y, zs, 1, h, D, col); else roofBox(w, x, y, zs, 1, h, D);
+  };
+  seg(cornerX + sign, topY, 2, 3);                              // 尾一段：深 3
+  seg(cornerX + sign * 2, topY + 1, 2, 2);                      // 尾二段：深 2、与一段共行
+  seg(cornerX + sign * 3, topY + 2, 2, 1, '金·主体');            // 牛角尖：单格金点、与二段共行
   return w;
 }
 
