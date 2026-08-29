@@ -59,3 +59,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 会话/工具的本地暂存目录（.tmp-t11/、.tmp-horn/ 等），不入库
+/.tmp-*/
+/.tmp-*
