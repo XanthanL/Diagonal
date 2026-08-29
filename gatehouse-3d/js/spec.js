@@ -1,4 +1,4 @@
-// 尺寸单一数据源（Single Source of Truth） —— 盐署门楼（架空）
+// 尺寸单一数据源（Single Source of Truth） —— 门楼（架空）
 // 全部数值直接派生自 docs/samples/elevation-guide.png（= docs/tools/gen-samples.ps1 403–591 行）。
 // 铁律：任何 Part 生成器**只允许**从这里取尺寸，不得自带魔数。
 // 坐标系：x∈[0,160) 面宽（镜像轴见 MIRROR），y 向上（y=0 地面），z∈[0,44)（+z 临街=正面）。

@@ -6,7 +6,7 @@
 # 3D 子项目的本地参考资料与技能工作目录（按约不入库，验收后删除）
 /salt-plant-3d/images/
 /salt-plant-3d/.img2threejs/
-/salt-gate-3d/docs/reference/
+/gatehouse-3d/docs/reference/
 
 # 子站部署副本 = 生成物（scripts/copy-salt-plant.js 由 dev/prebuild 自动同步，只提交根目录源）
 /public/salt-plant-3d/

@@ -1,4 +1,4 @@
-// 色板（盐署门楼（架空）体素解构 · 20 色单一来源）
+// 色板（门楼（架空）体素解构 · 20 色单一来源）
 // 数据闭环：docs/02-voxel-style-guide.md §7  ←  本文件  ←  samples/palette.png
 // 任何色名/HEX 增删须三处同步；违例（表外色名）一律 throw。
 import * as THREE from 'three';

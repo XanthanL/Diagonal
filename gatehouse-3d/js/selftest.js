@@ -1,4 +1,4 @@
-// 体素生成核心库自检（盐署门楼（架空）· T4 交付）
+// 体素生成核心库自检（门楼（架空）· T4 交付）
 // 8 项断言（与 docs/03-dev-plan.md §10 一一对应）+ 1 项装配冒烟
 // 输出结构：每条 { name, pass, detail? }；全部通过 → selftests=9/9
 import { PALETTE, TOTAL_COLORS, COLORS, COLORS_BY_NAME, NAME_TO_INDEX, getIndex, getColor }

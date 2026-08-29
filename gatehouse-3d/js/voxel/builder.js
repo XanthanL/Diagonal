@@ -1,4 +1,4 @@
-// 体素生成核心库（盐署门楼（架空） · T4 交付）
+// 体素生成核心库（门楼（架空） · T4 交付）
 // 数据结构 → 可见面剔除 → X 向 run-merge → BufferGeometry (position / normal / color)
 // 纯函数：同输入两次构建输出字节级一致（selftest 断言 #4）
 import * as THREE from 'three';

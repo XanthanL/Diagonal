@@ -1,4 +1,4 @@
-// 领域造型算子（03-dev-plan §5 契约实现）—— 盐署门楼（架空）的"体素词汇"
+// 领域造型算子（03-dev-plan §5 契约实现）—— 门楼（架空）的"体素词汇"
 // T4 只交付了 box/mirrorX/merge，导致各 Part 只能用方块硬堆、与 elevation-guide 脱节。
 // 本文件补齐契约里的全部领域算子，算法**忠实移植**自 docs/tools/gen-samples.ps1
 // （VxRoof / VxCurvedEave / VxEaveTip / VxEaveBand / VxPanelSym / VxLion），并 3D 化（沿 Z 拉伸）。

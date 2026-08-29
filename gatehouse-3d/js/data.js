@@ -1,4 +1,4 @@
-// 盐署门楼（架空）· Salt Bureau Gatehouse —— PARTS 元数据（T5）
+// 门楼（架空）· The Gatehouse —— PARTS 元数据（T5）
 // schema 见 docs/03-dev-plan.md §4；相机锚点见 §6 表。
 // 本建筑为对角线档案中的架空创作，不指涉任何真实建筑。
 // build 字段由 main.js 注入 placeholders 生成函数；P8 特写件为浮层独立场景，主场景只放占位标记。
@@ -11,11 +11,11 @@ export const PARTS = [
     color: 0x55565a,
     cam: [36, 62, 235], target: [0, 48, 0],
     principle:
-      '盐署门楼是档案中的一座架空建筑——想象中的旧时盐政官署临街门楼。四重檐复合结构：' +
+      '门楼是档案中的一座架空建筑——无名无署，只余一门。四重檐复合结构：' +
       '台基承柱网，柱网托第一重檐，其上三重檐逐层收分至宝顶。' +
       '整体面阔约 28 m、通高约 23.6 m（尺度均为虚构参考值）。',
     principleEn:
-      'The Salt Bureau Gatehouse is a fictional building of the Diagonal archive — an imagined street-facing ' +
+      'The The Gatehouse is a fictional building of the Diagonal archive — an imagined street-facing ' +
       'gate of an old salt administration bureau: a stone terrace carries the colonnade, the colonnade carries ' +
       'the first eave, and three upper tiers taper to the roof finial. ' +
       'Overall width approx. 28 m, height approx. 23.6 m (all dimensions invented reference values).',
@@ -109,9 +109,9 @@ export const PARTS = [
     color: 0x211d1b,
     cam: [14, 58, 72], target: [0, 54, -8],
     principle:
-      '黑漆墙身嵌「盐署门楼」描金大匾，两侧横矩形团窠花板中心对称、被檐带包裹于正中；描金纹样在黑漆地上读出轮廓。',
+      '黑漆墙身嵌描金大匾（匾文留白——架空之物不题名），两侧横矩形团窠花板中心对称、被檐带包裹于正中；描金纹样在黑漆地上读出轮廓。',
     principleEn:
-      'A black-lacquer wall carries the gilded plaque "Salt Bureau Gatehouse", flanked by horizontal roundel panels, ' +
+      'A black-lacquer wall carries the gilded plaque "The Gatehouse", flanked by horizontal roundel panels, ' +
       'each bilaterally centered within its encircling eave band; gilt outlines read against the dark ground.',
     reaction: {
       zh: ['墙身减薄减载，仅 2–3 vx', '花板 D4 中心对称构图'],
@@ -181,7 +181,7 @@ export const PARTS = [
 
 // 双语 UI 文案（applyLang 用）
 export const I18N = {
-  sideTitle: { zh: '盐署门楼 · 复合门楼', en: 'Salt Bureau Gatehouse · Composite Gate' },
+  sideTitle: { zh: '门楼 · 四重檐复合结构', en: 'The Gatehouse · Fourfold Eaves' },
   navTitle: { zh: '构件导览', en: 'Parts' },
   ipIndexLabel: { zh: '构件', en: 'Part' },
   equipTitle: { zh: '建筑构成', en: 'Composition' },
