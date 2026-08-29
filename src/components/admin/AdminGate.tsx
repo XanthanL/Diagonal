@@ -38,6 +38,15 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
       setError("请粘贴 GitHub 访问令牌");
       return;
     }
+    // 本地形状校验：粘贴时常见的是带进空白或截断，先拦掉省一次请求
+    if (/\s/.test(pat)) {
+      setError("令牌中不能包含空格或换行，请重新粘贴");
+      return;
+    }
+    if (value.length < 20) {
+      setError("令牌长度异常，请确认已完整复制");
+      return;
+    }
     setLoading(true);
     try {
       await verifyToken(value); // 校验令牌能访问目标仓库
@@ -94,8 +103,15 @@ export function AdminGate({ children }: { children: React.ReactNode }) {
               placeholder="github_pat_… 或 ghp_…"
               className="w-full border border-black/20 focus:border-black outline-none px-3 py-2 font-mono text-sm"
             />
-            <span className="block text-[11px] opacity-40">
-              需对 {GH_OWNER}/{GH_REPO} 具备 Contents 读写权限的细粒度令牌。
+            <span className="block text-[11px] leading-relaxed opacity-45">
+              请使用 Fine-grained token，按最小权限配置：
+              <br />
+              · Repository access → <b>Only select repositories</b>：{GH_OWNER}/{GH_REPO}
+              <br />· Permissions → Contents：<b>Read and write</b>（其余全部 Not required）
+              <br />· Expiration：建议 ≤ 30 天
+              <br />
+              发布是直接提交到 <code>main</code> 并由 CI 构建上线，建议同时为该分支开启
+              branch protection 与 Pages 部署审批。
             </span>
           </div>
 
