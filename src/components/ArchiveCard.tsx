@@ -9,6 +9,11 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
   const localized = getLocalizedArchiveItem(item, lang);
   const [imgLoaded, setImgLoaded] = useState(false);
 
+  // 暖缓存时图片可能先于水合完成加载，onLoad 不会触发——挂载时主动检查一次
+  const checkLoaded = (el: HTMLImageElement | null) => {
+    if (el?.complete && el.naturalWidth > 0) setImgLoaded(true);
+  };
+
   return (
     <Link href={`/archive/${item.id}`}>
       <div
@@ -27,6 +32,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
                此前两套 transition 写在同一元素上会互相覆盖。 */
             <div className="absolute inset-0 transition-transform duration-300 ease-out-strong group-hover:scale-[1.03]">
               <img
+                ref={checkLoaded}
                 src={getAssetPath(item.thumbnail)}
                 srcSet={getLocalSrcSet(item.thumbnail) || undefined}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

@@ -23,6 +23,9 @@ export const translations = {
     atlasIntro:
       "“地图集”通过视觉碎片记录现场考察、物质遗存与空间叙事，构建起从西南到东北的艺术地理图谱。",
     scrollToDiscover: "SCROLL TO DISCOVER",
+    dockDocuments: "文献",
+    dockAtlas: "图集",
+    dockLab: "实验",
 
     // Vacuum Salt（子项目入口）
     vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
@@ -94,6 +97,9 @@ export const translations = {
     atlasIntro:
       "“The Atlas” records field investigations, material remnants, and spatial narratives through visual fragments, constructing an artistic geography from the southwest to the northeast.",
     scrollToDiscover: "SCROLL TO DISCOVER",
+    dockDocuments: "DOCS",
+    dockAtlas: "ATLAS",
+    dockLab: "LAB",
 
     // Vacuum Salt（子项目入口）
     vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
