@@ -47,6 +47,10 @@ export const translations = {
     labSaltPlantLabel: "SUBPROJECT · 天车 3D",
     labSaltPlantTitle: "天车 3D 解构",
     labSaltPlantDesc: "自贡井盐的标志——木构天车（井架）。杉木为骨、竹篾绳捆扎、无铁钉；实时 3D 解构其提卤与顿钻工艺。",
+    gatehouseLabel: "SUBPROJECT · 门楼",
+    gatehouseTitle: "门楼 · 魔幻绿水青山",
+    gatehouseDesc:
+      "对角线档案中的架空门楼：四重檐长牛角翘角，立于青山碧水之间，赖以拄其间。程序化体素建模，可交互环视、构件导览。",
 
     // Archive
     backToHome: "HOME",
@@ -124,6 +128,10 @@ export const translations = {
     labSaltPlantTitle: "DERRICK 3D",
     labSaltPlantDesc:
       "The emblem of Zigong well salt — the timber derrick. Fir framed, bamboo-lashed, nail-free; a live 3D deconstruction of its brine-lifting and percussion-drilling craft.",
+    gatehouseLabel: "SUBPROJECT · GATEHOUSE",
+    gatehouseTitle: "The Gatehouse · Green Hills, Blue Water",
+    gatehouseDesc:
+      "A fictional gatehouse from the Diagonal archive: four tiers of long bull-horn eaves, propped between green hills and blue water. Procedural voxel model — orbit and tour its members.",
 
     // Archive
     backToHome: "HOME",
