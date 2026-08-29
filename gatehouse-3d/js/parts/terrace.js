@@ -1,5 +1,5 @@
 // P1 台基 · 石阶 · 栏杆基线（T6 / 重构版）
-// 尺寸全部取自 spec.js（= elevation-guide.png），无本地魔数。
+// 尺寸全部取自 spec.js，无本地魔数。
 // 立面图：台基 y0..2 砂岩·亮 + y3 砂岩·暗（压顶/栏杆基线）；中央踏步 4 级居中。
 import { VoxelWorld, ops } from '../voxel/builder.js';
 import { stairs } from '../voxel/ops.js';

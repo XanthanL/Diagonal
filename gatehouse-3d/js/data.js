@@ -1,7 +1,7 @@
 // 门楼（架空）· The Gatehouse —— PARTS 元数据（T5）
-// schema 见 docs/03-dev-plan.md §4；相机锚点见 §6 表。
+// PARTS 元数据（设定见 docs/DESIGN.md）；相机锚点 cam/target 为世界坐标（米）。
 // 本建筑为对角线档案中的架空创作，不指涉任何真实建筑。
-// build 字段由 main.js 注入 placeholders 生成函数；P8 特写件为浮层独立场景，主场景只放占位标记。
+// build 字段由 main.js 按 id 注入 parts/ 生成模块；P8 特写件为浮层独立场景，主场景只放标记。
 
 export const PARTS = [
   {

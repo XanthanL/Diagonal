@@ -1,5 +1,5 @@
 // 体素生成核心库自检（门楼（架空）· T4 交付）
-// 8 项断言（与 docs/03-dev-plan.md §10 一一对应）+ 1 项装配冒烟
+// builder 单元断言 + 几何/预算全局断言（见 docs/DESIGN.md）
 // 输出结构：每条 { name, pass, detail? }；全部通过 → selftests=9/9
 import { PALETTE, TOTAL_COLORS, COLORS, COLORS_BY_NAME, NAME_TO_INDEX, getIndex, getColor }
   from './voxel/palette.js';
@@ -134,7 +134,7 @@ export function runSelftest() {
        `count ${w.count()}→${m.count()}; (-1,0,0)=${m.has(-1,0,0)} (-3,0,0)=${m.has(-3,0,0)} (0,0,0)=${m.has(0,0,0)}`);
   }
 
-  // #9 palette 闭环：20 色 + 名称/编号双向索引 + THREE.Color 预计算
+  // #9 palette 闭环：30 色 + 名称/编号双向索引 + THREE.Color 预计算
   {
     const allColors = Object.values(COLORS);
     const allValid = allColors.every(c => c && typeof c.r === 'number' && c.r >= 0 && c.r <= 1);
@@ -144,8 +144,8 @@ export function runSelftest() {
       for (const [k, v] of Object.entries(PALETTE)) if (k !== '5' || v.name !== '金·主体') return false;
       return true;
     })();
-    ok('#9 palette 闭环：20 色 + 双向索引 + 预计算 Color',
-       TOTAL_COLORS === 20 && allColors.length === 20 && allValid && dup && nameIdx,
+    ok('#9 palette 闭环：30 色 + 双向索引 + 预计算 Color',
+       TOTAL_COLORS === 30 && allColors.length === 30 && allValid && dup && nameIdx,
        `TOTAL=${TOTAL_COLORS} allValid=${allValid} name→5=${nameIdx}`);
   }
 
@@ -164,7 +164,7 @@ export function runSelftest() {
       bb ? `x[${bb.min[0]},${bb.max[0]}] y[${bb.min[1]},${bb.max[1]}] z[${bb.min[2]},${bb.max[2]}]` : 'null');
   }
 
-  // #11 无悬空体素：从最低层做 6-连通 BFS，未触达者即悬空（elevation-guide 复校踩过的坑）
+  // #11 无悬空体素：从最低层做 6-连通 BFS，未触达者即悬空
   {
     const m = buildMergedWorld();
     const yMin = m.bbox().min[1];
@@ -209,11 +209,11 @@ export function runSelftest() {
       `widths=${widths.join('>')} tops=${tops.map((c) => (c ? 1 : 0)).join('')}`);
   }
 
-  // #13 三角形预算（03 §9：≤250k）
+  // #13 三角形预算（DESIGN：≤340k，含山水场景）
   {
     let tris = 0;
     for (const { world } of worlds) tris += buildPartMesh(world).getIndex().count / 3;
-    ok('#13 性能·三角形 ≤250k（03 §9 预算）', tris <= 250000, `tris=${tris}`);
+    ok('#13 性能·三角形 ≤340k（含山水）', tris <= 340000, `tris=${tris}`);
   }
 
   // #14 跨 Part 无体素重叠（重叠会在合并渲染时 z-fighting）

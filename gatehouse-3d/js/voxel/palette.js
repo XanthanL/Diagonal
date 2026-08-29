@@ -1,6 +1,6 @@
-// 色板（门楼（架空）体素解构 · 20 色单一来源）
-// 数据闭环：docs/02-voxel-style-guide.md §7  ←  本文件  ←  samples/palette.png
-// 任何色名/HEX 增删须三处同步；违例（表外色名）一律 throw。
+// 色板（门楼 · 魔幻绿水青山版 · 30 色单一来源）
+// 数据闭环：docs/DESIGN.md  ←  本文件。任何色名/HEX 增删须两处同步；违例（表外色名）一律 throw。
+// 20 建筑色（黑漆/金/朱红/白灰/石青/砂岩/栗木/灰塑/瓦/木雕/水波）+ 10 自然灵光色（青山绿水云雾）。
 import * as THREE from 'three';
 
 export const PALETTE = Object.freeze({
@@ -24,6 +24,19 @@ export const PALETTE = Object.freeze({
   18: { name: '水波·浅青',     hex: '#b7d0cf' },
   19: { name: '椽望暗层',       hex: '#2b2624' },
   20: { name: '灰塑·亮',       hex: '#efe9dc' },
+  // —— 自然 · 青山 ——
+  21: { name: '苔绿',           hex: '#7fa36b' },
+  22: { name: '松绿',           hex: '#4f7a52' },
+  23: { name: '黛绿',           hex: '#2f4a3a' },
+  24: { name: '青翠',           hex: '#a8c98a' },
+  25: { name: '岩影',           hex: '#6b7a72' },
+  // —— 自然 · 绿水 ——
+  26: { name: '碧水',           hex: '#4fb0b8' },
+  27: { name: '深潭',           hex: '#2b6f86' },
+  28: { name: '浪花',           hex: '#cfeceb' },
+  29: { name: '云雾',           hex: '#dfe7e6' },
+  // —— 魔幻 · 灵光 ——
+  30: { name: '灵光',           hex: '#ffe9a8' },
 });
 
 export const NAME_TO_INDEX = Object.freeze(
@@ -48,7 +61,7 @@ export const COLORS_BY_NAME = Object.freeze(
 );
 
 export const PALETTE_KEYS = Object.freeze(Object.keys(PALETTE).map(Number));
-export const TOTAL_COLORS = 20;
+export const TOTAL_COLORS = 30;
 
 // 入参可为「色名（中/英/含·号）」或「编号 1-20」；表外一律 throw。
 export function getIndex(nameOrIndex) {

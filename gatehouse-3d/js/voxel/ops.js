@@ -1,5 +1,5 @@
-// 领域造型算子（03-dev-plan §5 契约实现）—— 门楼（架空）的"体素词汇"
-// T4 只交付了 box/mirrorX/merge，导致各 Part 只能用方块硬堆、与 elevation-guide 脱节。
+// 领域造型算子 —— 门楼（魔幻架空）的"体素词汇"，设定见 docs/DESIGN.md
+// 翘角、花板、匾额、脊饰等造型算子集中于此。
 // 本文件补齐契约里的全部领域算子，算法**忠实移植**自 docs/tools/gen-samples.ps1
 // （VxRoof / VxCurvedEave / VxEaveTip / VxEaveBand / VxPanelSym / VxLion），并 3D 化（沿 Z 拉伸）。
 //
@@ -77,7 +77,7 @@ export function eaveBand(w, p) {
     const dx = Math.abs(x - cx + 0.5);
     const u = denom > 0 ? clamp((dx - flat) / denom, 0, 1) : 0;
     // 牛角铁律：角部深度随 u 向中轴收拢（平段全深，越出挑越窄，末端成尖）
-    const D = Math.max(1, Math.round(dz * Math.pow(1 - u, 1.15)));
+    const D = Math.max(2, Math.round(dz * Math.pow(1 - u, 1.15)));
     const zs = Math.round((z0 + z1) / 2 - (D - 1) / 2);
     roofBox(w, x, tops[i] - hh[i] + 1, zs, 1, hh[i], D);
   }
@@ -85,23 +85,31 @@ export function eaveBand(w, p) {
 }
 
 /**
- * 翘角凤头：檐带弧端的上翘弧钩，坡度先缓后陡、全程 4-连通（不是 45° 斜杆）。
- * 移植自 ps1 VxEaveTip。dir: 'L' 左角 / 'R' 右角。
- * 右角基准取 cx+halfW-1（对称区间右端），凤头外伸 3 格，与左角 24/23/22/21 镜像吻合（21↔138）。
+ * 魔幻长牛角翘角：自檐带角端向外 10 段挑出，坡度先缓后陡（y=baseY+⌊0.12k²⌉），
+ * 深度 3→2→1 渐收，末两格金身、顶端一格灵光冠尖——夸张上扬的架空魔幻感。
+ * 每段高 3 格，与相邻段及檐带角部共享整行，保 6-连通接地（#11 守护）。
+ * dir: 'L' 左角 / 'R' 右角。
  */
 export function eaveTip(w, p) {
   const { cx, halfW, yTop, rise, dir, z0, z1 } = p;
   const sign = dir === 'L' ? -1 : 1;
   const cornerX = dir === 'L' ? cx - halfW : cx + halfW - 1;
-  const topY = yTop + rise;
-  const cz = Math.round((z0 + z1) / 2);   // 角尾向檐带中轴收拢成牛角尖
-  const seg = (x, y, h, D, col) => {
+  const baseY = yTop + rise;
+  const cz = Math.round((z0 + z1) / 2);
+  const col = (x, y, h, D, c) => {
     const zs = Math.round(cz - (D - 1) / 2);
-    if (col) box(w, x, y, zs, 1, h, D, col); else roofBox(w, x, y, zs, 1, h, D);
+    if (c) box(w, x, y, zs, 1, h, D, c); else roofBox(w, x, y, zs, 1, h, D);
   };
-  seg(cornerX + sign, topY, 2, 3);                              // 尾一段：深 3
-  seg(cornerX + sign * 2, topY + 1, 2, 2);                      // 尾二段：深 2、与一段共行
-  seg(cornerX + sign * 3, topY + 2, 2, 1, '金·主体');            // 牛角尖：单格金点、与二段共行
+  const N = p.horn ?? 10;
+  let lastX = cornerX, lastTopY = baseY;
+  for (let k = 1; k <= N; k++) {
+    const x = cornerX + sign * k;
+    const y = baseY + Math.round(0.12 * k * k);
+    const D = Math.max(1, 3 - Math.floor((k - 1) / 4));   // 3→2→1 收尖
+    col(x, y, 3, D, k >= N - 1 ? '金·主体' : null);
+    lastX = x; lastTopY = y + 2;
+  }
+  box(w, lastX + sign, lastTopY, cz, 1, 2, 1, '灵光');      // 灵光冠尖
   return w;
 }
 

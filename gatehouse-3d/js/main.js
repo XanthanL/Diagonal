@@ -7,7 +7,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { runSelftest, summarizeSelftest } from './selftest.js';
 import { PARTS, I18N } from './data.js';
 import { buildPartMesh } from './voxel/builder.js';
-// 每个 Part 一个生成模块（03 §2 目录契约）；尺寸统一取自 spec.js = elevation-guide.png
+// 每个 Part 一个生成模块（parts/）；尺寸统一取自 spec.js（设定见 docs/DESIGN.md）
 import { PART_BUILDERS } from './parts/index.js';
 
 // 自检钩子（?selftest）：捕获运行时错误，便于无头浏览器断言验收
