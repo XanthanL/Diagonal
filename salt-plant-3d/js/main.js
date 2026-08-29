@@ -471,7 +471,8 @@ function bundleStrut(p1, p2, opt = {}) {
   // 箍环半径取木束实际外缘上限（离轴距与木径的随机放大都计入），确保箍环套在木外、不切入杉木
   const bindR = (count > 1 ? spread * 1.14 : 0) + rad * 1.24;
   const n = Math.max(2, Math.round(len / bindStep));
-  const wg = windGeoC(r2(bindR), 0.3, 2.5, 0.034);
+  // 竹篾箍：每道 3 根细篾（视觉减密）；管径略提回 0.02 保证 3 根仍有存在感
+  const wg = windGeoC(r2(bindR), 0.3, 3, 0.02);
   const ig = hoopGeoC(r2(bindR + 0.018), 0.044, 14);
   for (let i = 0; i <= n; i++) {
     const y = -len / 2 + (len / n) * i;
@@ -624,15 +625,14 @@ function buildWell(g) {
   const deck = new THREE.Mesh(new THREE.CylinderGeometry(4.0, 4.3, 0.5, 32), woodTex(0x6E5A42, 0.95));
   deck.position.y = 0.45; deck.castShadow = true; deck.receiveShadow = true; PART.well.add(deck);
 
-  // 主天车（高，正对井口，驱动提卤）+ 副天车（略矮），呼应自贡旧时「天车林立、盐井成群」之景。
-  // 副天车右移拉开与主天车风篾环/拉索的距离（原 1.9,-0.5 处主风篾环与副天辊互穿），
-  // 且两组风篾地桩圈不再重叠。
-  buildDerrick(g, P, -0.6, 0.2, 15, 2.1, 6, wood, woodDark, true);
-  buildDerrick(g, P, 2.6, -0.8, 11, 1.6, 5, woodLight, woodDark, false);
+  // 新天车骨架（2 主腿 + 2 辅柱，用户口述定稿）：单次构建整座 compound，置于原点西侧对齐井口。
+  // 旧「主天车 + 独立副天车」两塔布局已废弃——辅柱现作为主塔的一部分内嵌。
+  buildDerrick(g, P, -0.6, 0.2);
 
-  // 井口中心与主天车顶辊/束柱中心对齐：提卤绳沿塔内无撑通道直下，
-  // 不再穿右侧水平箍梁；汲卤筒也正好落入井口孔道。
-  const wellX = -0.6, wellZ = 0.2;
+  // 井口中心相对主天车顶辊/束柱中心：沿 z 向略退到束柱平面之后（wellZ=-0.6，
+  // 退距≈0.6≈塔高 4%），使提卤绳自天辊出绳点(z=0.2)斜下落到井口(z=-0.6)时，
+  // 在横梁高度处已离开横梁 z 平面(0.2±0.09)，不再穿任何不出头横梁。
+  const wellX = -0.6, wellZ = -0.6;
 
   // 井口石箍（自贡盐井以石圈箍井，防潮固壁）。
   // 石台改为石环而非实心圆盘，留出井口孔道，汲卤筒下降时不再穿进石台。
@@ -683,14 +683,15 @@ function buildWell(g) {
   // 立式大车（提卤巨轮）+ 地辊（转向定滑轮）+ 碓架（冲击式顿钻踩架）
   buildCart(g, PART.cart, -3.8, 1.4);
   buildGroundRoller(g, PART.ground, -1.9, 2.1);
-  // 碓架（踩架）置于井口右前方空地、主天车风篾圈之外：
-  // 避开主/副天车束柱腿部与两组风篾地桩/拉索；
-  // 实测副天车 60° 风篾会扫过原 (5.6, 1.6) 处的碓架杠杆，
-  // 故右移至 (6.4, 1.8)，同时仍与寮棚左面竹笆墙拉开 1.0+ 间距。
-  buildDuijia(g, PART.duijia, 6.4, 1.8);
+  // 碓架（踩架）置于井口右前方空地、主天车风篾圈之外，并再外移远离天车：
+  // 门形架足距 3.0、足位在 (7.8, 1.4)，与主/副天车束柱腿部、两组风篾地桩/拉索均拉开净空；
+  // 避免副天车风篾扫过杠杆（该方位已在 windStaySkip 的 _DEVICES 中跳过）。
+  buildDuijia(g, PART.duijia, 7.8, 1.4);
   // 提卤绳链：天辊 → 地辊（转向）→ 大车（绕绳）
+  // 起点取自当前天辊（cx=-0.6, topY=H+0.7）轮缘出绳方向；旧值 (-1.8,15.3) 为废弃双塔时代
+  // 的硬编码，曾导致一段导绳悬空挂在塔旁——已随新塔几何校准。
   const linkMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
-  PART.well.add(strut(new THREE.Vector3(-1.8, 15.3, 0.2), new THREE.Vector3(-1.9, 1.0, 2.1), 0.05, linkMat));
+  PART.well.add(strut(new THREE.Vector3(-0.6, 12.25, 0.35), new THREE.Vector3(-1.9, 1.0, 2.1), 0.05, linkMat));
   PART.well.add(strut(new THREE.Vector3(-1.9, 1.0, 2.1), new THREE.Vector3(-3.8, 3.0, 1.4), 0.05, linkMat));
 
   // 汲卤筒（楠竹/镔铁提卤桶）+ 提卤绳（随大车收放上下，联动天辊/地辊）
@@ -719,7 +720,7 @@ function buildWell(g) {
   g.userData.wellAnim = {
     bucket, liftRope, stem,
     top: 3.4, bottom: 1.3, period: 8.0,
-    anchor: new THREE.Vector3(-0.6, 14.85, 0.2), // 天辊绳槽底出绳点（首帧即被 animate 覆写；-0.7=辊半径+余量）
+    anchor: new THREE.Vector3(-0.6, 12.1, 0.2), // 天辊绳槽底出绳点（首帧即被 animate 覆写；-0.6=辊半径+余量）
     bucketX: wellX, bucketZ: wellZ,
     prevY: 3.4,
   };
@@ -742,251 +743,218 @@ function derrickTaper(baseHalf) {
 // buildDerrick 与 windStaySegments（selftest 共用）必须经由本函数取值，防止两处漂移。
 function windAttachY(H) { return H * 0.9; }
 
-// 风篾跳角规则：buildDerrick 与 ?selftest 碰撞回归共用同一函数，避免两处规则漂移。
-function windStayShouldSkip(a, isMain) {
-  // 副天车朝主天车一侧不设拉索。0.9H 挂点 + 3.4× 地桩圈下重测：
-  // 120° 拉索穿主天车东北束柱（碰撞点 ≈(0.9,5.2,2.0)）；150°/180°/210° 穿主塔身内部或足印。
-  if (!isMain && ((a > (140 * Math.PI) / 180 && a < (220 * Math.PI) / 180) ||
-                  Math.abs(a - (120 * Math.PI) / 180) < 1e-3)) return true;
-  // 主天车：0° 与副天车束柱净空仅 ~0.06；330° 穿副天车东南束柱（碰撞点 ≈(3.3,6.6,-2.05)）。均跳过。
-  if (isMain && (Math.abs(a) < 1e-3 ||
-                 Math.abs(a - (330 * Math.PI) / 180) < 1e-3)) return true;
+// 风篾跳过方位：避免拉索刺穿井场设备（大車/地辊/碓架/寮棚）。
+// 设备世界坐标相对塔心 (cx,cz) 求方位，落入 ±10° 锥内则跳过该风篾（真实天车也据此绕开厂房）。
+const _DEVICES = [[-3.8, 1.4], [-1.9, 2.1], [7.8, 1.4], [7.6, 4.8]];
+function windStaySkip(a, cx, cz) {
+  const TWO = Math.PI * 2, DEG = Math.PI / 180;
+  for (const [dx, dz] of _DEVICES) {
+    let d = (a - Math.atan2(dz - cz, dx - cx)) % TWO;
+    if (d < -Math.PI) d += TWO;
+    if (d > Math.PI) d -= TWO;
+    if (Math.abs(d) < 10 * DEG) return true;
+  }
   return false;
 }
 
-// 生成某座天车的风篾线段端点（世界坐标），buildDerrick 与 selftest 共用。
-function windStaySegments(cx, cz, H, baseHalf, isMain) {
-  const { topHX, topHZ } = derrickTaper(baseHalf);
-  const windY = windAttachY(H);
-  const hxW = baseHalf * (1 - windY / H) + topHX * (windY / H);
-  const hzW = baseHalf * (1 - windY / H) + topHZ * (windY / H);
-  const ringR = Math.hypot(hxW, hzW) + 0.25;
-  const pegR = baseHalf * 3.4;   // 地桩圈外扩：拉索更长、伞面更宽（对照照片）
+// 生成新天车骨架的风篾线段端点（世界坐标），buildDerrick 与 selftest 共用。
+// 5 个高度档、12 方位、约 30° 浅角、自各档散出连地桩；与 buildDerrick 内几何严格一致。
+function windStaySegments(cx, cz) {
+  const H = 12;
+  const mainHX = (y) => 3.0 + (1.6 - 3.0) * (y / H);
+  const tan30 = Math.tan(30 * Math.PI / 180);
+  const tiers = [11.7, 9.7, 7.4, 5.1, 2.9];
   const segs = [];
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    if (windStayShouldSkip(a, isMain)) continue;
-    segs.push({
-      a,
-      p1: [cx + Math.cos(a) * ringR, windY, cz + Math.sin(a) * ringR],
-      p2: [cx + Math.cos(a) * pegR, 0.7, cz + Math.sin(a) * pegR],
-    });
-  }
+  tiers.forEach((ay, tier) => {
+    const t0 = ay / H;
+    const legOuter = 0.115 * (1 - 0.55 * t0) + 0.085 * (1 - 0.34 * t0);
+    const ar = mainHX(ay) + legOuter;   // 附着点推到主腿束身外缘，风篾贴合主腿而非埋入中心
+    const pr = ar + ay / tan30;         // 落地半径：约 30° 浅角
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + tier * 0.26;
+      if (windStaySkip(a, cx, cz)) continue;   // 绕开井场设备方位，避免刺穿
+      segs.push({
+        a,
+        p1: [cx + Math.cos(a) * ar, ay, cz + Math.sin(a) * ar],
+        p2: [cx + Math.cos(a) * pr, 0.45, cz + Math.sin(a) * pr],
+      });
+    }
+  });
   return segs;
 }
 
 // 单座天车：四面收分木井架（束柱）+ 交叉斜撑 + 顶部天辊 + 风篾拉索
 // 静态构件统一收进 stat 临时树，最后按材质合并，避免束柱带来的网格爆炸。
-function buildDerrick(g, P, cx, cz, H, baseHalf, levels, woodMat, woodDarkMat, isMain) {
-  const { topHX, topHZ } = derrickTaper(baseHalf);
-  const statC = new THREE.Group();   // 束柱/斜撑/节点箍/础石/踏阶/顶冠 → cols（构件 1·束柱）
-  const statT = new THREE.Group();   // 天辊轮/辐/轴箍/风篾/地桩 → top（构件 2·天辊·风篾）
-  // 收分框架：x/z 两向各自线性收分 —— 正面两主腿快收成人字尖，进深缓收保持梯形
-  const frames = [];
-  for (let i = 0; i <= levels; i++) {
-    const t = i / levels;
-    frames.push({
-      hx: baseHalf * (1 - t) + topHX * t,
-      hz: baseHalf * (1 - t) + topHZ * t,
-      y: (H / levels) * i,
+function buildDerrick(g, P, cx, cz) {
+  // 新天车骨架（用户口述定稿）：2 主腿（全高）+ 2 辅柱（辅柱①最高≈10.5、辅柱②次高≈6.75）；
+  // 横梁不出头、柱体加不出头短束箍；风篾细长、约 30° 浅角、自各高度档散出连地桩。
+  // 沿用束柱 bundleStrut + 几何合并（emit/flushBin），保持低 draw call。
+  // H 15→12、底半宽 2.2→3.0、顶半宽 0.7→1.6：整体压低加宽，
+  // 两主腿顶角由 ≈11.4° 放大到 ≈13.3°，剪影不再细高。
+  const H = 12;
+  const wood = woodTex(WOOD, 0.85);
+  const woodDark = woodTex(WOOD_DARK, 0.9);
+  const woodLight = woodTex(WOOD_LIGHT, 0.8);
+  const statC = new THREE.Group();   // 束柱/斜撑/横梁/短箍/础石 → cols
+  const statT = new THREE.Group();   // 天辊 + 风篾 + 地桩 → top
+  const mainHX = (y) => 3.0 + (1.6 - 3.0) * (y / H); // 主腿半宽收分（底 3.0 → 顶 1.6）
+
+  // ---- 主腿（2 根全高，前后对称于 z=cz 面内收分）；逐段束柱、根数递减（束柱·错缝搭接）----
+  const levels = 6;
+  for (let i = 0; i < levels; i++) {
+    const y0 = (H / levels) * i, y1 = (H / levels) * (i + 1);
+    const t0 = i / (levels - 1);
+    const cnt = Math.max(2, Math.round(6 - 4 * t0));   // 底 6 根 → 顶 2 根
+    const rad = 0.085 * (1 - 0.34 * t0);
+    const spread = 0.115 * (1 - 0.55 * t0);
+    [-1, 1].forEach((s) => {
+      statC.add(bundleStrut(
+        new THREE.Vector3(cx + s * mainHX(y0), y0, cz),
+        new THREE.Vector3(cx + s * mainHX(y1), y1, cz),
+        { count: cnt, rad, spread, color: WOOD, rough: 0.86, bindStep: 0.46 + t0 * 0.32, ironEvery: 4 }
+      ));
     });
   }
-  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
-  // X 撑交叉点绑扎箍（全塔共用一份缓存几何）
-  const crossBindGeo = windGeoC(r2(0.115), 0.16, 2, 0.028);
 
-  // ---- 立柱：束柱。并束根数由下而上递减（底段最粗，顶段收为两根） ----
-  const nBase = isMain ? 6 : 4;     // 底段并束根数
-  const radBase = isMain ? 0.085 : 0.072;
-  const sprBase = isMain ? 0.115 : 0.095;
-  const denom = Math.max(1, levels - 1);
-  for (let i = 0; i < levels; i++) {
-    const a = frames[i], b = frames[i + 1];
-    const t0 = i / denom;
-    const cnt = Math.max(2, Math.round(nBase - (nBase - 2) * t0));
-    const rad = radBase * (1 - t0 * 0.34);
-    const spread = sprBase * (1 - t0 * 0.55);
-    corners.forEach(([sx, sz]) => {
-      const p1 = new THREE.Vector3(cx + a.hx * sx, a.y, cz + a.hz * sz);
-      const p2 = new THREE.Vector3(cx + b.hx * sx, b.y, cz + b.hz * sz);
+  // ---- 辅柱①（最高≈10.5）与 辅柱②（次高≈6.75）：根部落地、顶部搁在主腿横梁上 ----
+  const buildAux = (fx, fz, tx, tz, top) => {
+    const segs = 3;
+    for (let i = 0; i < segs; i++) {
+      const y0 = top * (i / segs), y1 = top * ((i + 1) / segs);
+      const t0 = i / (segs - 1);
+      const p1 = new THREE.Vector3(fx + (tx - fx) * (y0 / top), y0, fz + (tz - fz) * (y0 / top));
+      const p2 = new THREE.Vector3(fx + (tx - fx) * (y1 / top), y1, fz + (tz - fz) * (y1 / top));
       statC.add(bundleStrut(p1, p2, {
-        count: cnt, rad, spread,
-        color: WOOD, rough: 0.86,
-        bindStep: 0.46 + t0 * 0.32,   // 密缠：底段≈0.46，顶段≈0.78（对照照片加密）
-        ironEvery: 4,                 // 4 道 1 铁：篾箍变密后铁箍比例相应下调
+        count: 3, rad: 0.07 * (1 - 0.2 * t0), spread: 0.07 * (1 - 0.3 * t0),
+        color: WOOD, rough: 0.88, bindStep: 0.5, ironEvery: 4, splice: false,
       }));
-    });
-  }
-
-  // ---- 水平箍梁（双木并束的横箍）+ 交叉斜撑 ----
-  for (let i = 0; i < levels; i++) {
-    const a = frames[i], b = frames[i + 1];
-    [['x', -1], ['x', 1], ['z', -1], ['z', 1]].forEach(([axis, sign]) => {
-      if (axis === 'x') {
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(a.hx * 2 + 0.1, 0.14, 0.14), vWood(WOOD_DARK, 0.9));
-        bar.position.set(cx, a.y, cz + a.hz * sign); statC.add(bar);
-      } else {
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, a.hz * 2 + 0.1), vWood(WOOD_DARK, 0.9));
-        bar.position.set(cx + a.hx * sign, a.y, cz); statC.add(bar);
-      }
-    });
-    const faces = [
-      { sx: -1, sz: -1, ex: 1, ez: -1, open: false }, // 前 z-
-      { sx: 1, sz: 1, ex: -1, ez: 1, open: true },    // 后 z+（唯一展示开口面）
-      { sx: -1, sz: 1, ex: -1, ez: -1, open: false }, // 左 x-
-      { sx: 1, sz: -1, ex: 1, ez: 1, open: false },   // 右 x+
-    ];
-    faces.forEach((f) => {
-      if (f.open) return; // 只留朝向默认相机（+z）的一面开口（展示面），便于观察内部汲卤筒与提卤绳动态；
-                          // 其余三面按实景照片补满连续 X 剪刀撑
-      const p1 = new THREE.Vector3(cx + a.hx * f.sx, a.y, cz + a.hz * f.sz);
-      const p2 = new THREE.Vector3(cx + b.hx * f.ex, b.y, cz + b.hz * f.ez);
-      const p3 = new THREE.Vector3(cx + a.hx * f.ex, a.y, cz + a.hz * f.ez);
-      const p4 = new THREE.Vector3(cx + b.hx * f.sx, b.y, cz + b.hz * f.sz);
-      // 剪刀撑统一细单杆（对照照片：交叉撑均为细长直杆）
-      const bo = { count: 1, rad: 0.055, spread: 0.05, color: WOOD_DARK, rough: 0.9, bindStep: 1.7, ironEvery: 0, splice: false };
-      const d1 = bundleStrut(p1, p2, bo);
-      const d2 = bundleStrut(p3, p4, bo);
-      statC.add(d1); statC.add(d2);
-      // X 交叉点篾绑扎（两斜撑中点的均值即格心）：照片交叉节点均见绑束
-      addWind(statC, new THREE.Vector3().addVectors(d1.position, d2.position).multiplyScalar(0.5), 'y', crossBindGeo, bambooS());
-    });
-  }
-
-  // ---- 节点铁箍：层框与束柱交汇处，用手工锻打的铁箍锁紧，上下再各缠一道竹篾 ----
-  frames.forEach((f, idx) => {
-    if (idx === 0) return; // 地面层埋在木地台里，省略
-    const tf = idx / levels;
-    const nodeR = sprBase * (1 - tf * 0.55) * 1.14 + radBase * (1 - tf * 0.34) * 1.24 + 0.02;
-    const wgeo = windGeoC(r2(nodeR - 0.025), 0.26, 2, 0.03);
-    corners.forEach(([sx, sz]) => {
-      const px = cx + f.hx * sx, pz = cz + f.hz * sz;
-      const hoop = new THREE.Mesh(hoopGeoC(r2(nodeR), 0.05, 18), ironS());
-      hoop.rotation.x = Math.PI / 2; hoop.rotation.z = Math.random() * Math.PI;
-      hoop.position.set(px, f.y, pz); hoop.castShadow = true; statC.add(hoop);
-      addWind(statC, new THREE.Vector3(px, f.y + 0.24, pz), 'y', wgeo, bambooS());
-      addWind(statC, new THREE.Vector3(px, f.y - 0.24, pz), 'y', wgeo, bambooS());
-    });
-  });
-
-  // ---- 础石：束柱落地处的石墩（自贡盐场以石为础，隔潮防朽） ----
-  corners.forEach(([sx, sz]) => {
-    const f = frames[0];
-    // 副天车础石略小：其西北角紧邻主天车东南角础石，缩小避免两塔础石互穿
-    const ps = isMain ? 0.62 : 0.5;
-    const plinth = new THREE.Mesh(new THREE.BoxGeometry(ps, 0.34, ps), vStone(0x928d84, 0.96));
-    plinth.position.set(cx + f.hx * sx, 0.86, cz + f.hz * sz);
-    plinth.rotation.y = (Math.random() - 0.5) * 0.2;
-    plinth.castShadow = true; plinth.receiveShadow = true; statC.add(plinth);
-  });
-
-  // ---- 踏阶（三角木楔）：四根束柱均设攀爬踏脚 ----
-  for (let i = 1; i < levels; i++) {
-    const f = frames[i], yy = f.y;
-    corners.forEach(([sx, sz]) => {
-      const st = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.26), woodDarkMat);
-      st.position.set(cx + f.hx * sx, yy, cz + f.hz * sz * 1.08);
-      st.rotation.x = -0.32;
-      statC.add(st);
-    });
-  }
-  // ---- 顶冠（矩形颈圈，落在四柱柱顶；x 向随人字合拢收窄，天辊竖直辐条从圈内穿过，不穿透实心冠块） ----
-  {
-    const cy = H + 0.1;
-    const lw = topHX * 2 + 0.2;   // 顺 x（人字合拢方向）
-    const dw = topHZ * 2 + 0.2;   // 顺 z（进深向）
-    for (const [ox, oz, w, d] of [
-      [0, -topHZ, lw, 0.16],
-      [0, topHZ, lw, 0.16],
-      [-topHX, 0, 0.16, dw],
-      [topHX, 0, 0.16, dw],
-    ]) {
-      const beam = new THREE.Mesh(new THREE.BoxGeometry(w, 0.16, d), woodMat);
-      beam.position.set(cx + ox, cy, cz + oz);
-      statC.add(beam);
     }
-  }
+  };
+  // ---- 辅柱：位于「俯视主腿连线(x 轴)」两侧(±z)一边一根，足位落地、顶部撑横梁中点(x=cx) ----
+  // 足位在 ±z 基础上沿 x 略偏 ±1.2，使柱身斜插入横梁中点而不占 x=cx 的提卤绳通道（避免与绳穿插）。
+  // 辅柱① 撑最高承重横梁(y≈10.52)，足位退前(+z,≈3.0)→倾角≈15°；
+  // 辅柱② 撑次高承重横梁(y≈6.75)，足位退后(-z,≈2.2)→倾角≈19°；两倾角不同，分列主腿直线两侧。
+  buildAux(cx + 1.2, cz + 2.4, cx, cz + 0.19, 8.42);    // 辅柱①（最高横梁，+z 侧，足略偏 +x 避绳）
+  buildAux(cx - 1.2, cz - 1.8, cx, cz + 0.19, 5.42);    // 辅柱②（次高横梁，-z 侧，足略偏 -x 避绳）
 
-  emit(statC); flushBin(P.cols); // 束柱构件合并入 cols 分区
+  // ---- 横梁：不出头，搁在主腿上（跨度 = 主腿半宽×2×0.9，两端收进束身）----
+  [1.7, 3.45, 5.15, 6.85, 10.3].forEach((y) => {
+    const span = mainHX(y) * 2 * 0.9;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(span, 0.17, 0.17), vWood(WOOD_DARK, 0.9));
+    b.position.set(cx, y, cz); b.rotation.z = 0.02; b.rotation.y = 0.03; b.castShadow = true; statC.add(b);
+  });
+  // 承重横梁：辅柱①顶（8.4）、辅柱②顶（5.4）
+  [[8.4, 0.19], [5.4, 0.19]].forEach(([y, off]) => {
+    const span = mainHX(y) * 2 * 0.9;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(span, 0.19, 0.19), vWood(WOOD_DARK, 0.9));
+    b.position.set(cx, y, cz + off); b.rotation.z = 0.02; b.castShadow = true; statC.add(b);
+  });
 
-  // ---- 顶部天辊（小型带槽辊，架在双柱叉头支架上；随提卤绳联动）+ 风篾（放射拉索） → top 构件 ----
-  // 对照照片「小辊大架」：辊径远小于塔顶宽，双柱叉头自顶冠升起抱住轴端，轴卧于托枋之上。
-  const topY = H + 0.55;
-  const RR = 0.62;          // 辊体半径（含挡盘）
-  const axleHalf = 0.52;    // 轴承段半长（叉头抱轴处）
-  const axleCapZ = axleHalf + 0.1;
+  // ---- 柱体不出头短束箍：主腿 [3,6,9,12]、辅柱① [3,6,9]、辅柱② [3,5] ----
+  const addCollar = (x, z, ys) => ys.forEach((y) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.16), vWood(WOOD_DARK, 0.9));
+    b.position.set(x, y, z); b.rotation.y = 0.04; b.castShadow = true; statC.add(b);
+  });
+  [-1, 1].forEach((s) => [2.4, 4.8, 7.2, 9.6].forEach((y) => addCollar(cx + s * mainHX(y), cz, [y])));
+  // 辅柱短束箍随其斜向(z 向)落点内插：足位→顶在 z 上线性变化（x 随足位 ±1.2）
+  addCollar(cx + 1.2, cz + 1.77, [2.4]);
+  addCollar(cx + 1.2, cz + 1.14, [4.8]);
+  addCollar(cx + 1.2, cz + 0.51, [7.2]);
+  addCollar(cx - 1.2, cz - 0.92, [2.4]);
+  addCollar(cx - 1.2, cz - 0.33, [4]);
+
+  // ---- 础石（主腿根 ±3.0 + 辅柱根）----
+  [-1, 1].forEach((s) => {
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.34, 0.62), vStone(0x928d84, 0.96));
+    pl.position.set(cx + s * 3.0, 0.86, cz); pl.rotation.y = (Math.random() - 0.5) * 0.2;
+    pl.castShadow = true; pl.receiveShadow = true; statC.add(pl);
+  });
+  [[1.2, 2.4], [-1.2, -1.8]].forEach(([px, pz]) => {
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.5), vStone(0x928d84, 0.96));
+    pl.position.set(cx + px, 0.86, cz + pz); pl.castShadow = true; pl.receiveShadow = true; statC.add(pl);
+  });
+
+  emit(statC); flushBin(P.cols);
+
+  // ---- 顶部：天辊（木轮·辐条·镂空，架于天夹板轴座）+ 天箍头 ----
+  // 依据历史构造（《自流井图说》）：天辊安置于「天夹板」中，含辊把子(轴)、座子(轴座)、轴瓦；
+  // 风篾系于「天箍头」(主腿顶端束箍)，周围六方斜牵。天辊为扁平小木轮，中心镂空、辐条木撑。
+  const topY = H + 0.7;            // 天辊轴心高
+  const RR = 0.52;                 // 天辊轮半径（小，扁平定滑轮感）
+  const wheelW = 0.42;             // 轮宽（沿 z）
+  const hubR = 0.1;
   const wheelGrp = new THREE.Group();
   wheelGrp.position.set(cx, topY, cz);
   P.top.add(wheelGrp);
-  // 辊体：辊筒 + 两端挡盘（中间为绳槽），整体绕 z 转动
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(RR * 0.8, RR * 0.8, 0.66, 20), woodTex(WOOD_LIGHT, 0.85));
-  drum.rotation.x = Math.PI / 2; drum.castShadow = true; wheelGrp.add(drum);
-  [-1, 1].forEach((s) => {
-    const flange = new THREE.Mesh(new THREE.CylinderGeometry(RR, RR, 0.07, 22), woodDarkMat);
-    flange.rotation.x = Math.PI / 2; flange.position.z = s * 0.34; flange.castShadow = true; wheelGrp.add(flange);
-  });
-  const grooveRope = new THREE.Mesh(hoopGeoC(r2(RR * 0.82), 0.035, 20), bambooS()); // 绳槽内的篾绳圈（随辊转）
-  grooveRope.rotation.x = Math.PI / 2; wheelGrp.add(grooveRope);
+  // 轮缘（扁平圆环，绳槽在外缘）
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(RR, 0.06, 8, 28), woodDark);
+  rim.castShadow = true; wheelGrp.add(rim);
+  // 轮缘绳槽（细篾环，示意缆绳所嵌）
+  const groove = new THREE.Mesh(hoopGeoC(RR, 0.022, 28), bambooS());
+  wheelGrp.add(groove);
+  // 轮毂（轴心，沿 z）
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(hubR, hubR, wheelW + 0.12, 12), woodTex(0x473A2B, 0.9));
+  hub.rotation.x = Math.PI / 2; wheelGrp.add(hub);
+  // 辐条：6 根细木棍，从轮毂辐射至轮缘（镂空中心，木撑支撑）
+  const spokeN = 6;
+  for (let k = 0; k < spokeN; k++) {
+    const ang = (k / spokeN) * Math.PI * 2;
+    const sp = new THREE.Mesh(new THREE.BoxGeometry(RR - hubR, 0.05, 0.05), woodTex(WOOD, 0.85));
+    sp.position.set(Math.cos(ang) * (hubR + RR) / 2, Math.sin(ang) * (hubR + RR) / 2, 0);
+    sp.rotation.z = ang; sp.castShadow = true; wheelGrp.add(sp);
+  }
+  g.userData.skyRoller = wheelGrp;
 
-  // 双柱叉头支架：自顶冠进深两侧升起，向内收拢至轴端下方；托枋连两柱顶，承住静轴
+  // 天夹板（yoke）：自主腿顶端「天箍头」立两短柱，顶端以横梁连成轴座，承天辊轴
+  const capTopW = mainHX(H);        // 天箍头半宽（= 主腿顶端半宽）
+  const yokeHalf = 0.3;             // 轴座半宽（顶端收拢处）
   [-1, 1].forEach((s) => {
+    // 天箍头：主腿顶端束箍（加宽短箍，风篾系于此）
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.28, 0.28), vWood(WOOD_DARK, 0.9));
+    cap.position.set(cx + s * capTopW, H, cz); cap.castShadow = true; statT.add(cap);
+    // 天夹板立柱：自天箍头顶斜上收至轴座
     statT.add(bundleStrut(
-      new THREE.Vector3(cx, H + 0.14, cz + s * (topHZ + 0.04)),
-      new THREE.Vector3(cx, topY - 0.12, cz + s * axleCapZ),
-      { count: 2, rad: 0.06, spread: 0.055, color: WOOD, rough: 0.88, bindStep: 0.5, ironEvery: 4, splice: false }
+      new THREE.Vector3(cx + s * capTopW, H + 0.1, cz),
+      new THREE.Vector3(cx + s * yokeHalf, topY - 0.05, cz),
+      { count: 2, rad: 0.06, spread: 0.05, color: WOOD, rough: 0.88, bindStep: 0.5, ironEvery: 4, splice: false }
     ));
   });
-  statT.add(strut(
-    new THREE.Vector3(cx, topY - 0.16, cz - axleCapZ),
-    new THREE.Vector3(cx, topY - 0.16, cz + axleCapZ),
-    0.11, woodDarkMat
-  ));
-
-  // 静轴 + 轴端铁箍（受力最集中处）：轴不随辊转，辊体绕轴转动
-  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, axleCapZ * 2, 10), woodTex(0x473A2B, 0.92));
+  // 轴座横梁（天夹板顶联系梁）
+  const yokeBeam = new THREE.Mesh(new THREE.BoxGeometry(yokeHalf * 2 + 0.3, 0.16, 0.16), vWood(WOOD_DARK, 0.9));
+  yokeBeam.position.set(cx, topY - 0.02, cz); statT.add(yokeBeam);
+  // 辊把子（轴）+ 座子/轴瓦（铁轴承端盖）
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, wheelW + 0.24, 10), woodTex(0x473A2B, 0.92));
   axle.rotation.x = Math.PI / 2; axle.position.set(cx, topY, cz); statT.add(axle);
   [-1, 1].forEach((s) => {
-    const cap = new THREE.Mesh(hoopGeoC(0.12, 0.035, 12), ironS());
-    cap.rotation.x = Math.PI / 2; cap.position.set(cx, topY, cz + s * axleCapZ); statT.add(cap);
+    const seat = new THREE.Mesh(hoopGeoC(0.11, 0.03, 12), ironS());
+    seat.rotation.x = Math.PI / 2; seat.position.set(cx, topY, cz + s * (wheelW / 2 + 0.1)); statT.add(seat);
   });
-  if (isMain) g.userData.skyRoller = wheelGrp; else g.userData.spin.push({ mesh: wheelGrp, axis: 'z', speed: 0.8 });
 
-  // 悬吊篾绳材质（风篾拉索复用）；天辊→汲卤筒的提卤主绳改由采卤站统一生成（见 buildWell）
-  const ropeMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 1.0, metalness: 0.0 });
-
-  // ---- 风篾（放射状拉索 + 地桩）：天车最标志性的防风结构 ----
-  const windY = windAttachY(H);
-  // 风篾环半径须包住该高度四角束柱的对角距（矩形截面 √(hx²+hz²)），
-  // 否则拉索会从束柱中穿过。环外扩后以四根短撑连到四角束柱，形成「柱颈箍环」。
-  const hxW = baseHalf * (1 - windY / H) + topHX * (windY / H);
-  const hzW = baseHalf * (1 - windY / H) + topHZ * (windY / H);
-  const diagW = Math.hypot(hxW, hzW);
-  const ringR = diagW + 0.25;
-  const windRing = new THREE.Mesh(new THREE.TorusGeometry(ringR, 0.09, 8, 20), woodDarkMat);
-  windRing.rotation.x = Math.PI / 2; windRing.position.set(cx, windY, cz); statT.add(windRing);
-  // 颈箍环 ↔ 四角束柱的连接短撑：矩形截面角方位不再是 45°，端点取实际角点方向
-  [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sz]) => {
-    const inv = 1 / diagW;
-    statT.add(strut(
-      new THREE.Vector3(cx + sx * hxW, windY, cz + sz * hzW),
-      new THREE.Vector3(cx + (sx * hxW * inv) * ringR, windY, cz + (sz * hzW * inv) * ringR),
-      0.07,
-      woodDarkMat
-    ));
+  // ---- 风篾：细、黑、无彩色，约 30° 浅角，自各高度档散出连地桩；风篾本就系于塔身，故碰撞回归不检 cols ----
+  const ropeMat = new THREE.MeshStandardMaterial({ color: 0x20201e, roughness: 0.85, metalness: 0.0 });
+  const tiers = [11.7, 9.7, 7.4, 5.1, 2.9];
+  const tan30 = Math.tan(30 * Math.PI / 180);
+  tiers.forEach((ay, tier) => {
+    const t0 = ay / H;
+    const legOuter = 0.115 * (1 - 0.55 * t0) + 0.085 * (1 - 0.34 * t0);
+    const ar = mainHX(ay) + legOuter;   // 附着点推到主腿束身外缘，风篾贴合主腿而非埋入中心
+    const pr = ar + ay / tan30;         // 落地半径：约 30° 浅角
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + tier * 0.26; // 螺旋散布，避免直线重叠
+      if (windStaySkip(a, cx, cz)) continue;   // 绕开井场设备方位，避免刺穿
+      const p1 = new THREE.Vector3(cx + Math.cos(a) * ar, ay, cz + Math.sin(a) * ar);
+      const p2 = new THREE.Vector3(cx + Math.cos(a) * pr, 0.45, cz + Math.sin(a) * pr);
+      statT.add(strut(p1, p2, 0.02 - 0.007 * (ay / H), ropeMat));
+      const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.9, 8), woodDark);
+      peg.position.set(p2.x, 0.25, p2.z); peg.castShadow = true; statT.add(peg);
+      const pc = new THREE.Mesh(hoopGeoC(0.15, 0.03, 12), ironS());
+      pc.rotation.x = Math.PI / 2; pc.position.set(p2.x, 0.62, p2.z); statT.add(pc);
+    }
   });
-  for (const seg of windStaySegments(cx, cz, H, baseHalf, isMain)) {
-    const [ax, ay, az] = seg.p1;
-    const [px, py, pz] = seg.p2;
-    statT.add(strut(new THREE.Vector3(ax, ay, az), new THREE.Vector3(px, py, pz), 0.06, ropeMat));
-    const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.9, 8), woodDarkMat);
-    peg.position.set(px, 0.25, pz); peg.castShadow = true; statT.add(peg);
-    // 地桩铁箍（防劈裂）
-    const pc = new THREE.Mesh(hoopGeoC(0.15, 0.03, 12), ironS());
-    pc.rotation.x = Math.PI / 2; pc.position.set(px, 0.62, pz); statT.add(pc);
-  }
 
-  emit(statT); flushBin(P.top); // 天辊·风篾构件合并入 top 分区
+  emit(statT); flushBin(P.top);
 }
+
 
 // 立式大车（提卤巨轮）：轮面朝 z，绕水平轴(z)旋转；底杠支撑轮轴两端
 function buildCart(g, part, x, z) {
@@ -1050,49 +1018,57 @@ function buildDuijia(g, part, x, z) {
   const woodMat = woodTex(WOOD, 0.9);
   const woodDark = woodTex(WOOD_DARK, 0.9);
   const H = 4.2, base = 0.7;
-  // 门形架的两根立柱：并束木柱（碓头反复冲击，靠束柱与铁箍分散冲击力）
-  [-1.2, 1.2].forEach((sx) => {
+  const POST = 1.5;            // 门形架立柱半距（两立柱净距 3.0）
+  const TOP = base + H;        // 立柱顶 / 横梁高 = 4.9
+  // 门形架两根立柱：并束木柱（碓头反复冲击，靠束柱与铁箍分散冲击力）。足距加宽，
+  // 使碓头+钻杆可悬于两柱之间净空，不再贴柱穿模。
+  [-POST, POST].forEach((sx) => {
     emit(bundleStrut(
-      new THREE.Vector3(x + sx, base * 0.2, z),
-      new THREE.Vector3(x + sx, base + H, z),
+      new THREE.Vector3(x + sx, 0.05, z),
+      new THREE.Vector3(x + sx, TOP, z),
       { count: 3, rad: 0.082, spread: 0.08, color: WOOD, rough: 0.9, bindStep: 0.56, ironEvery: 4, splice: false }
     ));
   });
   flushBin(part); // 立柱合并入碓架分区
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.3, 0.3), vWood(WOOD_DARK, 0.9));
-  beam.position.set(x, base + H, z); part.add(beam);
-  const pivotY = base + H - 0.4;
-  // 花辊轴（固定，铰接杠杆）
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10), woodDark);
+  // 顶横梁：压在两立柱顶
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(2 * POST + 0.3, 0.3, 0.3), vWood(WOOD_DARK, 0.9));
+  beam.position.set(x, TOP, z); part.add(beam);
+  // 花辊轴（固定铰接轴）：架在顶横梁之上（高于立柱顶 0.25），杠杆悬于柱顶之上，避免与立柱穿模
+  const pivotY = TOP + 0.25;
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2 * POST, 10), woodDark);
   hub.rotation.z = Math.PI / 2; hub.position.set(x, pivotY, z); part.add(hub);
   // 杠杆组（绕花辊轴摆动 = 冲击式顿钻）：杠杆 + 碓头 + 钻杆 + 踏板
   const pivot = new THREE.Group();
   pivot.position.set(x, pivotY, z);
-  const lever = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.18, 0.4), woodMat);
-  pivot.add(lever); // 局部坐标 (0,0,0)
-  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 1.4, 12), woodDark);
-  head.position.set(-1.3, -1.0, 0); head.castShadow = true; pivot.add(head);
+  const lever = new THREE.Mesh(new THREE.BoxGeometry(2 * POST + 0.2, 0.16, 0.4), woodMat);
+  pivot.add(lever); // 居中，悬于柱顶之上
+  // 碓头：悬于两立柱之间（局部 x 轻微偏 -0.5，仍在立柱内侧净空内），不再贴柱
+  const headX = -0.5;
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.46, 1.4, 12), woodDark);
+  head.position.set(headX, -1.0, 0); head.castShadow = true; pivot.add(head);
   // 碓头铁箍 + 铁靴（冲击端包铁，做旧锈重）
   [-0.45, -1.55].forEach((yy) => {
-    const hb = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.055, 8, 16), ironS());
-    hb.rotation.x = Math.PI / 2; hb.position.set(-1.3, yy, 0); pivot.add(hb);
+    const hb = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.05, 8, 16), ironS());
+    hb.rotation.x = Math.PI / 2; hb.position.set(headX, yy, 0); pivot.add(hb);
   });
   const shoe = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.34, 0.4, 12), ironS());
-  shoe.position.set(-1.3, -1.85, 0); shoe.castShadow = true; pivot.add(shoe);
-  const drill = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 3.4, 10), woodTex(0x473A2B, 0.9));
-  drill.position.set(-1.3, -2.8, 0); pivot.add(drill);
+  shoe.position.set(headX, -1.85, 0); shoe.castShadow = true; pivot.add(shoe);
+  // 钻杆：自碓头直下，落入井孔（位于立柱之间，不碰立柱）
+  const drill = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 4.2, 10), woodTex(0x473A2B, 0.9));
+  drill.position.set(headX, -2.9, 0); pivot.add(drill);
+  // 踏板（杠杆长端，伸出门架外供踩踏）
   const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.16, 0.5), woodTex(WOOD_LIGHT, 0.8));
-  pedal.position.set(1.3, -0.1, 0); pivot.add(pedal);
+  pedal.position.set(1.15, -0.1, 0); pivot.add(pedal);
   part.add(pivot);
   g.userData.duijiaPivot = pivot; // 由 animate 驱动（冲击节奏）
   // 竹篾缠绕：门形架穿斗节点 + 花辊轴端 + 碓头连接（螺旋篾绳捆扎，不用铁钉）
   const bindMat = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
   const djWindGeo = helixWindGeo(0.26, 0.5, 3, 0.04);
   [-1, 1].forEach((s) => {
-    addWind(part, new THREE.Vector3(x + s * 1.2, base + H - 0.15, z), 'y', djWindGeo, bindMat);
-    addWind(part, new THREE.Vector3(x + s * 1.1, pivotY, z), 'x', djWindGeo, bindMat);
+    addWind(part, new THREE.Vector3(x + s * POST, TOP - 0.15, z), 'y', djWindGeo, bindMat);
+    addWind(part, new THREE.Vector3(x + s * POST, pivotY, z), 'x', djWindGeo, bindMat);
   });
-  addWind(part, new THREE.Vector3(x - 1.3, pivotY - 0.3, z), 'y', helixWindGeo(0.3, 0.5, 3, 0.04), bindMat);
+  addWind(part, new THREE.Vector3(x + headX, pivotY - 0.3, z), 'y', helixWindGeo(0.3, 0.5, 3, 0.04), bindMat);
 }
 
 // ============================================================
@@ -1407,17 +1383,17 @@ function runSelfTest() {
   };
 
   let collisionSegments = 0;
-  const mainStays = windStaySegments(-0.6, 0.2, 15, 2.1, true);
-  const subStays = windStaySegments(2.6, -0.8, 11, 1.6, false);
-  const stayTargets = ['cols', 'cart', 'ground', 'duijia', 'shed', 'well'];
-  [...mainStays, ...subStays].forEach((seg) => {
+  // 新骨架为单塔；风篾本就系于塔身，故碰撞回归仅检「风篾是否刺穿其余设备」，不检 cols。
+  const mainStays = windStaySegments(-0.6, 0.2);
+  const stayTargets = ['cart', 'ground', 'duijia', 'shed', 'well'];
+  mainStays.forEach((seg) => {
     collisionSegments += 1;
     const hits = segmentHits(seg.p1, seg.p2, stayTargets, `wind@${Math.round(seg.a * 180 / Math.PI)}deg`);
     if (hits.length) collisionErrors.push(...hits);
   });
 
   const w = stationGroups[0].userData.wellAnim;
-  const anchor = new THREE.Vector3(0, -0.7, 0).add(stationGroups[0].userData.skyRoller.position);
+  const anchor = new THREE.Vector3(0, -0.6, 0).add(stationGroups[0].userData.skyRoller.position);
   [[w.bucket.position.y, 'lift-top'], [1.3, 'lift-bottom']].forEach(([yy, label]) => {
     collisionSegments += 1;
     const hits = segmentHits(
@@ -1677,9 +1653,9 @@ function animate() {
       if (g.userData.groundRoller) g.userData.groundRoller.rotation.z += dW;
       if (g.userData.skyRoller) {
         g.userData.skyRoller.rotation.z += dW;
-        // 提卤绳从天辊绳槽正下方出绳（-0.7 = 辊半径 0.62 + 余量）：井口已与天辊中心对齐，
+        // 提卤绳从天辊绳槽正下方出绳（-0.6 = 辊半径 0.52 + 余量）：井口已与天辊中心对齐，
         // 固定底缘出绳点保证绳段竖直落在塔内无撑通道中，不会扫过侧向水平箍梁。
-        w.anchor.set(0, -0.7, 0).add(g.userData.skyRoller.position);
+        w.anchor.set(0, -0.6, 0).add(g.userData.skyRoller.position);
       }
     }
   });

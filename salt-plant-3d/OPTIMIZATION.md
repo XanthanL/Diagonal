@@ -125,6 +125,7 @@ node tools/cdp-shot-nav.mjs "http://127.0.0.1:8765/index.html" 2 out.png  # 聚�
 - **P-next-7**：`data.js` 的英文 `principleEn` 大车条目里残留中文“串联”（line 120 附近）；应清理。`I18N.ctrl` 中 `rotate/labels/download/playOff` 已无对应 UI，可删或补齐。
 - **P-next-8**：移动端顶栏按钮增多后，窄屏可能挤压 legend；需要 390px 宽度视觉回归。
 - **P-next-9**：项目无 ESLint/格式化/CI；若要长期维护，建议至少加 `node --check` 语法校验和 headless selftest 的 CI 步骤。
+- **P-next-10**：**阶段 5 形制精修已规划、暂缓执行**（详见 `TASKS.md` 阶段 5）：骨架重构（2 全高主腿 + 2 搭梁半高辅柱，横梁搁置式出头）+ 并木密度/多圈深色绳箍/楔子/戗木/头部加重/风篾分层/双色木料/去对称等 P0~P10。依据为第二批束柱近景（杉木+楔子+多圈捆绳）与第三批多角度照片；待用户引入新工具后评估结合方式再开工。开工时 P0 属 `buildDerrick` 骨架级改动，必须全量过 selftest（重点：提卤绳 vs cols、风篾 vs cols）。
 
 ## 6. 给未来会话的调试提示
 
