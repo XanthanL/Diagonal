@@ -24,8 +24,8 @@ window.addEventListener('unhandledrejection', (e) => __recordErr('promise:' + (e
 
 // ---------- 常量与状态 ----------
 const BG = 0xfaFAF8; // diagonal 设计系统暖纸底
-const DEFAULT_CAM = [36, 62, 235]; // P0 总览锚点（03-dev-plan §6）
-const DEFAULT_TGT = [0, 48, 0];
+const DEFAULT_CAM = [18, 26, 68]; // P0 总览锚点（T21 山水全景；原 [36,62,235] 为纯建筑构图）
+const DEFAULT_TGT = [0, 9, 0];
 const state = { lang: 'zh' };
 
 let scene, camera, renderer, controls, clock;
@@ -336,4 +336,6 @@ if (SELFTEST) {
   runSelftestSuite();
 } else {
   init();
+  // 无头调试钩子（验收用）：场景图直查
+  window.__gatehouse = { scene, camera, controls };
 }

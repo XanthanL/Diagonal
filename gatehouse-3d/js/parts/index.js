@@ -9,9 +9,10 @@ import walls from './walls.js';
 import upperRoofs from './upperRoofs.js';
 import wings from './wings.js';
 import closeups from './closeups.js';
+import terrain from './terrain.js';
 
 export const PART_BUILDERS = {
-  terrace, lions, gatehouse, eave1, walls, upperRoofs, wings, closeups,
+  terrace, lions, gatehouse, eave1, walls, upperRoofs, wings, closeups, terrain,
 };
 
 export const PART_IDS = Object.keys(PART_BUILDERS);
@@ -26,9 +27,10 @@ export function buildAllWorlds() {
 }
 
 /** 合并为一个世界（供 bbox / 连通域等全局几何断言使用；不用于渲染） */
-export function buildMergedWorld() {
+export function buildMergedWorld(excludeIds = []) {
   const merged = new (buildAllWorlds()[0].world.constructor)();
-  for (const { world } of buildAllWorlds()) {
+  for (const { id, world } of buildAllWorlds()) {
+    if (excludeIds.includes(id)) continue;
     for (const [x, y, z, idx] of world.entries()) merged.set(x, y, z, idx);
   }
   return merged;

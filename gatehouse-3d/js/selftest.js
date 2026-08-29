@@ -153,9 +153,9 @@ export function runSelftest() {
   // 原 10 条全是 builder 单元测试，对"真实模型长什么样"零覆盖 —— 这正是模型悄悄跑偏却全绿的原因。
   const worlds = buildAllWorlds();
 
-  // #10 总包围盒（03 §10 #6 契约）
+  // #10 总包围盒（03 §10 #6 契约）——只度量建筑本体，山水地形 Part 越界不计
   {
-    const m = buildMergedWorld();
+    const m = buildMergedWorld(['terrain']);
     const bb = m.bbox();
     const okBox = !!bb && bb.min[0] === 0 && bb.max[0] === GRID.W - 1
       && bb.min[1] === 0 && bb.max[1] === CROWN.TOP - 1

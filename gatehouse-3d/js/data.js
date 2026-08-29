@@ -9,7 +9,7 @@ export const PARTS = [
     name: '总览', subtitle: '复合门楼',
     nameEn: 'Overview', subtitleEn: 'Composite gatehouse',
     color: 0x55565a,
-    cam: [36, 62, 235], target: [0, 48, 0],
+    cam: [18, 26, 68], target: [0, 9, 0],
     principle:
       '门楼是档案中的一座架空建筑——无名无署，只余一门。四重檐复合结构：' +
       '台基承柱网，柱网托第一重檐，其上三重檐逐层收分至宝顶。' +
@@ -175,6 +175,25 @@ export const PARTS = [
     },
     params: ['特写世界 1vx=0.02m', '浮层视口 160×110px', '参考值：DPR≥2'],
     paramsEn: ['Inset world 1vx=0.02m', 'Viewport 160×110 px', 'Ref: DPR≥2'],
+    build: null,
+  },
+  {
+    id: 'terrain', index: 9,
+    name: '山水', subtitle: '赖以拄其间',
+    nameEn: 'Terrain', subtitleEn: 'Between mountain and river',
+    color: 0xb7d0cf,
+    cam: [-44, 22, 56], target: [-2, 8, 2],
+    principle:
+      '门楼以山为倚、以水为邻：后岭连峰承其背，左带曲水绕其趾；石桥通渡，甬道引门——一门拄于山水之间。',
+    principleEn:
+      'The gatehouse leans on the ridge behind and listens to the river bending at its left; ' +
+      'a stone bridge joins the banks and a paved way leads to the door — one gate propped between mountain and water.',
+    reaction: {
+      zh: ['地坪让位于台基领地', '山为阶梯台地、巅以灰塑作云帽', '水面单格浅青 + 泡点为纹'],
+      en: ['Ground yields to the terrace plot', 'Stepped mesas, crested with pale plaster caps', 'Single-cell water with foam strokes'],
+    },
+    params: ['场景 x[-60,220] z[-36,74]', '河宽 13 vx · 主峰 30 vx', '全部取色于既定 20 色'],
+    paramsEn: ['Scene x[-60,220] z[-36,74]', 'River 13 vx · main peak 30 vx', 'All colors within the 20-tone palette'],
     build: null,
   },
 ];
