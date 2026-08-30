@@ -1,0 +1,8 @@
+{
+  "$comment": "独立子站单一登记表。新增/改子站只改这里：scripts/sync-sites.js 据此同步进 public，PageTransition 据此判断整页跳转，避免多处手工登记漏改导致 404。sync=true 的 dir 必须与仓库根同名目录存在；sync=false 的（如 vacuum-salt 独立 Next app）由 merge-vacuum.js 单独产出，仅供导航判断。",
+  "sites": [
+    { "dir": "salt-plant-3d", "sync": true, "excludes": ["images", ".img2threejs", "tools"] },
+    { "dir": "gatehouse-3d", "sync": true, "excludes": ["docs", "images", ".img2threejs", "tools"] },
+    { "dir": "vacuum-salt", "sync": false }
+  ]
+}

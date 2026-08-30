@@ -13,17 +13,13 @@ const INTRO_HOLD_MS = 280; // 首屏定格：让字标先被读到一眼，再�
 const LOAD_TIMEOUT_MS = 2600; // 路由迟迟不提交时的强制揭幕上限
 
 // 独立部署的子项目：主站 App Router 里没有对应路由，必须走整页跳转。
-// 生产静态导出中它们位于 out/vacuum-salt、out/salt-plant-3d 与 out/gatehouse-3d。
-// ⚠️ 新增子站首页卡片时必须同步登记到这里，否则点击会被 router.push 接管而落到 404。
+// 单一登记表在 src/lib/subsites.json（sync-sites.js 同步共用同一份）——新增子站改配置即可，
+// 不必再动本文件，从根上消除"漏登记 → router.push 落到 404"。
+import subsites from "@/lib/subsites.json";
+const STANDALONE_DIRS: string[] = subsites.sites.map((s) => `/${s.dir}`);
+
 function isStandaloneSubproject(pathname: string) {
-  return (
-    pathname === "/vacuum-salt" ||
-    pathname.startsWith("/vacuum-salt/") ||
-    pathname === "/salt-plant-3d" ||
-    pathname.startsWith("/salt-plant-3d/") ||
-    pathname === "/gatehouse-3d" ||
-    pathname.startsWith("/gatehouse-3d/")
-  );
+  return STANDALONE_DIRS.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
 
 function isAssetLink(pathname: string) {
