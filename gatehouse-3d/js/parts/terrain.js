@@ -30,10 +30,19 @@ export function build() {
     ops.box(w, seg.x[0], 0, seg.z[0], sx, 1, sz, RIVER.deep);
     ops.box(w, seg.x[0], 1, seg.z[0], sx, 1, sz, RIVER.surface);
   }
-  // 浪花：主河水面中缝隔 7 石一枚浅色泡点（明暗成纹）
+  // 浪花勾边：每片水域外缘一圈浅色岸沫，勾出清晰岸线
+  for (const seg of RIVER.channel) {
+    const sx = seg.x[1] - seg.x[0] + 1;
+    const sz = seg.z[1] - seg.z[0] + 1;
+    ops.box(w, seg.x[0], 1, seg.z[0], sx, 1, 1, RIVER.foam);                 // 北缘
+    ops.box(w, seg.x[0], 1, seg.z[1], sx, 1, 1, RIVER.foam);                 // 南缘
+    ops.box(w, seg.x[0], 1, seg.z[0], 1, 1, sz, RIVER.foam);                 // 西缘
+    ops.box(w, seg.x[1], 1, seg.z[0], 1, 1, sz, RIVER.foam);                 // 东缘
+  }
+  // 湖面散点波纹：隔 9 石一枚浅色泡点，明暗成纹
   const c0 = RIVER.channel[0];
-  for (let x = c0.x[0] + 3; x <= c0.x[1] - 3; x += 7) {
-    const zf = 53 + ((Math.abs(x) % 14 < 7) ? 1 : -1);
+  for (let x = c0.x[0] + 4; x <= c0.x[1] - 4; x += 9) {
+    const zf = 52 + ((Math.abs(x) % 18 < 9) ? 2 : -2);
     ops.box(w, x, 1, zf, 1, 1, 1, RIVER.foam);
   }
 

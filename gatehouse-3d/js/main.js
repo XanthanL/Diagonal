@@ -172,18 +172,14 @@ function init() {
   dir.position.set(120, 180, 140);
   scene.add(hemi, dir);
 
-  // 地面：暖纸圆盘 + 极淡网格（呼应 salt-plant-3d 展台感）
+  // 地面：连片绿野圆盘（绿水青山的"大地"），不画网格（graph-paper 观感杂乱）
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(600, 64),
-    new THREE.MeshLambertMaterial({ color: 0xe4e0d7 })
+    new THREE.MeshLambertMaterial({ color: 0x9cb98b })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.02;
   scene.add(ground);
-  const grid = new THREE.GridHelper(600, 60, 0x000000, 0x000000);
-  grid.material.opacity = 0.06;
-  grid.material.transparent = true;
-  scene.add(grid);
 
   scene.add(modelGroup);
 

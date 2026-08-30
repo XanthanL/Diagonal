@@ -26,11 +26,17 @@ export function build() {
     for (const p of t.panels) panelSym(w, { ...p, z0: ez0, z1: ez1 });
   }
 
-  // T4 墙身（顶格 = yTop - h：与 T4 檐带中央底边 yTop-h+1 相邻而不重叠）
+  // T4 墙身（顶格 = yTop - h：与 T4 檐带中央底边 yTop-h+1 相邻而不重叠）——白墙+红柱+金顶线
   const t4 = TIERS[3];
   const t4Top = Math.min(t4.wall.y[1], t4.eave.yTop - t4.eave.h);
-  ops.box(w, t4.wall.x[0], t4.wall.y[0], bz0,
-    t4.wall.x[1] - t4.wall.x[0] + 1, t4Top - t4.wall.y[0] + 1, bz1 - bz0 + 1, '黑漆·主体');
+  const x0 = t4.wall.x[0], x1 = t4.wall.x[1];
+  const W = x1 - x0 + 1, H = t4Top - t4.wall.y[0] + 1;
+  const y0 = t4.wall.y[0];
+  ops.box(w, x0, y0, bz0, W, H, bz1 - bz0 + 1, '白灰墙');
+  for (let cx = x0; cx <= x1 - 1; cx += 10)
+    ops.box(w, cx, y0, bz0, 2, H, bz1 - bz0 + 1, '朱红·柱');
+  ops.box(w, x1 - 1, y0, bz0, 2, H, bz1 - bz0 + 1, '朱红·柱');
+  ops.box(w, x0, t4Top, bz0, W, 1, bz1 - bz0 + 1, '金·主体');
 
   // 顶：黑漆顶柱 → 灰塑正脊 + 鸱吻 → 立体宝顶（16→12→8→4 三段阶梯）
   ridgeSet(w, CROWN, ez0, ez1);
