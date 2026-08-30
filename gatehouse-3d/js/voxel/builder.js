@@ -98,10 +98,11 @@ const FACES = {
   pz: { n: [ 0, 0, 1], c: [C.C001, C.C011, C.C111, C.C101] },  // +Z 前
   nz: { n: [ 0, 0,-1], c: [C.C000, C.C100, C.C110, C.C010] },  // -Z 后
 };
-// faceKey 在 X run 合并时需把单位立方体的 x∈[0,1] 拉伸到 x∈[0,sx]
-const STRETCH_X = new Set(['px', 'nx']);
+// faceKey 在 run 合并时：上下前后四面的 x∈[0,1] 拉伸到 x∈[0,sx]（面平面含 X 轴）；
+// px/nx 端盖不拉伸（面平面垂直 X 轴，只贴在 run 两端）。
+const STRETCH_X = new Set(['py', 'ny', 'pz', 'nz']);
 
-// 在 (x,y,z) 位置、run 长度 sx（仅 px/nx 用）emit 一个 quad 到数组。
+// 在 (x,y,z) 位置、run 长 sx 处 emit 一个 quad 到数组。
 // 全程直接 push 到调用方 buffer（不创建临时数组），保证纯函数语义。
 function emitFace(faceKey, x, y, z, sx, color, vs, positions, normals, colors, indices) {
   const face = FACES[faceKey];
@@ -155,23 +156,40 @@ export function buildPartMesh(world, opts = {}) {
       const runLen = c1.x - c0.x + 1;
       const color = COLORS[c0.idx];
 
-      // -X 端面（最左）：仅当左侧是空气
+      // -X 端盖（最左）：仅当左侧是空气；单位 quad，贴 run 左缘
       if (!world.has(c0.x - 1, c0.y, c0.z))
         emitFace('nx', c0.x, c0.y, c0.z, runLen, color, vs, positions, normals, colors, indices);
-      // +X 端面（最右）：仅当右侧是空气
+      // +X 端盖（最右）：仅当右侧是空气；角点 x=1，平面落在 c1.x+1
       if (!world.has(c1.x + 1, c1.y, c1.z))
         emitFace('px', c1.x, c1.y, c1.z, runLen, color, vs, positions, normals, colors, indices);
 
-      // 上下前后 4 面：每个体素独立（不合并，控制简单性）
+      // 上下前后 4 面：整 run 邻域条件一致 → 一枚拉伸合并 quad；不一致 → 逐体素回退
+      let above = 0, below = 0, front = 0, back = 0;
       for (let k = i; k < j; k++) {
         const c = row[k];
-        if (!world.has(c.x, c.y + 1, c.z))
+        if (!world.has(c.x, c.y + 1, c.z)) above++;
+        if (!world.has(c.x, c.y - 1, c.z)) below++;
+        if (!world.has(c.x, c.y, c.z + 1)) front++;
+        if (!world.has(c.x, c.y, c.z - 1)) back++;
+      }
+      const skipBottom = rowY === yMin && yMax > yMin; // 全局最低层底面永不可见
+      if (above === runLen)
+        emitFace('py', c0.x, c0.y, c0.z, runLen, color, vs, positions, normals, colors, indices);
+      if (below === runLen && !skipBottom)
+        emitFace('ny', c0.x, c0.y, c0.z, runLen, color, vs, positions, normals, colors, indices);
+      if (front === runLen)
+        emitFace('pz', c0.x, c0.y, c0.z, runLen, color, vs, positions, normals, colors, indices);
+      if (back === runLen)
+        emitFace('nz', c0.x, c0.y, c0.z, runLen, color, vs, positions, normals, colors, indices);
+      for (let k = i; k < j; k++) {
+        const c = row[k];
+        if (above !== runLen && !world.has(c.x, c.y + 1, c.z))
           emitFace('py', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);
-        if (!world.has(c.x, c.y - 1, c.z) && !(rowY === yMin && yMax > yMin))
+        if (below !== runLen && !skipBottom && !world.has(c.x, c.y - 1, c.z))
           emitFace('ny', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);
-        if (!world.has(c.x, c.y, c.z + 1))
+        if (front !== runLen && !world.has(c.x, c.y, c.z + 1))
           emitFace('pz', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);
-        if (!world.has(c.x, c.y, c.z - 1))
+        if (back !== runLen && !world.has(c.x, c.y, c.z - 1))
           emitFace('nz', c.x, c.y, c.z, 1, color, vs, positions, normals, colors, indices);
       }
 

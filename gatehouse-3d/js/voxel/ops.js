@@ -104,7 +104,7 @@ export function eaveTip(w, p) {
   let lastX = cornerX, lastTopY = baseY;
   for (let k = 1; k <= N; k++) {
     const x = cornerX + sign * k;
-    const y = baseY + Math.round(0.12 * k * k);
+    const y = baseY + Math.round(0.15 * k * k);
     const D = Math.max(1, 3 - Math.floor((k - 1) / 4));   // 3→2→1 收尖
     col(x, y, 3, D, k >= N - 1 ? '金·主体' : null);
     lastX = x; lastTopY = y + 2;

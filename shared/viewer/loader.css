@@ -7,7 +7,10 @@
    投影与先行线读作「翻过一页纸」。JS 未跑起来时 2.6s 纯 CSS 兜底自动揭幕。
    ========================================================================== */
 .pt-veil { position: fixed; inset: 0; z-index: 80; overflow: hidden; }
-.pt-veil.gone { display: none; }
+/* 纯 CSS 兜底路径：脚本挂起时兜底揭幕后释放指针拦截，避免无形 veil 永远挡住点击；
+   正常路径由 JS 在揭幕完成后把节点移出 DOM */
+.pt-veil:not(.revealed) { animation: ptVeilRelease 1ms linear 3400ms forwards; }
+@keyframes ptVeilRelease { to { pointer-events: none; } }
 .pt-carriage {
   --veil-overflow: calc(12vw + 11vh);
   --rule-lead: 7vw;

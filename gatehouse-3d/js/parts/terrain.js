@@ -23,27 +23,27 @@ export function build() {
   // ---- 门前甬道：台明正对面的深色铺石 ----
   ops.box(w, 20, 1, 44, 120, 1, 4, '砂岩·暗');
 
-  // ---- 绕门碧水：深潭底 + 碧水面 + 浪花 ----
+  // ---- 绕门碧水：深潭底 + 碧水面 + 浅青浅水环岸 ----
   for (const seg of RIVER.channel) {
     const sx = seg.x[1] - seg.x[0] + 1;
     const sz = seg.z[1] - seg.z[0] + 1;
     ops.box(w, seg.x[0], 0, seg.z[0], sx, 1, sz, RIVER.deep);
     ops.box(w, seg.x[0], 1, seg.z[0], sx, 1, sz, RIVER.surface);
   }
-  // 浪花勾边：每片水域外缘一圈浅色岸沫，勾出清晰岸线
+  // 浅水环：水域外缘一圈浅青，岸线由水色过渡读出（替代硬白勾边）
   for (const seg of RIVER.channel) {
     const sx = seg.x[1] - seg.x[0] + 1;
     const sz = seg.z[1] - seg.z[0] + 1;
-    ops.box(w, seg.x[0], 1, seg.z[0], sx, 1, 1, RIVER.foam);                 // 北缘
-    ops.box(w, seg.x[0], 1, seg.z[1], sx, 1, 1, RIVER.foam);                 // 南缘
-    ops.box(w, seg.x[0], 1, seg.z[0], 1, 1, sz, RIVER.foam);                 // 西缘
-    ops.box(w, seg.x[1], 1, seg.z[0], 1, 1, sz, RIVER.foam);                 // 东缘
+    ops.box(w, seg.x[0] - 1, 1, seg.z[0] - 1, sx + 2, 1, 1, RIVER.shallow);  // 北缘
+    ops.box(w, seg.x[0] - 1, 1, seg.z[1] + 1, sx + 2, 1, 1, RIVER.shallow);  // 南缘
+    ops.box(w, seg.x[0] - 1, 1, seg.z[0], 1, 1, sz, RIVER.shallow);          // 西缘
+    ops.box(w, seg.x[1] + 1, 1, seg.z[0], 1, 1, sz, RIVER.shallow);          // 东缘
   }
-  // 湖面散点波纹：隔 9 石一枚浅色泡点，明暗成纹
+  // 湖面散点波纹：隔 12 石一枚浅色泡点，明暗成纹
   const c0 = RIVER.channel[0];
-  for (let x = c0.x[0] + 4; x <= c0.x[1] - 4; x += 9) {
-    const zf = 52 + ((Math.abs(x) % 18 < 9) ? 2 : -2);
-    ops.box(w, x, 1, zf, 1, 1, 1, RIVER.foam);
+  for (let x = c0.x[0] + 5; x <= c0.x[1] - 5; x += 12) {
+    const zf = 58 + ((Math.abs(x) % 24 < 12) ? 3 : -3);
+    ops.box(w, x, 1, zf, 1, 1, 1, RIVER.ripple);
   }
 
   // ---- 石梁桥：桥面 y1..2 贴水、两翼低栏 ----

@@ -24,9 +24,7 @@ export function runSelftest() {
        `verts=${verts} idx=${idx} quads=${quads}`);
   }
 
-  // #2 合并：相邻同色双盒(X向) — 03 §10 期望 quads==9
-  //   我的实现：6×2 − 2(接触面对消) = 10 quad。差异原因：03 可能额外合并 1 quad
-  //   （如 y/z run 合并），本实现按"只沿 X 合并且只合并 X 端面"实现。报告实际值供 T13 比对裁决。
+  // #2 合并：相邻同色双盒(X向) — 单 run：端盖 2 + 上下前后各合并 1 = 6 quad
   {
     const w = new VoxelWorld();
     ops.box(w, 0, 0, 0, 2, 1, 1, '砂岩·亮');
@@ -34,9 +32,9 @@ export function runSelftest() {
     const verts = g.getAttribute('position').count;
     const idx = g.getIndex().count;
     const quads = idx / 6;
-    ok('#2 合并：相邻同色双盒(X向) quads<=10（接触面对消）',
-       verts === 40 && idx === 60 && quads === 10,
-       `verts=${verts} idx=${idx} quads=${quads} [03期望 9，实际 10；待 T13 裁决]`);
+    ok('#2 合并：相邻同色双盒(X向) quads=6（run 合并）',
+       verts === 24 && idx === 36 && quads === 6,
+       `verts=${verts} idx=${idx} quads=${quads}`);
   }
 
   // #2b 异色双盒(X向) — 03 §10 期望 quads==10
@@ -62,9 +60,9 @@ export function runSelftest() {
     const verts = g.getAttribute('position').count;
     const idx = g.getIndex().count;
     const quads = idx / 6;
-    // 期望：外层 6 × 9 = 54 quad；底面优化后最低层 9 个底面省去 → 45 quad = 180 verts
-    ok('#3 剔除：3³ 同色盒 quads=45 verts=180（底面省去）',
-       verts === 180 && quads === 45,
+    // 期望：端盖 9 行×2=18 + 顶/前/后各 3 枚合并 quad = 27；最低层底面省去
+    ok('#3 剔除：3³ 同色盒 quads=27 verts=108（run 合并+底面省去）',
+       verts === 108 && quads === 27,
        `verts=${verts} idx=${idx} quads=${quads}`);
   }
 

@@ -159,10 +159,15 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setClearColor(BG);
+  // ACES 收高光：绿水青山的亮面不再过曝烧白，整体读作 filmic 山水
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = false; // T19 性能任务再评估是否开启
   root.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
+  // 纸色雾：远山渐次没入暖纸，近实远虚；地平线由雾收边
+  scene.fog = new THREE.Fog(BG, 80, 240);
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
   camera.position.set(...DEFAULT_CAM);
 
@@ -172,10 +177,10 @@ function init() {
   dir.position.set(120, 180, 140);
   scene.add(hemi, dir);
 
-  // 地面：连片绿野圆盘（绿水青山的"大地"），不画网格（graph-paper 观感杂乱）
+  // 地面：连片草绿圆盘（绿水青山的"大地"，与体素地坪同色系），不画网格
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(600, 64),
-    new THREE.MeshLambertMaterial({ color: 0x9cb98b })
+    new THREE.MeshLambertMaterial({ color: 0x79976a })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.02;
@@ -257,10 +262,16 @@ function applyLang() {
 function hideLoader() {
   const l = document.getElementById('loader');
   if (!l || l.classList.contains('revealed')) return;
-  l.classList.add('revealed'); // CSS: 承载层同方向右移揭幕（与首页转场一致）
-  const done = () => l.classList.add('gone');
-  l.addEventListener('transitionend', done, { once: true });
-  setTimeout(done, 900); // 兜底：无 transitionend 时也能移除
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    // 与首页纸面翻页读时对齐：纸面停留不足 1s 只像闪一下，读不出翻页
+    const wait = Math.max(0, 1000 - performance.now());
+    setTimeout(() => {
+      l.classList.add('revealed'); // CSS: 承载层同方向右移揭幕（与首页转场一致）
+      const done = () => l.remove();
+      l.addEventListener('transitionend', done, { once: true });
+      setTimeout(done, 900); // 兜底：无 transitionend 时也移除
+    }, wait);
+  }));
 }
 
 // ---------- selftest ----------

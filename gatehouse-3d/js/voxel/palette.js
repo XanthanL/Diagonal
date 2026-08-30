@@ -4,8 +4,8 @@
 import * as THREE from 'three';
 
 export const PALETTE = Object.freeze({
-  1:  { name: '瓦·暗垄',       hex: '#55565a' },
-  2:  { name: '瓦·亮垄',       hex: '#6b6e6a' },
+  1:  { name: '瓦·暗垄',       hex: '#5f636b' },
+  2:  { name: '瓦·亮垄',       hex: '#7a8087' },
   3:  { name: '黑漆·主体',     hex: '#211d1b' },
   4:  { name: '黑漆·受光',     hex: '#332c28' },
   5:  { name: '金·主体',       hex: '#c9a13b' },
@@ -31,7 +31,7 @@ export const PALETTE = Object.freeze({
   24: { name: '青翠',           hex: '#a8c98a' },
   25: { name: '岩影',           hex: '#6b7a72' },
   // —— 自然 · 绿水 ——
-  26: { name: '碧水',           hex: '#4fb0b8' },
+  26: { name: '碧水',           hex: '#3fa3ad' },
   27: { name: '深潭',           hex: '#2b6f86' },
   28: { name: '浪花',           hex: '#cfeceb' },
   29: { name: '云雾',           hex: '#dfe7e6' },

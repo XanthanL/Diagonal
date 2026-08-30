@@ -567,10 +567,14 @@ function init() {
   const loaderEl = document.getElementById('loader');
   if (loaderEl) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      loaderEl.classList.add('revealed');
-      const done = () => loaderEl.classList.add('gone');
-      loaderEl.addEventListener('transitionend', done, { once: true });
-      setTimeout(done, 900); // 兜底
+      // 与首页纸面翻页读时对齐：纸面停留不足 1s 只像闪一下，读不出翻页
+      const wait = Math.max(0, 1000 - performance.now());
+      setTimeout(() => {
+        loaderEl.classList.add('revealed');
+        const done = () => loaderEl.remove();
+        loaderEl.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, 900); // 兜底
+      }, wait);
     }));
   }
 }
