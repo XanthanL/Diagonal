@@ -563,12 +563,14 @@ function init() {
   window.addEventListener('resize', onResize);
   animate();
 
-  // 首帧渲染完成后隐去加载遮罩（双 rAF 确保场景已实际绘制一帧）
+  // 首帧渲染完成后揭幕：纸面同方向右移（与首页转场一致），双 rAF 确保场景已实际绘制一帧
   const loaderEl = document.getElementById('loader');
   if (loaderEl) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      loaderEl.classList.add('hidden');
-      loaderEl.addEventListener('transitionend', () => loaderEl.remove(), { once: true });
+      loaderEl.classList.add('revealed');
+      const done = () => loaderEl.classList.add('gone');
+      loaderEl.addEventListener('transitionend', done, { once: true });
+      setTimeout(done, 900); // 兜底
     }));
   }
 }

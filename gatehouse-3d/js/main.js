@@ -256,9 +256,11 @@ function applyLang() {
 
 function hideLoader() {
   const l = document.getElementById('loader');
-  if (!l) return;
-  l.classList.add('hidden'); // CSS: #loader.hidden { opacity:0; pointer-events:none }
-  l.addEventListener('transitionend', () => l.remove(), { once: true });
+  if (!l || l.classList.contains('revealed')) return;
+  l.classList.add('revealed'); // CSS: 承载层同方向右移揭幕（与首页转场一致）
+  const done = () => l.classList.add('gone');
+  l.addEventListener('transitionend', done, { once: true });
+  setTimeout(done, 900); // 兜底：无 transitionend 时也能移除
 }
 
 // ---------- selftest ----------
