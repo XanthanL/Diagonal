@@ -35,19 +35,22 @@ export const PARTS = [
     cam: [-9, 5, 16], target: [0, 0.9, 2],
     principle:
       '台基是一条整石：暗色台身托起一圈亮色压顶，压顶四周外突一格，读作一条檐口线。' +
-      '台面周圈两道矮栏，正对门洞开缺；缺口中是三级实砌踏道，再外是一块阶前地平石。',
+      '台面周圈两道矮栏，正对门洞开缺；缺口中是三级实砌踏道，再外是一块阶前地平石。' +
+      '缺口两侧各蹲一只石狮守门，砂岩两阶分体量。',
     principleEn:
       'The terrace is one stone bed: a dark body under a bright coping that projects one voxel all round, ' +
       'reading as a single cornice line. A low balustrade rings the deck and stops before the doorway, ' +
-      'where three solid flights step down onto an apron slab.',
+      'where three solid flights step down onto an apron slab. A pair of stone lions crouches ' +
+      'either side of the gap, massed in two sandstone tones.',
     reaction: {
-      zh: ['压顶外突一格 → 侧看是一条线，不是一摞盒子', '栏板在踏道处断开，缺口自己说话', '踏道实砌，所以永不悬空'],
+      zh: ['压顶外突一格 → 侧看是一条线，不是一摞盒子', '栏板在踏道处断开，缺口自己说话', '踏道实砌，所以永不悬空', '石狮面门一枚暗点、背上一卷尾——抽象蹲踞，不做鬃毛'],
       en: ['Coping projects one voxel — a line from the side, not a stack of boxes',
            'Balustrade breaks at the stair; the gap speaks for itself',
-           'Solid-built flights, so nothing floats'],
+           'Solid-built flights, so nothing floats',
+           'One dark dot for the face, one curl for the tail — an abstract crouch, no mane'],
     },
-    params: ['台明高 ≈0.8 m（4 vx）', '台面 94 × 35 vx', '踏道 3 级'],
-    paramsEn: ['Plinth ≈0.8 m (4 vx)', 'Deck 94 × 35 vx', 'Flights: 3'],
+    params: ['台明高 ≈0.8 m（4 vx）', '台面 94 × 35 vx', '踏道 3 级', '石狮一对 ≈2.2 m（11 vx）'],
+    paramsEn: ['Plinth ≈0.8 m (4 vx)', 'Deck 94 × 35 vx', 'Flights: 3', 'Stone lions ≈2.2 m (11 vx)'],
   },
   {
     id: 'gate', index: 2,
@@ -90,8 +93,8 @@ export const PARTS = [
            'The roof curve is control-point interpolation — 1-voxel micro-steps read as a smooth surface',
            'A dark rafter course rings the eave edge; the big faces stay clean'],
     },
-    params: ['半跨 47 → 34 → 22 vx', '翘角段数 4 → 3 → 2', '檐口高 7.2 → 13.2 → 17.4 m'],
-    paramsEn: ['Half-spans 47 → 34 → 22 vx', 'Horn segments 4 → 3 → 2', 'Eave heads 7.2 → 13.2 → 17.4 m'],
+    params: ['半跨 47 → 34 → 22 vx', '翘角段数 5 → 4 → 2', '檐口高 7.2 → 13.2 → 17.4 m'],
+    paramsEn: ['Half-spans 47 → 34 → 22 vx', 'Horn segments 5 → 4 → 2', 'Eave heads 7.2 → 13.2 → 17.4 m'],
   },
   {
     id: 'crown', index: 4,
@@ -107,13 +110,14 @@ export const PARTS = [
       'to a point; the last segment is gilt and the tip a single spark. The crown is two thin caps, ' +
       'a gilded collar and one spark — a roof ends either as a line or as a point.',
     reaction: {
-      zh: ['金 + 灵光 < 1% 画面占比，所以两点就够跳', '冠尖与末段同行起 —— 为的是 6-连通不悬空', '板状尾、平伸不出挑、末端不尖：出现即判不合格'],
+      zh: ['金 + 灵光 < 1% 画面占比，所以两点就够跳', '冠尖与末段同行起 —— 为的是 6-连通不悬空', '板状尾、平伸不出挑、末端不尖：出现即判不合格', '正脊两端微微上翻收住——吻饰读作脊线收头，不是挂件'],
       en: ['Gold plus spark stay under 1% of the frame, so two touches carry it',
            'The finial starts on the last segment’s row — six-connectivity, no floating',
-           'Flat tails, straight projections, blunt tips: any of these fails the model'],
+           'Flat tails, straight projections, blunt tips: any of these fails the model',
+           'The ridge ends flip up slightly to finish — ridge kisses read as line endings, not appliqués'],
     },
-    params: ['翘角轨迹 y = base + round(0.25k²)', '冠部 4 级 / 通高至 99 vx', '金 + 灵光占比 < 1%'],
-    paramsEn: ['Horn curve y = base + round(0.25k²)', 'Crown: 4 courses up to vx 99', 'Gold + spark < 1% of frame'],
+    params: ['翘角轨迹 y = base + round(0.35k²)', '冠部 4 级 / 通高至 99 vx', '金 + 灵光占比 < 1%'],
+    paramsEn: ['Horn curve y = base + round(0.35k²)', 'Crown: 4 courses up to vx 99', 'Gold + spark < 1% of frame'],
   },
   {
     id: 'water', index: 5,

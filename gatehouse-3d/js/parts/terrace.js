@@ -1,5 +1,6 @@
 // Part: 台基 · 踏道 —— 门楼唯一的石作基座（砂岩两层：暗体亮面，正面对门洞开缺）
 import { VoxelWorld, ops } from '../voxel/builder.js';
+import { stoneLion } from '../voxel/ops.js';
 import { TERRACE } from '../spec.js';
 
 /** 沿 X 画一道横栏，中间留出 [gapX0, gapX1] 的开口 */
@@ -36,5 +37,9 @@ export default function build() {
   // 阶前地平石
   ops.box(w, APRON.x[0], 0, APRON.z[0], APRON.x[1] - APRON.x[0] + 1, 1,
           APRON.z[1] - APRON.z[0] + 1, '砂岩·亮');
+
+  // 门前石狮一对：贴踏道缺口两侧守门洞（左狮 + 逐体素镜像右狮）
+  stoneLion(w);
+  stoneLion(w, { mirror: true });
   return w;
 }

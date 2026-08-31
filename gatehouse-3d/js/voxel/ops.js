@@ -2,7 +2,7 @@
 // 只对着 docs/STYLE.md 写：轴对齐长方体堆叠、横向长条为基本笔触、纯追加可链式、同输入两次一致。
 // 镜像轴 x → 117 - x（CX=59）。翘角语汇见 STYLE §四，是本文唯一不可改动的造型公式。
 import { ops } from './builder.js';
-import { MIRROR, CROWN, SCULPT } from '../spec.js';
+import { MIRROR, CROWN, SCULPT, LION } from '../spec.js';
 
 const box = ops.box;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -73,9 +73,10 @@ export function roofSlab(w, p) {
 }
 
 /**
- * 长牛角翘角（STYLE §四）：自角端向外 N 段挑出，轨迹 y = baseY + round(hornRise·k²)
+ * 长牛角翘角（STYLE §四）：自角端向外 N 段挑出，轨迹取 round(hornRise·k²) 的累计增量，
+ * 相邻段高差夹在 [1, hornH-1] —— 必共享整行才 6-连通接地（高差 ≥ 段高即悬空）。
  * 先缓后陡，深度 3→2→1 收尖，末段金身、顶端一枚灵光冠尖。
- * 每段高 3 格且与左邻共享整行 → 6-连通接地。金只留给末段：多段金身读作金梯子。
+ * 金只留给末段：多段金身读作金梯子。
  */
 export function eaveTip(w, p) {
   const { cx, halfW, yTop, rise, dir, z1 } = p;
@@ -85,10 +86,14 @@ export function eaveTip(w, p) {
   const baseY = yTop + rise - 1;
   const N = p.horn;
   const H = SCULPT.hornH;
-  let lastX = cornerX, lastTop = baseY + H - 1;
+  const raw = (k) => Math.round(SCULPT.hornRise * k * k);
+  let lastX = cornerX, lastTop = baseY + H - 1, y = baseY;
   for (let k = 1; k <= N; k++) {
+    if (k > 1) {
+      const dy = raw(k) - raw(k - 1);
+      y += clamp(dy, 1, H - 1);
+    }
     const x = cornerX + sign * k;
-    const y = baseY + Math.round(SCULPT.hornRise * k * k);
     const D = Math.max(1, SCULPT.hornD0 - Math.floor(((k - 1) * SCULPT.hornD0) / N));
     const zs = z1 - D + 1;                       // 各段同贴檐口前皮 → 平面收成一枚楔尖
     if (k === N) box(w, x, y, zs, 1, H, D, '金·主体');
@@ -161,13 +166,33 @@ export function lattice(w, p) {
 // ---------------------------------------------------------------- 顶
 /** 攒尖式顶：三级收分 → 金领 → 一枚灵光（顶收成一个尖，不是一摞白盒） */
 export function crownTop(w) {
-  const { CAP1, CAP2, COLLAR, SPIKE } = CROWN;
+  const { CAP1, CAP2, COLLAR, SPIKE, KISS } = CROWN;
   const put = (b, c) => box(w, b.x[0], b.y[0], b.z[0],
     b.x[1] - b.x[0] + 1, b.y[1] - b.y[0] + 1, b.z[1] - b.z[0] + 1, c);
   put(CAP1, '瓦·亮垄');
+  // 脊端吻饰：CAP1 两端顶上一枚上翻收头（左半区间 + 镜像），正脊线在端部微微翘起收住
+  const kw = KISS.x[1] - KISS.x[0] + 1;
+  for (const [a, b] of sym(KISS.x[0], kw)) {
+    box(w, a, KISS.y[0], KISS.z[0], b - a + 1, KISS.y[1] - KISS.y[0] + 1,
+        KISS.z[1] - KISS.z[0] + 1, '灰塑·亮');
+  }
   put(CAP2, '瓦·暗垄');
   put(COLLAR, '金·主体');
   put(SPIKE, '灵光');
+  return w;
+}
+
+/**
+ * 石狮（抽象蹲踞）：按 spec.LION 部件清单逐块砌；mirror 时 x 区间逐体素 MIRROR。
+ * 底坐 y=0 接地（6-连通）；砂岩两阶分体量，面门一枚暗点、背上一卷尾 —— 守门洞的一对。
+ */
+export function stoneLion(w, p = {}) {
+  const mirror = !!p.mirror;
+  for (const q of LION.parts) {
+    const a = mirror ? MIRROR(q.x[1]) : q.x[0];
+    const b = mirror ? MIRROR(q.x[0]) : q.x[1];
+    box(w, a, q.y[0], q.z[0], b - a + 1, q.y[1] - q.y[0] + 1, q.z[1] - q.z[0] + 1, q.c);
+  }
   return w;
 }
 
@@ -192,5 +217,5 @@ export function mountainScreen(w, p) {
 export default {
   sym, interpolateCols, roofSlab, eaveTip, eaveTier,
   wallWithOpening, colonnade, blankPlaque, lattice,
-  crownTop, mountainScreen,
+  crownTop, stoneLion, mountainScreen,
 };
