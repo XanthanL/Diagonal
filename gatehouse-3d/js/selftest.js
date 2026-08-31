@@ -1,11 +1,11 @@
-// 体素生成核心库自检（门楼（架空）· T4 交付）
-// builder 单元断言 + 几何/预算全局断言（见 docs/DESIGN.md）
-// 输出结构：每条 { name, pass, detail? }；全部通过 → selftests=9/9
+// 体素生成核心库自检（门楼（架空））
+// builder 单元断言 + 对着 docs/STYLE.md 判据的几何/预算全局断言
+// 输出结构：每条 { name, pass, detail? }；?selftest 模式下全绿才算交付（STYLE §五）
 import { PALETTE, TOTAL_COLORS, COLORS, COLORS_BY_NAME, NAME_TO_INDEX, getIndex, getColor }
   from './voxel/palette.js';
 import { VoxelWorld, ops, buildPartMesh } from './voxel/builder.js';
-import { buildAllWorlds, buildMergedWorld } from './parts/index.js';
-import { GRID, TIERS, CROWN } from './spec.js';
+import { buildAllWorlds, buildMergedWorld, TERRAIN_IDS } from './parts/index.js';
+import { GRID, TIERS, CROWN, CX, CZ, MIRROR } from './spec.js';
 
 export function runSelftest() {
   const r = [];
@@ -37,7 +37,7 @@ export function runSelftest() {
        `verts=${verts} idx=${idx} quads=${quads}`);
   }
 
-  // #2b 异色双盒(X向) — 03 §10 期望 quads==10
+  // #2b 异色双盒(X向) — 异色不合并，期望 quads==10
   {
     const w = new VoxelWorld();
     ops.box(w, 0, 0, 0, 1, 1, 1, '金·主体');
@@ -132,7 +132,7 @@ export function runSelftest() {
        `count ${w.count()}→${m.count()}; (-1,0,0)=${m.has(-1,0,0)} (-3,0,0)=${m.has(-3,0,0)} (0,0,0)=${m.has(0,0,0)}`);
   }
 
-  // #9 palette 闭环：30 色 + 名称/编号双向索引 + THREE.Color 预计算
+  // #9 palette 闭环：23 色 + 名称/编号双向索引 + THREE.Color 预计算
   {
     const allColors = Object.values(COLORS);
     const allValid = allColors.every(c => c && typeof c.r === 'number' && c.r >= 0 && c.r <= 1);
@@ -142,23 +142,25 @@ export function runSelftest() {
       for (const [k, v] of Object.entries(PALETTE)) if (k !== '5' || v.name !== '金·主体') return false;
       return true;
     })();
-    ok('#9 palette 闭环：30 色 + 双向索引 + 预计算 Color',
-       TOTAL_COLORS === 30 && allColors.length === 30 && allValid && dup && nameIdx,
+    ok('#9 palette 闭环：23 色 + 双向索引 + 预计算 Color',
+       TOTAL_COLORS === 23 && allColors.length === 23 && allValid && dup && nameIdx,
        `TOTAL=${TOTAL_COLORS} allValid=${allValid} name→5=${nameIdx}`);
   }
 
-  // ===== 几何断言（重构新增）=====
-  // 原 10 条全是 builder 单元测试，对"真实模型长什么样"零覆盖 —— 这正是模型悄悄跑偏却全绿的原因。
+  // ===== 几何断言（对着 docs/STYLE.md 的判据）=====
+  // builder 单元测试对"模型长什么样"零覆盖 —— 这正是模型悄悄跑偏却全绿的原因。
   const worlds = buildAllWorlds();
 
-  // #10 总包围盒（03 §10 #6 契约）——只度量建筑本体，山水地形 Part 越界不计
+  // #10 总包围盒：只度量建筑本体（山水地形越界不计）
   {
-    const m = buildMergedWorld(['terrain']);
+    const m = buildMergedWorld(TERRAIN_IDS);
     const bb = m.bbox();
-    const okBox = !!bb && bb.min[0] === 0 && bb.max[0] === GRID.W - 1
-      && bb.min[1] === 0 && bb.max[1] === CROWN.TOP - 1
-      && bb.min[2] >= 0 && bb.max[2] < GRID.D;
-    ok('#10 几何·总包围盒 x[0,159] y[0,117] z⊂[0,44)', okBox,
+    const okBox = !!bb
+      && bb.min[1] === 0 && bb.max[1] === CROWN.TOP - 1        // 接地 → 灵光收口
+      && bb.min[0] + bb.max[0] === 2 * CX - 1                  // 左右严格对称
+      && bb.min[0] >= 0 && bb.max[0] < GRID.W                  // 落在面宽网格内
+      && bb.min[2] >= 0 && bb.max[2] < GRID.D;                 // 落在进深网格内
+    ok('#10 几何·总包围盒：接地/到顶/左右对称/不出网格', okBox,
       bb ? `x[${bb.min[0]},${bb.max[0]}] y[${bb.min[1]},${bb.max[1]}] z[${bb.min[2]},${bb.max[2]}]` : 'null');
   }
 
@@ -184,7 +186,7 @@ export function runSelftest() {
       }
     }
     const floating = m.count() - seen.size;
-    // 悬空格样本（定位用）：按 y 分组，报出最高/最低各 3 例
+    // 悬空格样本（定位用）：报出最高/最低各若干例
     const samples = [];
     for (const [x, y, z] of m.entries()) {
       if (!seen.has(x + ',' + y + ',' + z)) { samples.push([x, y, z]); if (samples.length > 4000) break; }
@@ -197,17 +199,17 @@ export function runSelftest() {
       `total=${m.count()} reachable=${seen.size} floating=${floating}${brief}`);
   }
 
-  // #12 四重檐宽度严格递减 + 各层檐带顶缘在中轴处有体素
+  // #12 三重檐：半跨严格递减 + 每层檐带顶缘在中轴处确有体素
   {
-    const widths = TIERS.map((t) => 2 * t.eave.halfW);
+    const widths = TIERS.map((t) => t.halfW);
     const decreasing = widths.every((v, i) => i === 0 || v < widths[i - 1]);
-    const m = buildMergedWorld();
-    const tops = TIERS.map((t) => m.has(80, t.eave.yTop, 20));
-    ok('#12 几何·四重檐宽度递减 + 各层顶缘有体素', decreasing && tops.every(Boolean),
-      `widths=${widths.join('>')} tops=${tops.map((c) => (c ? 1 : 0)).join('')}`);
+    const m = buildMergedWorld(TERRAIN_IDS);
+    const tops = TIERS.map((t) => m.has(CX, t.yTop, CZ));
+    ok('#12 几何·三重檐宽度递减 + 中轴檐顶有体素', decreasing && tops.every(Boolean),
+      `halfW=${widths.join('>')} tops=${tops.map((c) => (c ? 1 : 0)).join('')}`);
   }
 
-  // #13 三角形预算（DESIGN：≤340k，含山水场景）
+  // #13 三角形预算（STYLE §五：≤340k，含山水）
   {
     let tris = 0;
     for (const { world } of worlds) tris += buildPartMesh(world).getIndex().count / 3;
@@ -228,6 +230,26 @@ export function runSelftest() {
     }
     ok('#14 几何·跨 Part 无体素重叠（防 z-fighting）', dup === 0,
       dup ? `overlap=${dup} e.g. ${firstPair}` : 'clean');
+  }
+
+  // #15 对称契约：建筑本体占位关于 x=58.5 镜像（破对称只留给山水，STYLE §二.4）
+  {
+    const m = buildMergedWorld(TERRAIN_IDS);
+    let bad = 0;
+    let sample = '';
+    for (const [x, y, z] of m.entries()) {
+      if (!m.has(MIRROR(x), y, z)) { bad++; if (!sample) sample = `(${x},${y},${z})`; }
+    }
+    ok('#15 几何·建筑本体左右镜像对称', bad === 0, bad ? `破对称 ${bad} 格 e.g. ${sample}` : 'clean');
+  }
+
+  // #16 山色纪律：山 Part 只许 黛绿/松绿/岩影（§三 明度分层是唯一空间线索）
+  {
+    const hills = worlds.find((w) => w.id === 'hills');
+    const allowed = [getIndex('黛绿'), getIndex('松绿'), getIndex('岩影')];
+    const used = hills ? hills.world.usedIndices() : [];
+    const okSet = used.length > 0 && used.every((i) => allowed.includes(i));
+    ok('#16 山色纪律：hills usedIndices ⊆ {黛绿,松绿,岩影}', okSet, `used=[${used.join(',')}]`);
   }
 
   return r;

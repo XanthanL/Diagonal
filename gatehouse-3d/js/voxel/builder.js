@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { getIndex, COLORS } from './palette.js';
 
 // ========== VoxelWorld ==========
-// 内部 Map<"x,y,z", paletteIndex(1..20)>；外部用 set/get/has/delete/entries。
+// 内部 Map<"x,y,z", paletteIndex(1..23)>；外部用 set/get/has/delete/entries。
 // 关键不变量：键是整数串，颜色索引合法（同 palette.js set 阶段已 throw 拦截）。
 export class VoxelWorld {
   constructor() {
@@ -89,14 +89,15 @@ const C = {
   C001: [0, 0, 1], C101: [1, 0, 1], C011: [0, 1, 1], C111: [1, 1, 1],
 };
 const FACES = {
-  px: { n: [ 1, 0, 0], c: [C.C100, C.C101, C.C111, C.C110] },  // +X 朝外
-  nx: { n: [-1, 0, 0], c: [C.C001, C.C000, C.C010, C.C011] },  // -X 朝外
-  // 下方四面的角点序按「从面外侧看为逆时针」排列（THREE FrontSide 约定）。
-  // 历史上 py/ny/pz/nz 与 px/nx 约定相反，导致顶面/前面被背面剔除、模型呈纸片感——已修正。
+  // 不变量：从面外看角点逆时针，即 cross(v1-v0, v2-v0) === n。
+  // 若绕序反了，FrontSide 会剔掉真面；实心盒会透出对面掩盖问题，
+  // 但台阶立面这类「对面被占用、自身是唯一外表面」的面会成洞（桥拱曾因此露出地纸色横带）。
+  px: { n: [ 1, 0, 0], c: [C.C100, C.C110, C.C111, C.C101] },  // +X 朝外
+  nx: { n: [-1, 0, 0], c: [C.C000, C.C001, C.C011, C.C010] },  // -X 朝外
   py: { n: [ 0, 1, 0], c: [C.C010, C.C011, C.C111, C.C110] },  // +Y 顶
-  ny: { n: [ 0,-1, 0], c: [C.C000, C.C001, C.C101, C.C100] },  // -Y 底
-  pz: { n: [ 0, 0, 1], c: [C.C001, C.C011, C.C111, C.C101] },  // +Z 前
-  nz: { n: [ 0, 0,-1], c: [C.C000, C.C100, C.C110, C.C010] },  // -Z 后
+  ny: { n: [ 0,-1, 0], c: [C.C000, C.C100, C.C101, C.C001] },  // -Y 底
+  pz: { n: [ 0, 0, 1], c: [C.C001, C.C101, C.C111, C.C011] },  // +Z 前
+  nz: { n: [ 0, 0,-1], c: [C.C000, C.C010, C.C110, C.C100] },  // -Z 后
 };
 // faceKey 在 run 合并时：上下前后四面的 x∈[0,1] 拉伸到 x∈[0,sx]（面平面含 X 轴）；
 // px/nx 端盖不拉伸（面平面垂直 X 轴，只贴在 run 两端）。

@@ -1,13 +1,14 @@
-// 门楼（架空）· 体素解构（中英双语）
-// T3 脚手架：空场景 + 相机 + 灯光 + 地面 + UI 绑定 + selftest 钩子。
-// T4 接入：selftest.js 8+1 项断言（palette/builder 闭环）。
-// T5 接入：PARTS 装配（占位体素）+ 侧栏导览 + 信息面板 + 双语切换。
+// 门楼（架空）· The Gatehouse —— 查看器外壳（中英双语）
+// 场景 = parts/* 生成的 6 个体素 Part 装配成一个 model；判据 docs/STYLE.md，尺寸 js/spec.js。
+// 本文件只管：渲染器/相机/灯光/地面/导览/信息面板/双语/载入揭幕/?selftest 钩子。
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { runSelftest, summarizeSelftest } from './selftest.js';
 import { PARTS, I18N } from './data.js';
 import { buildPartMesh } from './voxel/builder.js';
-// 每个 Part 一个生成模块（parts/）；尺寸统一取自 spec.js（设定见 docs/DESIGN.md）
+import { getColor } from './voxel/palette.js';
+import { CX, CZ, GRID } from './spec.js';
+// 每个 Part 一个生成模块（parts/）；全部尺寸取自 spec.js，判据取自 docs/STYLE.md
 import { PART_BUILDERS } from './parts/index.js';
 
 // 自检钩子（?selftest）：捕获运行时错误，便于无头浏览器断言验收
@@ -24,17 +25,17 @@ window.addEventListener('unhandledrejection', (e) => __recordErr('promise:' + (e
 
 // ---------- 常量与状态 ----------
 const BG = 0xfaFAF8; // diagonal 设计系统暖纸底
-const DEFAULT_CAM = [18, 26, 68]; // P0 总览锚点（T21 山水全景；原 [36,62,235] 为纯建筑构图）
-const DEFAULT_TGT = [0, 9, 0];
+const DEFAULT_CAM = PARTS[0].cam;   // 总览锚点随 data.js 走，避免两处数字
+const DEFAULT_TGT = PARTS[0].target;
 const state = { lang: 'zh' };
 
 let scene, camera, renderer, controls, clock;
 const modelGroup = new THREE.Group();
 modelGroup.name = 'model';
 const partGroups = [];        // 与 PARTS 顺序对应（overview 无实体 → null 占位）
-const VX = 0.2;               // 1 vx = 0.2 m（118 vx ≈ 23.6 m）
+const VX = GRID.VX;           // 1 vx = 0.2 m（100 vx 通高 = 20 m）
 
-// ---------- 装配（T5 骨架 / 重构版接 parts/*） ----------
+// ---------- 装配 ----------
 function assemble() {
   for (const p of PARTS) {
     let group = null;
@@ -49,8 +50,8 @@ function assemble() {
       group = new THREE.Group();
       group.name = 'part-' + p.id;
       group.add(mesh);
-      // 体素 x∈[0,160]、中轴 80 → 平移使中轴落在世界 x=0
-      group.position.set(-80 * VX, 0, -22 * VX);
+      // 体素对称面在 x=58.5/59 之间、进深中心 21 → 平移使中轴落在世界 x=0
+      group.position.set(-(CX - 0.5) * VX, 0, -CZ * VX);
       modelGroup.add(group);
     }
     partGroups.push(group);
@@ -74,9 +75,9 @@ function showInfo(part) {
   set('ip-name', zh ? part.name : part.nameEn);
   set('ip-sub', zh ? part.subtitle : part.subtitleEn);
   set('ip-principle', zh ? part.principle : part.principleEn);
+  set('ip-title', zh ? I18N.principleTitle.zh : I18N.principleTitle.en);
   set('ip-reaction-title', zh ? I18N.reactionTitle.zh : I18N.reactionTitle.en);
   set('ip-params-title', zh ? I18N.paramsTitle.zh : I18N.paramsTitle.en);
-  set('ip-equip-title', zh ? I18N.equipTitle.zh : I18N.equipTitle.en);
   const rx = document.getElementById('ip-reaction');
   if (rx) {
     rx.innerHTML = '';
@@ -162,12 +163,12 @@ function init() {
   // ACES 收高光：绿水青山的亮面不再过曝烧白，整体读作 filmic 山水
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.enabled = false; // T19 性能任务再评估是否开启
+  renderer.shadowMap.enabled = false;   // 无阴影：明度分层只靠顶点色与灯光（STYLE §一）
   root.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
-  // 纸色雾：远山渐次没入暖纸，近实远虚；地平线由雾收边
-  scene.fog = new THREE.Fog(BG, 80, 240);
+  // 纸色雾：远山渐次没入暖纸，近实远虚；地平线由雾收边（判据 STYLE §一）
+  scene.fog = new THREE.Fog(BG, 50, 170);
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
   camera.position.set(...DEFAULT_CAM);
 
@@ -177,13 +178,14 @@ function init() {
   dir.position.set(120, 180, 140);
   scene.add(hemi, dir);
 
-  // 地面：连片草绿圆盘（绿水青山的"大地"，与体素地坪同色系），不画网格
+  // 地 = 纸：这一片圆盘就是地坪（体素不再铺地坪，直边与双色接缝随之一并消失）。
+  // 取色板 苔绿（与体素同一 sRGB→linear 管线）；顶面高度 0.19 m 恰在水体素顶面 0.2 m 之下。
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(600, 64),
-    new THREE.MeshLambertMaterial({ color: 0x79976a })
+    new THREE.MeshLambertMaterial({ color: getColor('苔绿').clone() })
   );
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.02;
+  ground.position.y = VX * 0.95;
   scene.add(ground);
 
   scene.add(modelGroup);
@@ -211,7 +213,6 @@ function init() {
   }
   renderer.setAnimationLoop(tick);
   hideLoader();
-  if (SELFTEST) runSelftest();
 }
 
 function onResize() {
@@ -237,7 +238,7 @@ function bindUI() {
       camera.position.set(...DEFAULT_CAM);
       controls.target.set(...DEFAULT_TGT);
     });
-  // T14/T15 接管：动画与自动导览（当前为占位）
+  // 动画与自动导览：暂为占位按钮
   if (btnPlay) btnPlay.addEventListener('click', () => {});
   if (btnTour) btnTour.addEventListener('click', () => {});
   if (btnLang)
@@ -250,7 +251,7 @@ function bindUI() {
     });
 }
 
-// T5 起由 data.js 的 I18N 驱动
+// 语言切换文案由 data.js 的 I18N 驱动
 function applyLang() {
   const zh = state.lang === 'zh';
   const el = document.getElementById('side-title');
@@ -275,29 +276,6 @@ function hideLoader() {
 }
 
 // ---------- selftest ----------
-function runDiag() {
-  const d = document.getElementById('diag');
-  const checks = [];
-  checks.push(['renderer', renderer instanceof THREE.WebGLRenderer]);
-  checks.push(['scene', scene instanceof THREE.Scene]);
-  checks.push(['modelGroup', modelGroup.name === 'model']);
-  checks.push(['controls', !!controls]);
-  const built = partGroups.filter(Boolean).length;
-  checks.push(['parts:1', built === PARTS.length - 1]);   // overview 无实体，其余 8 个必须全部装配
-  const ok = checks.every(([, v]) => v);
-  const msg =
-    (ok ? 'SELFTEST-OK' : 'SELFTEST-FAIL') +
-    ' three=' + THREE.REVISION +
-    ' errs=' + window.__errs.length +
-    ' parts:' + built +
-    ' | ' + checks.map(([k, v]) => k + ':' + (v ? 1 : 0)).join(',');
-  if (d) {
-    d.removeAttribute('hidden');
-    d.textContent = window.__errs.length ? 'ERR:' + window.__errs.join(' ; ') : msg;
-  }
-  console.info('[selftest:diag]', msg);
-}
-
 function runSelftestSuite() {
   const d = document.getElementById('diag');
   let results;
