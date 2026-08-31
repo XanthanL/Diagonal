@@ -32,9 +32,9 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
             <h1 className="text-5xl md:text-7xl font-black uppercase italic">{localized.title}</h1>
           </div>
           <div className="md:col-span-4 space-y-4 border-l border-white/10 pl-6">
-            <div className="archive-text text-[10px] opacity-40 uppercase">{t(lang, "investigator")}</div>
+            <div className="archive-text text-[10px] opacity-60 uppercase">{t(lang, "investigator")}</div>
             <div className="text-lg font-bold italic">{localized.author}</div>
-            <div className="archive-text text-[10px] opacity-40 uppercase pt-2">{t(lang, "timeline")}</div>
+            <div className="archive-text text-[10px] opacity-60 uppercase pt-2">{t(lang, "timeline")}</div>
             <div className="text-lg font-bold italic">{localized.date}</div>
           </div>
         </header>

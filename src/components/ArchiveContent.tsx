@@ -21,11 +21,13 @@ function enhanceImages(html: string): string {
   let index = 0;
   return html.replace(/<img\b([^>]*?)\/?>/gi, (match, attrs: string) => {
     const isFirst = index++ === 0;
-    if (/srcset=/i.test(attrs)) return match;
+    // 缺 alt 的正文图补空 alt：宁可标记为装饰，也不让读屏朗读文件名
+    if (!/alt=/i.test(attrs)) attrs += ' alt=""';
+    if (/srcset=/i.test(attrs)) return `<img${attrs} />`;
     const srcMatch = attrs.match(/src="([^"]+)"/i);
-    if (!srcMatch) return match;
+    if (!srcMatch) return `<img${attrs} />`;
     const srcSet = getLocalSrcSet(decodeURI(srcMatch[1]));
-    if (!srcSet) return match;
+    if (!srcSet) return `<img${attrs} />`;
     // 首图通常是封面/LCP，不懒加载且提高优先级；其余懒加载
     const loading = /loading=/i.test(attrs)
       ? ""

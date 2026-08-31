@@ -28,7 +28,7 @@ export function ArtistsIndexClient() {
         <header className="mb-24 space-y-6">
           <Link
             href={getLocalizedUrl("/")}
-            className="archive-text text-[10px] opacity-50 hover:opacity-100 transition-opacity flex items-center gap-2 group w-fit"
+            className="archive-text text-[10px] opacity-65 hover:opacity-100 transition-opacity flex items-center gap-2 group w-fit"
           >
             <span className="group-hover:-translate-x-2 transition-transform">←</span>
             {lang === "zh" ? "返回首页" : "BACK_HOME"}
@@ -43,7 +43,7 @@ export function ArtistsIndexClient() {
             <span className="block text-6xl md:text-8xl">
               {lang === "zh" ? "艺术家" : "Artists"}
             </span>
-            <span className="block text-2xl md:text-4xl opacity-40 italic font-medium mt-4">
+            <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
               {lang === "en" ? "艺术家" : "Artists"}
             </span>
           </h1>
@@ -83,13 +83,13 @@ export function ArtistsIndexClient() {
                       href={getLocalizedUrl(`/artists/${artist.slug}`)}
                       className="group block border-t border-black/10 pt-6 hover:border-black transition-colors"
                     >
-                      <div className="archive-text text-[10px] opacity-40 mb-2">
+                      <div className="archive-text text-[10px] opacity-65 mb-2">
                         {lang === "zh" ? artist.roleEn : artist.role}
                       </div>
                       <h3 className="text-2xl font-bold tracking-tight group-hover:underline underline-offset-8 decoration-2">
                         {lang === "zh" ? artist.name : artist.nameEn}
                       </h3>
-                      <p className="text-sm opacity-50 italic font-serif mt-1">
+                      <p className="text-sm opacity-65 italic font-serif mt-1">
                         {lang === "zh" ? artist.nameEn : artist.name}
                       </p>
                     </Link>

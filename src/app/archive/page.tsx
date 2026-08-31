@@ -105,7 +105,7 @@ export default function ArchiveIndexPage() {
 
           {/* 类型筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="archive-text text-[10px] opacity-40 mr-2">
+            <span className="archive-text text-[10px] opacity-65 mr-2">
               {lang === "zh" ? "类型" : "TYPE"}:
             </span>
             <button
@@ -133,7 +133,7 @@ export default function ArchiveIndexPage() {
 
           {/* 地区筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="archive-text text-[10px] opacity-40 mr-2">
+            <span className="archive-text text-[10px] opacity-65 mr-2">
               {lang === "zh" ? "地区" : "REGION"}:
             </span>
             <button
@@ -167,7 +167,7 @@ export default function ArchiveIndexPage() {
 
           {/* 项目筛选 */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="archive-text text-[10px] opacity-40 mr-2">
+            <span className="archive-text text-[10px] opacity-65 mr-2">
               {lang === "zh" ? "项目" : "PROJECT"}:
             </span>
             <button
@@ -195,7 +195,7 @@ export default function ArchiveIndexPage() {
           </div>
 
           {/* 结果计数 */}
-          <div className="archive-text text-[10px] opacity-40">
+          <div className="archive-text text-[10px] opacity-65">
             {lang === "zh" ? "共" : "TOTAL"} {filtered.length}{" "}
             {lang === "zh" ? "条结果" : "RESULTS"}
           </div>
@@ -228,7 +228,7 @@ export default function ArchiveIndexPage() {
             transition={{ duration: 0.35, ease: EASE_OUT }}
             className="py-40 text-center"
           >
-            <div className="archive-text text-sm opacity-40">
+            <div className="archive-text text-sm opacity-65">
               {lang === "zh" ? "无匹配结果" : "NO MATCHING RESULTS"}
             </div>
           </motion.div>

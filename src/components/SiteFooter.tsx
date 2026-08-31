@@ -23,16 +23,16 @@ export function SiteFooter() {
             <span>DIA</span>
             <span className="ml-1">GONAL</span>
           </div>
-          <p className="archive-text text-[9px] opacity-40 max-w-xs leading-relaxed">
+          <p className="archive-text text-[9px] opacity-50 max-w-xs leading-relaxed">
             从东北到西南的长期艺术项目
           </p>
         </div>
 
         {/* 右侧：版权信息与制作说明入口 */}
         <div className="archive-text text-[9px] text-right space-y-1">
-          <div className="opacity-30">© 2024–2026 DIAGONAL PROJECT</div>
-          <div className="opacity-30">ZIGONG / HEGANG / CHENGDU</div>
-          <div className="opacity-40 pt-2">
+          <div className="opacity-40">© 2024–2026 DIAGONAL PROJECT</div>
+          <div className="opacity-40">ZIGONG / HEGANG / CHENGDU</div>
+          <div className="opacity-65 pt-2">
             <Link
               href={getLocalizedUrl("/colophon")}
               className="hover:opacity-100 hover:text-diagonal-red transition-[opacity,color] duration-200 ease-out-strong"

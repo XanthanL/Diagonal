@@ -70,7 +70,7 @@ function SectionDock() {
             onClick={() => jump(it.id)}
             aria-current={active === it.id ? "true" : undefined}
             className={`press archive-text relative py-3.5 text-[10px] tracking-widest transition-opacity ${
-              active === it.id ? "opacity-100" : "opacity-40"
+              active === it.id ? "opacity-100" : "opacity-60"
             }`}
           >
             <span
@@ -105,7 +105,7 @@ function SectionHeading({
     >
       <div className="md:flex md:items-end md:justify-between md:gap-16">
         <div className="space-y-4">
-          <div className="archive-text text-[11px] opacity-60" style={{ letterSpacing: "0.3em" }}>
+          <div className="archive-text text-[11px] opacity-65" style={{ letterSpacing: "0.3em" }}>
             {code}
           </div>
           <h2 className="font-serif text-3xl md:text-5xl font-bold uppercase leading-none tracking-tight">
@@ -144,7 +144,7 @@ function IndexRow({
       href={href}
       className="press group block border-b border-black/5 py-5 md:grid md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-10"
     >
-      <div className="archive-text flex justify-between gap-3 text-[11px] opacity-55 md:block md:space-y-1">
+      <div className="archive-text flex justify-between gap-3 text-[11px] opacity-65 md:block md:space-y-1">
         {code}
       </div>
       <div className="mt-2 min-w-0 md:mt-0">
@@ -158,19 +158,19 @@ function IndexRow({
           )}
         </h3>
         {desc && (
-          <p className="mt-1.5 max-w-2xl font-serif text-sm leading-relaxed opacity-55">{desc}</p>
+          <p className="mt-1.5 max-w-2xl font-serif text-sm leading-relaxed opacity-70">{desc}</p>
         )}
         {(artist || tags) && (
           <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            {artist && <span className="font-serif text-[15px] italic opacity-60">{artist}</span>}
+            {artist && <span className="font-serif text-[15px] italic opacity-65">{artist}</span>}
             {tags && (
-              <span className="archive-text flex flex-wrap gap-x-3 text-[10px] opacity-45">{tags}</span>
+              <span className="archive-text flex flex-wrap gap-x-3 text-[10px] opacity-65">{tags}</span>
             )}
           </div>
         )}
       </div>
       {trailing && (
-        <div className="archive-text mt-2 text-[10px] opacity-45 transition-opacity group-hover:opacity-70 md:mt-0 md:text-right">
+        <div className="archive-text mt-2 text-[10px] opacity-65 transition-opacity group-hover:opacity-85 md:mt-0 md:text-right">
           {trailing}
         </div>
       )}
@@ -259,7 +259,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.55, duration: 0.5, ease: EASE_OUT }}
-              className="hidden md:block archive-text text-[10px] leading-relaxed space-y-2 opacity-60 text-right pb-1"
+              className="hidden md:block archive-text text-[10px] leading-relaxed space-y-2 opacity-65 text-right pb-1"
             >
               <div>{t(lang, "totalRecords")}: {archiveData.length}</div>
               <div>{t(lang, "axis")}</div>
@@ -315,7 +315,7 @@ export default function Home() {
               {t(lang, "loadFullIndex")}
               <span className="transition-transform group-hover:translate-x-1.5">→</span>
             </Link>
-            <span className="archive-text text-[11px] opacity-55">
+            <span className="archive-text text-[11px] opacity-65">
               {t(lang, "totalRecords")}: {archiveData.length}
             </span>
           </div>
@@ -330,7 +330,7 @@ export default function Home() {
             title={t(lang, "atlasTitle")}
             aside={
               <>
-                <p className="font-serif text-sm italic leading-relaxed opacity-55">
+                <p className="font-serif text-sm italic leading-relaxed opacity-65">
                   {t(lang, "atlasIntro")}
                 </p>
                 {/* 流动线：CSS animation，不占主线程 */}
@@ -369,11 +369,11 @@ export default function Home() {
                       </div>
                     )}
                     <div className="min-w-0 flex-1 space-y-1.5">
-                      <div className="archive-text text-[11px] opacity-55">{item.id}</div>
+                      <div className="archive-text text-[11px] opacity-65">{item.id}</div>
                       <h3 className="font-serif text-xl font-medium leading-snug tracking-tight decoration-black/30 decoration-1 underline-offset-4 group-hover:underline md:text-2xl">
                         {localized.title}
                       </h3>
-                      <div className="archive-text flex flex-wrap gap-x-3 text-[10px] opacity-45">
+                      <div className="archive-text flex flex-wrap gap-x-3 text-[10px] opacity-65">
                         <span>{localized.category}</span>
                         <span>{localized.location.city}</span>
                         {subs > 0 && <span>SUB-COLLECTIONS ×{subs}</span>}
@@ -394,7 +394,7 @@ export default function Home() {
             code={t(lang, "labLabel")}
             title={t(lang, "labTitle")}
             aside={
-              <p className="font-serif text-sm italic leading-relaxed opacity-55">{t(lang, "labIntro")}</p>
+              <p className="font-serif text-sm italic leading-relaxed opacity-65">{t(lang, "labIntro")}</p>
             }
           />
 

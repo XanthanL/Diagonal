@@ -26,7 +26,7 @@ export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: Archiv
             <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToDocuments")}
           </Link>
           <div className="flex items-center gap-6">
-            <div className="archive-text text-[10px] opacity-50 uppercase tracking-widest text-white">{id} // {t(lang, "htmlRecord")}</div>
+            <div className="archive-text text-[10px] opacity-70 uppercase tracking-widest text-white">{id} // {t(lang, "htmlRecord")}</div>
             <LanguageSwitcher />
           </div>
         </div>
@@ -48,10 +48,10 @@ export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: Archiv
 
       {/* 底部验证标注 */}
       <div className="mt-60 max-w-3xl mx-auto px-6 border-t border-black/10 pt-12 flex justify-between items-end">
-        <div className="archive-text text-[10px] opacity-30 tracking-[0.2em] uppercase">
+        <div className="archive-text text-[10px] opacity-45 tracking-[0.2em] uppercase">
           {t(lang, "endOfRecord")} / {id}
         </div>
-        <div className="archive-text text-[9px] opacity-20">
+        <div className="archive-text text-[9px] opacity-35">
           {t(lang, "archiveSystemVersion")}
         </div>
       </div>

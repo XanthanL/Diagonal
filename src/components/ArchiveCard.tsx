@@ -19,7 +19,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
       <div
         className="press-card group relative border-t border-black/10 pt-6 pb-12 cursor-pointer flex flex-col h-full"
       >
-        <div className="archive-text text-[9px] mb-4 flex justify-between opacity-50">
+        <div className="archive-text text-[9px] mb-4 flex justify-between opacity-60">
           <span>{item.id} // {localized.location.code}</span>
           <span>{item.year}</span>
         </div>
@@ -52,7 +52,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
                 <div className="w-12 h-12 mx-auto border border-black/10 relative">
                   <div className="absolute inset-0 diagonal-line opacity-30" />
                 </div>
-                <div className="archive-text text-[9px] opacity-30">{item.id}</div>
+                <div className="archive-text text-[9px] opacity-45">{item.id}</div>
               </div>
             </div>
           )}
@@ -75,7 +75,7 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
 
           <div className="flex flex-wrap gap-2 pt-4">
             {localized.tags.map(tag => (
-              <span key={tag} className="archive-text text-[9px] opacity-40">#{tag}</span>
+              <span key={tag} className="archive-text text-[9px] opacity-55">#{tag}</span>
             ))}
           </div>
         </div>

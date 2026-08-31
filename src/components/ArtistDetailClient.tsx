@@ -25,7 +25,7 @@ export function ArtistDetailClient({ artist }: ArtistDetailClientProps) {
         <header className="mb-24 space-y-6">
           <Link
             href={getLocalizedUrl("/artists")}
-            className="archive-text text-[10px] opacity-50 hover:opacity-100 transition-opacity flex items-center gap-2 group w-fit"
+            className="archive-text text-[10px] opacity-65 hover:opacity-100 transition-opacity flex items-center gap-2 group w-fit"
           >
             <span className="group-hover:-translate-x-2 transition-transform">←</span>
             {lang === "zh" ? "返回艺术家索引" : "BACK_TO_ARTISTS"}
@@ -40,7 +40,7 @@ export function ArtistDetailClient({ artist }: ArtistDetailClientProps) {
             <span className="block text-6xl md:text-8xl">
               {lang === "zh" ? artist.name : artist.nameEn}
             </span>
-            <span className="block text-2xl md:text-4xl opacity-40 italic font-medium mt-4">
+            <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
               {lang === "zh" ? artist.nameEn : artist.name}
             </span>
           </h1>
@@ -67,7 +67,7 @@ export function ArtistDetailClient({ artist }: ArtistDetailClientProps) {
           </div>
         ) : (
           <div className="py-40 text-center">
-            <div className="archive-text text-sm opacity-40">
+            <div className="archive-text text-sm opacity-65">
               {lang === "zh" ? "暂无关联档案" : "NO RELATED RECORDS"}
             </div>
           </div>

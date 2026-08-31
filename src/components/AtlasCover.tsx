@@ -36,7 +36,7 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
               />
             </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+            <div className="absolute inset-0 flex items-center justify-center opacity-50">
               <span className="archive-text text-[9px]">{t(lang, "noVisualRecord")}</span>
             </div>
           )}

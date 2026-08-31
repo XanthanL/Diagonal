@@ -145,7 +145,7 @@ body {
 /* blockquote 改用衬线，更有出版物质感 */
 .archive-html-content blockquote { @apply font-serif border-l-8 border-diagonal-red pl-8 py-4 my-16 italic opacity-80 bg-neutral-50 text-2xl font-light; }
 .archive-html-content figure { @apply my-20 space-y-4; }
-.archive-html-content figcaption { @apply archive-text text-[10px] opacity-40 text-center uppercase tracking-widest; }
+.archive-html-content figcaption { @apply archive-text text-[10px] opacity-65 text-center uppercase tracking-widest; }
 .archive-html-content strong { @apply font-black underline decoration-2 underline-offset-4; }
 /* h3 子标题、有序/无序列表：后台富文本会用到，正文渲染同样需要 */
 .archive-html-content h3 { @apply text-xl font-bold mb-4; }
@@ -217,6 +217,22 @@ body {
     transform: none;
     opacity: 0.68;
   }
+}
+
+/* —— 键盘焦点 ——
+   全站此前没有任何 :focus-visible，键盘用户完全看不到自己在哪。
+   用品牌暗朱做 2px 外描边：纸面底色上任何位置都读得出来 */
+:focus-visible {
+  outline: 2px solid var(--diagonal-red);
+  outline-offset: 2px;
+}
+/* main 是 skip-link 的落点，不该给整块内容画一圈 */
+#main-content:focus-visible {
+  outline: none;
+}
+/* skip-link 跳过来时，别让固定顶栏吃掉落点 */
+#main-content {
+  scroll-margin-top: 5rem;
 }
 
 /* —— 全局页面进入动画 ——

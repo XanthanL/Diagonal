@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
@@ -19,6 +19,8 @@ export function GlobalNav() {
   const { lang } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const drawerRef = useRef<HTMLElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -27,16 +29,40 @@ export function GlobalNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // 抽屉展开期间锁住页面滚动，并支持 Esc 关闭
+  // 抽屉展开期间锁住页面滚动、接管键盘焦点：
+  // 焦点移入抽屉并在条目间循环（Tab 陷阱），Esc 关闭并把焦点还给汉堡键
   useEffect(() => {
     if (!mobileOpen) return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const focusables = () =>
+      drawerRef.current
+        ? Array.from(drawerRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"))
+        : [];
+    // 等卷轴铺开一小段再交焦点，避免焦点环在半开的面板上闪
+    const focusTimer = window.setTimeout(() => focusables()[0]?.focus(), 120);
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = focusables();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
+      window.clearTimeout(focusTimer);
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
@@ -92,7 +118,7 @@ export function GlobalNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="archive-text text-[11px] opacity-60 hover:opacity-100 transition-opacity"
+                className="archive-text text-[11px] opacity-70 hover:opacity-100 transition-opacity"
               >
                 {item.label}
               </Link>
@@ -106,6 +132,7 @@ export function GlobalNav() {
           <div className="md:hidden flex items-center gap-5">
             <LanguageSwitcher />
             <button
+              ref={menuButtonRef}
               onClick={() => setMobileOpen(!mobileOpen)}
               className="press archive-text text-xs"
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -129,6 +156,7 @@ export function GlobalNav() {
 
       {/* 移动端抽屉：窄幅挂轴，自上而下铺开、原路回卷 */}
       <nav
+        ref={drawerRef}
         id="mobile-nav-drawer"
         data-open={mobileOpen}
         aria-label={lang === "zh" ? "站内导航" : "Site navigation"}
@@ -148,7 +176,7 @@ export function GlobalNav() {
                   className="nav-drawer-item flex items-baseline gap-4 border-b border-black/5 px-6 py-4"
                 >
                   <span
-                    className={`archive-text text-[9px] ${active ? "text-diagonal-red" : "opacity-40"}`}
+                    className={`archive-text text-[9px] ${active ? "text-diagonal-red" : "opacity-50"}`}
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -162,7 +190,7 @@ export function GlobalNav() {
         </ul>
 
         <div
-          className="nav-drawer-item space-y-1 px-6 pt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] archive-text text-[9px] opacity-35"
+          className="nav-drawer-item space-y-1 px-6 pt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] archive-text text-[9px] opacity-45"
           style={{ "--i": navItems.length } as CSSProperties}
         >
           <div>ZIGONG / HEGANG / CHENGDU</div>

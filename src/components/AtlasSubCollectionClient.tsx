@@ -46,7 +46,7 @@ export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; sub
                   className="w-full h-auto"
                 />
               </div>
-              <p className="archive-text text-[12px] opacity-40 uppercase tracking-widest pl-2">
+              <p className="archive-text text-[12px] opacity-65 uppercase tracking-widest pl-2">
                 {img.caption || `${subCollection.title}_${(index + 1).toString().padStart(3, '0')}`}
               </p>
             </div>

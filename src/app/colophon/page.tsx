@@ -115,7 +115,7 @@ export default function ColophonPage() {
         {/* 顶部返回 */}
         <Link
           href={getLocalizedUrl("/")}
-          className="archive-text text-[10px] opacity-50 hover:opacity-100 transition-opacity flex items-center gap-2 group w-fit mb-24"
+          className="archive-text text-[10px] opacity-65 hover:opacity-100 transition-opacity flex items-center gap-2 group w-fit mb-24"
         >
           <span className="group-hover:-translate-x-2 transition-transform">←</span>
           {lang === "zh" ? "返回首页" : "BACK_HOME"}
@@ -131,7 +131,7 @@ export default function ColophonPage() {
             <span className="block text-6xl md:text-9xl">
               {lang === "zh" ? "制作说明" : "Colophon"}
             </span>
-            <span className="block text-2xl md:text-4xl opacity-40 italic font-medium mt-4">
+            <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
               {lang === "zh" ? "Colophon" : "制作说明"}
             </span>
           </h1>
@@ -151,7 +151,7 @@ export default function ColophonPage() {
           <h2 className="archive-text text-sm font-bold tracking-[0.2em] opacity-70 mb-4 border-t border-black/10 pt-8">
             {lang === "zh" ? "制作者的其他作品" : "OTHER WORKS BY THE MAKER"}
           </h2>
-          <p className="archive-text text-[10px] opacity-40 mb-12 tracking-wider">
+          <p className="archive-text text-[10px] opacity-55 mb-12 tracking-wider">
             XANTHANL — {works.length} PROJECTS
           </p>
 
@@ -164,7 +164,7 @@ export default function ColophonPage() {
                 rel="noopener noreferrer"
                 className="group flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-8 border-b border-black/5 py-6 hover:bg-black/[0.02] transition-colors"
               >
-                <span className="archive-text text-xs opacity-40 w-8 shrink-0 tracking-wider">
+                <span className="archive-text text-xs opacity-55 w-8 shrink-0 tracking-wider">
                   {work.id}
                 </span>
                 <div className="flex-1 min-w-0 space-y-1">
@@ -172,15 +172,15 @@ export default function ColophonPage() {
                     <span className="text-lg font-serif font-bold leading-snug group-hover:text-diagonal-red transition-colors">
                       {lang === "zh" ? work.name : work.nameEn}
                     </span>
-                    <span className="archive-text text-[9px] opacity-40 tracking-[0.2em] border border-black/15 px-1.5 py-0.5">
+                    <span className="archive-text text-[9px] opacity-55 tracking-[0.2em] border border-black/15 px-1.5 py-0.5">
                       {lang === "zh" ? work.type : work.typeEn}
                     </span>
                   </div>
-                  <p className="text-sm opacity-60 font-serif leading-relaxed max-w-2xl">
+                  <p className="text-sm opacity-65 font-serif leading-relaxed max-w-2xl">
                     {lang === "zh" ? work.zh : work.en}
                   </p>
                 </div>
-                <span className="archive-text text-[10px] opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-[opacity,transform] duration-200 ease-out-strong shrink-0">
+                <span className="archive-text text-[10px] opacity-55 group-hover:opacity-100 group-hover:translate-x-1 transition-[opacity,transform] duration-200 ease-out-strong shrink-0">
                   ↗
                 </span>
               </a>
@@ -189,7 +189,7 @@ export default function ColophonPage() {
         </div>
 
         {/* 底部落款 */}
-        <div className="archive-text text-[9px] opacity-30 tracking-[0.2em] border-t border-black/10 pt-8 pb-12">
+        <div className="archive-text text-[9px] opacity-45 tracking-[0.2em] border-t border-black/10 pt-8 pb-12">
           {lang === "zh"
             ? "网站设计与开发 — XANTHANL / 对角线计划"
             : "SITE DESIGN & DEVELOPMENT — XANTHANL / DIAGONAL PROJECT"}

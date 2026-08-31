@@ -81,7 +81,7 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
 
   return (
     <nav className="hidden lg:block sticky top-32 max-h-[calc(100vh-10rem)] overflow-y-auto pr-4 pb-12">
-      <div className="archive-text text-[10px] opacity-40 uppercase tracking-widest mb-4 pb-2 border-b border-black/10">
+      <div className="archive-text text-[10px] opacity-65 uppercase tracking-widest mb-4 pb-2 border-b border-black/10">
         Contents
       </div>
       <ul className="space-y-2">
@@ -99,7 +99,7 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
               className={`block text-xs leading-relaxed transition-[color,opacity] duration-150 ease-out-strong ${
                 activeId === item.id
                   ? "text-diagonal-red font-bold"
-                  : "opacity-50 hover:opacity-90"
+                  : "opacity-65 hover:opacity-90"
               } ${item.level === 3 ? "py-1" : "py-1.5"}`}
             >
               {item.text}

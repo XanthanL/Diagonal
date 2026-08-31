@@ -193,8 +193,9 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   return (
     <>
-      {/* key 驱动 main 重挂载；data-nav 把相位交给 CSS，控制新页的入场时机 */}
-      <main id="main-content" key={pathname} data-nav={phase}>
+      {/* key 驱动 main 重挂载；data-nav 把相位交给 CSS，控制新页的入场时机。
+          tabIndex=-1 让 skip-link 能把键盘焦点真正移进内容，而不只是滚动过去 */}
+      <main id="main-content" tabIndex={-1} key={pathname} data-nav={phase}>
         {children}
       </main>
 
