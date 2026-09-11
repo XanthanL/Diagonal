@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { artistsData, getArtistBySlug } from "@/lib/artists";
+import { getArtistProfile } from "@/lib/artistProfile";
 import { getAbsoluteUrl } from "@/lib/path";
 import { ArtistDetailClient } from "@/components/ArtistDetailClient";
 
@@ -22,10 +23,15 @@ export async function generateMetadata({
 
   const title = `${artist.name} ${artist.nameEn} | DIAGONAL`;
   const url = getAbsoluteUrl(`/artists/${artist.slug}`);
+  // 登记了作品集档案的艺术家，用自述做描述；其余退回角色
+  const profile = getArtistProfile(artist.slug);
+  const description = profile
+    ? profile.bio
+    : `${artist.name}（${artist.nameEn}）— ${artist.roleEn}`;
 
   return {
     title,
-    description: `${artist.name} (${artist.nameEn}) - ${artist.roleEn}`,
+    description,
     openGraph: {
       title,
       url,

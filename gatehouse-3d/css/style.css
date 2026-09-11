@@ -27,7 +27,8 @@ html, body {
 }
 
 #scene-root { position: fixed; inset: 0; z-index: 1; }
-#scene-root canvas { display: block; }
+#scene-root canvas { display: block; cursor: grab; }
+#scene-root canvas:active { cursor: grabbing; }
 
 /* 等宽眉标（对齐 diagonal 的 archive-text） */
 .eyebrow {

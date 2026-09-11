@@ -1,17 +1,16 @@
-// 门楼（架空）· The Gatehouse —— 查看器外壳（中英双语）
-// 场景 = parts/* 生成的 6 个体素 Part 装配成一个 model；判据 docs/STYLE.md，尺寸 js/spec.js。
-// 本文件只管：渲染器/相机/灯光/地面/导览/信息面板/双语/载入揭幕/?selftest 钩子。
+// 魔幻门楼 · The Gatehouse —— 查看器外壳(中英双语)
+// 场景 = buildEnvironment + buildGatehouse + buildPortal + 粒子;尺寸 js/spec.js。
+// 本文件只管:渲染器/相机/灯光/聚焦 tween/自动导览/信息面板/双语/载入揭幕/?selftest 钩子。
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { runSelftest, summarizeSelftest } from './selftest.js';
 import { PARTS, I18N } from './data.js';
-import { buildPartMesh } from './voxel/builder.js';
-import { getColor } from './voxel/palette.js';
-import { CX, CZ, GRID } from './spec.js';
-// 每个 Part 一个生成模块（parts/）；全部尺寸取自 spec.js，判据取自 docs/STYLE.md
-import { PART_BUILDERS } from './parts/index.js';
+import { WORLD } from './spec.js';
+import { buildEnvironment } from './build/environment.js';
+import { buildGatehouse, buildPortal } from './build/gatehouse.js';
+import { buildFireflies, buildPortalStream } from './build/particles.js';
 
-// 自检钩子（?selftest）：捕获运行时错误，便于无头浏览器断言验收
+// 自检钩子(?selftest):捕获运行时错误,便于无头浏览器断言验收
 const SELFTEST =
   typeof location !== 'undefined' && new URLSearchParams(location.search).has('selftest');
 window.__errs = [];
@@ -23,51 +22,59 @@ function __recordErr(m) {
 window.addEventListener('error', (e) => __recordErr(String(e.message || (e.error && e.error.message) || e)));
 window.addEventListener('unhandledrejection', (e) => __recordErr('promise:' + (e.reason && e.reason.message ? e.reason.message : e.reason)));
 
-// ---------- 常量与状态 ----------
-const BG = 0xfaFAF8; // diagonal 设计系统暖纸底
-const DEFAULT_CAM = PARTS[0].cam;   // 总览锚点随 data.js 走，避免两处数字
-const DEFAULT_TGT = PARTS[0].target;
-const state = { lang: 'zh' };
+// ---------- 状态 ----------
+const DEFAULT_PART = PARTS[0];
+const state = {
+  lang: 'zh',
+  playing: true,     // 动画总开关
+  tour: false,       // 自动导览
+  animTime: 0,       // 仅在 playing 时推进的动画时钟
+  focusAnim: null,   // 相机 tween
+  tourNext: 0,
+};
 
-let scene, camera, renderer, controls, clock;
-const modelGroup = new THREE.Group();
-modelGroup.name = 'model';
-const partGroups = [];        // 与 PARTS 顺序对应（overview 无实体 → null 占位）
-const VX = GRID.VX;           // 1 vx = 0.2 m（100 vx 通高 = 20 m）
+let scene, camera, renderer, controls;
+const tickers = [];   // (t, dt) => void 的动画单元
 
-// ---------- 装配 ----------
-function assemble() {
-  for (const p of PARTS) {
-    let group = null;
-    if (p.id !== 'overview') {
-      const buildFn = PART_BUILDERS[p.id];
-      if (!buildFn) throw new Error('no builder for part: ' + p.id);
-      const world = buildFn();
-      if (!world || world.count() === 0) throw new Error('empty world: ' + p.id);
-      const geo = buildPartMesh(world, { voxelSize: VX });
-      geo.computeBoundingSphere();
-      const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
-      group = new THREE.Group();
-      group.name = 'part-' + p.id;
-      group.add(mesh);
-      // 体素对称面在 x=58.5/59 之间、进深中心 21 → 平移使中轴落在世界 x=0
-      group.position.set(-(CX - 0.5) * VX, 0, -CZ * VX);
-      modelGroup.add(group);
-    }
-    partGroups.push(group);
-  }
+// ---------- 相机 tween ----------
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+function flyTo(part, dur = 1.5) {
+  state.focusAnim = {
+    t0: performance.now() / 1000,
+    dur,
+    fromP: camera.position.clone(),
+    toP: new THREE.Vector3(...part.cam),
+    fromT: controls.target.clone(),
+    toT: new THREE.Vector3(...part.target),
+  };
+  markActive(part.id);
+  showInfo(part);
+}
+function tickFocus(now) {
+  const a = state.focusAnim;
+  if (!a) return;
+  const u = Math.min(1, (now - a.t0) / a.dur);
+  const k = easeInOut(u);
+  camera.position.lerpVectors(a.fromP, a.toP, k);
+  controls.target.lerpVectors(a.fromT, a.toT, k);
+  if (u >= 1) state.focusAnim = null;
 }
 
 // ---------- 导览 ----------
-function focusOn(part) {
-  camera.position.set(...part.cam);
-  controls.target.set(...part.target);
-  document.querySelectorAll('.nav-item').forEach((el) =>
-    el.classList.toggle('active', el.dataset.part === part.id)
-  );
-  showInfo(part);
+function focusOn(part, { fly = true } = {}) {
+  if (fly) flyTo(part);
+  else {
+    camera.position.set(...part.cam);
+    controls.target.set(...part.target);
+    markActive(part.id);
+    showInfo(part);
+  }
 }
-
+function markActive(id) {
+  document.querySelectorAll('.nav-item').forEach((el) =>
+    el.classList.toggle('active', el.dataset.part === id)
+  );
+}
 function showInfo(part) {
   const zh = state.lang === 'zh';
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -113,12 +120,14 @@ function buildNav() {
     btn.innerHTML =
       '<span class="ni-index">' + String(p.index).padStart(2, '0') + '</span>' +
       '<span class="ni-name"></span>';
-    btn.addEventListener('click', () => focusOn(p));
+    btn.addEventListener('click', () => {
+      stopTour();
+      focusOn(p);
+    });
     nav.appendChild(btn);
   }
   refreshNavNames();
 }
-
 function refreshNavNames() {
   const zh = state.lang === 'zh';
   document.querySelectorAll('.nav-item').forEach((el) => {
@@ -128,7 +137,6 @@ function refreshNavNames() {
     if (nameEl) nameEl.textContent = zh ? p.name : p.nameEn;
   });
 }
-
 function buildLegend() {
   const lg = document.getElementById('legend');
   if (!lg) return;
@@ -142,7 +150,6 @@ function buildLegend() {
   }
   refreshLegend();
 }
-
 function refreshLegend() {
   const zh = state.lang === 'zh';
   document.querySelectorAll('#legend span').forEach((el) => {
@@ -152,6 +159,64 @@ function refreshLegend() {
   });
 }
 
+// ---------- 拾取:点击 3D 构件 → 聚焦对应 Part ----------
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+let downXY = null;
+function bindPick() {
+  const el = renderer.domElement;
+  el.addEventListener('pointerdown', (e) => { downXY = [e.clientX, e.clientY]; });
+  el.addEventListener('pointerup', (e) => {
+    if (!downXY) return;
+    const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]);
+    downXY = null;
+    if (moved > 6) return; // 拖拽不算点击
+    ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hits = ray.intersectObjects(scene.children, true);
+    for (const h of hits) {
+      let o = h.object;
+      while (o && !o.userData.partId) o = o.parent;
+      if (o && o.userData.partId) {
+        const p = PARTS.find((x) => x.id === o.userData.partId);
+        if (p) { stopTour(); focusOn(p); }
+        return;
+      }
+    }
+  });
+  el.addEventListener('pointermove', (e) => {
+    ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hits = ray.intersectObjects(scene.children, true);
+    let hover = false;
+    for (const h of hits) {
+      let o = h.object;
+      while (o && !o.userData.partId) o = o.parent;
+      if (o && o.userData.partId) { hover = true; break; }
+    }
+    el.style.cursor = hover ? 'pointer' : 'grab';
+  });
+}
+
+// ---------- 自动导览 ----------
+function startTour() {
+  state.tour = true;
+  state.tourNext = performance.now() / 1000 + 0.6;
+  document.getElementById('btn-tour')?.classList.add('active');
+}
+function stopTour() {
+  if (!state.tour) return;
+  state.tour = false;
+  document.getElementById('btn-tour')?.classList.remove('active');
+}
+function tickTour(now) {
+  if (!state.tour || now < state.tourNext) return;
+  const cur = PARTS.findIndex((p) => document.querySelector('.nav-item.active')?.dataset.part === p.id);
+  const next = PARTS[(cur + 1 + PARTS.length) % PARTS.length];
+  focusOn(next, { fly: cur >= 0 });
+  state.tourNext = now + 7;
+}
+
 // ---------- 初始化 ----------
 function init() {
   const root = document.getElementById('scene-root');
@@ -159,58 +224,78 @@ function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(BG);
-  // ACES 收高光：绿水青山的亮面不再过曝烧白，整体读作 filmic 山水
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.enabled = false;   // 无阴影：明度分层只靠顶点色与灯光（STYLE §一）
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   root.appendChild(renderer.domElement);
+  renderer.domElement.style.cursor = 'grab';
 
   scene = new THREE.Scene();
-  // 纸色雾：远山渐次没入暖纸，近实远虚；地平线由雾收边（判据 STYLE §一）
-  scene.fog = new THREE.Fog(BG, 50, 170);
+  scene.fog = new THREE.Fog(WORLD.fog.color, WORLD.fog.near, WORLD.fog.far);
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
-  camera.position.set(...DEFAULT_CAM);
+  camera.position.set(...DEFAULT_PART.cam);
 
-  // 灯光：暖纸环境 + 暖白主光（体素顶点色 + Lambert，无需更多）
-  const hemi = new THREE.HemisphereLight(0xffffff, 0xd8d2c4, 0.95);
-  const dir = new THREE.DirectionalLight(0xfff4e0, 1.05);
-  dir.position.set(120, 180, 140);
-  scene.add(hemi, dir);
+  // 灯光:半球环境 + 暖阳(投影) + 门内一点玉色点光
+  const hemi = new THREE.HemisphereLight(WORLD.hemi.sky, WORLD.hemi.ground, WORLD.hemi.intensity);
+  const sun = new THREE.DirectionalLight(WORLD.sun.color, WORLD.sun.intensity);
+  sun.position.set(...WORLD.sun.pos);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -52; sun.shadow.camera.right = 52;
+  sun.shadow.camera.top = 56; sun.shadow.camera.bottom = -40;
+  sun.shadow.camera.near = 8; sun.shadow.camera.far = 200;
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.03;
+  scene.add(hemi, sun, sun.target);
 
-  // 地 = 纸：这一片圆盘就是地坪（体素不再铺地坪，直边与双色接缝随之一并消失）。
-  // 取色板 苔绿（与体素同一 sRGB→linear 管线）；顶面高度 0.19 m 恰在水体素顶面 0.2 m 之下。
-  const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(600, 64),
-    new THREE.MeshLambertMaterial({ color: getColor('苔绿').clone() })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = VX * 0.95;
-  scene.add(ground);
+  // 场景装配
+  const env = buildEnvironment();
+  scene.add(env);
+  const gate = buildGatehouse(env.userData.terrainHeight);
+  scene.add(gate);
+  const portal = buildPortal();
+  scene.add(portal);
+  const portalLight = new THREE.PointLight(0x7fe0c8, 90, 26, 2);
+  portalLight.position.set(0, 5.0, 1.6);
+  portalLight.userData.partId = 'portal';
+  scene.add(portalLight);
+  const fireflies = buildFireflies();
+  scene.add(fireflies);
+  const stream = buildPortalStream();
+  scene.add(stream);
 
-  scene.add(modelGroup);
+  tickers.push((t) => {
+    env.traverse((o) => { if (o.userData.tick) o.userData.tick(t); });
+    portal.userData.disc.material.uniforms.time.value = t;
+    fireflies.userData.tick(t);
+    stream.userData.tick(t);
+  });
 
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(...DEFAULT_TGT);
+  controls.target.set(...DEFAULT_PART.target);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.maxPolarAngle = Math.PI * 0.52;
-  controls.minDistance = 20;
-  controls.maxDistance = 600;
+  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.minDistance = 8;
+  controls.maxDistance = 220;
+  controls.target.set(...DEFAULT_PART.target);
 
-  clock = new THREE.Clock();
   window.addEventListener('resize', onResize);
-  assemble();
   buildNav();
   buildLegend();
   bindUI();
+  bindPick();
   applyLang();
-  // 支持 ?focus=<id> 深链直跳某 Part（主站直链 / 逐 Part 截图验收用）
+  markActive(DEFAULT_PART.id);
+  showInfo(DEFAULT_PART);
+
   const focusId = new URLSearchParams(location.search).get('focus');
   if (focusId) {
     const p = PARTS.find((x) => x.id === focusId);
-    if (p) focusOn(p);
+    if (p) focusOn(p, { fly: false });
   }
+  window.__gh = { scene, camera, controls, renderer, parts: PARTS };
   renderer.setAnimationLoop(tick);
   hideLoader();
 }
@@ -222,6 +307,12 @@ function onResize() {
 }
 
 function tick() {
+  const now = performance.now() / 1000;
+  if (state.playing) state.animTime += 1 / 60;
+  const t = state.playing ? state.animTime : state.animTime; // 暂停时冻结 animTime,t 不再前进
+  for (const fn of tickers) fn(t);
+  tickFocus(now);
+  tickTour(now);
   controls.update();
   renderer.render(scene, camera);
 }
@@ -234,13 +325,17 @@ function bindUI() {
   const btnLang = document.getElementById('btn-lang');
 
   if (btnOverview)
-    btnOverview.addEventListener('click', () => {
-      camera.position.set(...DEFAULT_CAM);
-      controls.target.set(...DEFAULT_TGT);
+    btnOverview.addEventListener('click', () => { stopTour(); focusOn(DEFAULT_PART); });
+  if (btnPlay)
+    btnPlay.addEventListener('click', () => {
+      state.playing = !state.playing;
+      btnPlay.classList.toggle('active', !state.playing);
     });
-  // 动画与自动导览：暂为占位按钮
-  if (btnPlay) btnPlay.addEventListener('click', () => {});
-  if (btnTour) btnTour.addEventListener('click', () => {});
+  if (btnTour)
+    btnTour.addEventListener('click', () => {
+      if (state.tour) stopTour();
+      else startTour();
+    });
   if (btnLang)
     btnLang.addEventListener('click', () => {
       state.lang = state.lang === 'zh' ? 'en' : 'zh';
@@ -249,28 +344,43 @@ function bindUI() {
       if (ct) ct.textContent = state.lang === 'zh' ? 'EN' : '中';
       applyLang();
     });
+  // 详情面板折叠头(沿用外壳交互)
+  const head = document.querySelector('.ip-head');
+  const panel = document.getElementById('infopanel');
+  if (head && panel) {
+    const toggle = () => {
+      const ex = panel.classList.toggle('expanded');
+      head.setAttribute('aria-expanded', String(ex));
+      const t = panel.querySelector('.ip-toggle');
+      if (t) t.setAttribute('aria-expanded', String(ex));
+    };
+    head.addEventListener('click', toggle);
+    head.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+    });
+  }
 }
 
-// 语言切换文案由 data.js 的 I18N 驱动
 function applyLang() {
   const zh = state.lang === 'zh';
   const el = document.getElementById('side-title');
   if (el) el.textContent = zh ? I18N.sideTitle.zh : I18N.sideTitle.en;
   refreshNavNames();
   refreshLegend();
+  const cur = PARTS.find((p) => document.querySelector('.nav-item.active')?.dataset.part === p.id);
+  if (cur) showInfo(cur);
 }
 
 function hideLoader() {
   const l = document.getElementById('loader');
   if (!l || l.classList.contains('revealed')) return;
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    // 与首页纸面翻页读时对齐：纸面停留不足 1s 只像闪一下，读不出翻页
     const wait = Math.max(0, 1000 - performance.now());
     setTimeout(() => {
-      l.classList.add('revealed'); // CSS: 承载层同方向右移揭幕（与首页转场一致）
+      l.classList.add('revealed');
       const done = () => l.remove();
       l.addEventListener('transitionend', done, { once: true });
-      setTimeout(done, 900); // 兜底：无 transitionend 时也移除
+      setTimeout(done, 900);
     }, wait);
   }));
 }
@@ -280,30 +390,19 @@ function runSelftestSuite() {
   const d = document.getElementById('diag');
   let results;
   try {
-    results = runSelftest();
+    results = runSelftest({ scene, camera, renderer, tickers });
   } catch (e) {
     if (d) { d.removeAttribute('hidden'); d.textContent = 'ERR:selftest threw ' + (e && e.message || e); }
     console.error('[selftest:suite] threw', e);
     return;
   }
   const { passed, total, failed, allPass } = summarizeSelftest(results);
-  const built = partGroups.filter(Boolean).length;
-  const partsOk = built === PARTS.length - 1;
   const summary =
-    (allPass && partsOk && window.__errs.length === 0 ? 'SELFTEST-OK' : 'SELFTEST-FAIL') +
+    (allPass && window.__errs.length === 0 ? 'SELFTEST-OK' : 'SELFTEST-FAIL') +
     ' three=' + THREE.REVISION +
     ' errs=' + window.__errs.length +
     ' selftests=' + passed + '/' + total +
-    ' parts:' + built +
-    (failed.length ? ' failed=' + failed.length : '') +
-    // 失败明细直接进 #diag：无头验收时无需再抓 console
-    (failed.length
-      ? ' | ' + results.filter((x) => !x.pass).map((x) => x.name + ' → ' + x.detail).join(' ;; ')
-      : '') +
-    ' | ' + results.map(x => {
-      const short = x.name.split('：')[0].replace(/^#\d+\s*/, '');
-      return short + ':' + (x.pass ? 1 : 0);
-    }).join(',');
+    (failed.length ? ' | ' + failed.map((x) => x.name + ' → ' + x.detail).join(' ;; ') : '');
   if (d) {
     d.removeAttribute('hidden');
     d.textContent = window.__errs.length
@@ -311,18 +410,15 @@ function runSelftestSuite() {
       : summary;
   }
   console.info('[selftest:suite]', summary);
-  // 详细条目（带 detail）打到 console，方便无头验证
   for (const x of results) {
-    const tag = x.pass ? '✓' : '✗';
-    console.info('  ' + tag + ' ' + x.name + (x.detail ? '  ' + x.detail : ''));
+    console.info('  ' + (x.pass ? '✓' : '✗') + ' ' + x.name + (x.detail ? '  ' + x.detail : ''));
   }
 }
 
 if (SELFTEST) {
   init();
-  runSelftestSuite();
+  // 等 2 帧让 render info 生效
+  requestAnimationFrame(() => requestAnimationFrame(runSelftestSuite));
 } else {
   init();
-  // 无头调试钩子（验收用）：场景图直查
-  window.__gatehouse = { scene, camera, controls };
 }

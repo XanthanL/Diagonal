@@ -1,0 +1,326 @@
+{
+  "slug": "vivienne-peng",
+  "bio": "1997 年生于四川自贡。本科毕业于电子科技大学成都学院，硕士毕业于四川美术学院。出于好奇去观察并反思世界，艺术实践不受特定媒介或材料的限制。创作围绕盐、自贡盐业工业遗产、身体与家庭档案展开，横跨实验艺术、新媒体、动画与影像。现为对角线计划驻留艺术家。",
+  "bioEn": "Born in 1997 in Zigong, Sichuan Province, China. Graduated from Chengdu College, University of Electronic Science and Technology of China as a bachelor, and from Sichuan Fine Arts Institute as a postgraduate. Driven to observe and reflect on the world by curiosity, artistic endeavors are not constrained by a particular medium or material. Her practice revolves around salt, the industrial heritage of Zigong's salt industry, the body and the family archive, spanning experimental art, new media, animation and film. Resident artist of DIAGONAL.",
+  "education": "硕士 · 四川美术学院\n学士 · 电子科技大学成都学院",
+  "educationEn": "MFA · Sichuan Fine Arts Institute\nBA · Chengdu College, University of Electronic Science and Technology of China",
+  "cover": "/images/artists/vivienne-peng/p01_00.jpg",
+  "portrait": "/images/artists/vivienne-peng/p02_00.jpg",
+  "works": [
+    {
+      "slug": "salt-a-reshaped-area",
+      "title": "盐 · 一片重塑的区域",
+      "titleEn": "Salt · A Reshaped Area",
+      "year": "2022",
+      "medium": "实验艺术作品 / 装置 / 纪录影像",
+      "mediumEn": "Experimental artwork / Installation / Documentary",
+      "category": "毕业创作",
+      "categoryEn": "Graduation Project",
+      "images": [
+        "/images/artists/vivienne-peng/p04_00.jpg",
+        "/images/artists/vivienne-peng/p04_01.jpg",
+        "/images/artists/vivienne-peng/p05_00.jpg",
+        "/images/artists/vivienne-peng/p06_00.jpg",
+        "/images/artists/vivienne-peng/p06_01.jpg",
+        "/images/artists/vivienne-peng/p07_00.jpg",
+        "/images/artists/vivienne-peng/p07_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p04_00.jpg",
+      "description": "盐是人类生活的必需元素，也是自贡千百年来文化与情感的载体。作品召集退休或迁居的家庭成员、以及盐厂的老员工重新进入盐厂现场，探讨盐、身体与家庭记忆之间的关系。拍摄了包括已消失的自流井盐厂在内的三处盐厂空间。",
+      "descriptionEn": "Salt is a necessary element of human life, and also the cultural and emotional carrier of Zigong over thousands of years. The work gathers retired or relocated family members and former salt-factory employees to re-enter the salt-factory site, exploring the relationship between salt, the body and family memory. Three salt-factory spaces were filmed, including the Ziliujing salt factory that has disappeared."
+    },
+    {
+      "slug": "the-breath-of-salt",
+      "title": "盐的呼吸",
+      "titleEn": "The Breath of Salt",
+      "year": "2023",
+      "medium": "现场行为艺术",
+      "mediumEn": "Live performance art",
+      "category": "行为",
+      "categoryEn": "Performance",
+      "images": [
+        "/images/artists/vivienne-peng/p09_03.jpg",
+        "/images/artists/vivienne-peng/p09_00.jpg",
+        "/images/artists/vivienne-peng/p09_01.jpg",
+        "/images/artists/vivienne-peng/p09_02.jpg",
+        "/images/artists/vivienne-peng/p09_04.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p09_03.jpg",
+      "description": "表演者身着白色连体服进入水池，面朝下将憋气坚持到极限约一分钟。起身后走出水池，走向预先铺好的盐堆并躺下，直到被盐覆盖——呈现出一幅盐工记忆的图像。",
+      "descriptionEn": "Dressed in a white jumpsuit, the performer enters a pool, positions herself face down and holds her breath to the limit for about one minute. Getting up, she walks out of the pool to a pre-positioned pile of salt and lies down, until covered by salt—revealing an image of salt-worker memory."
+    },
+    {
+      "slug": "user-value",
+      "title": "用户价值",
+      "titleEn": "User Value",
+      "year": "2019",
+      "medium": "腾讯天美 L1 工作室宣传片",
+      "mediumEn": "Promotional video for Tencent Timi L1 Studio",
+      "category": "委托项目",
+      "categoryEn": "Commission",
+      "images": [
+        "/images/artists/vivienne-peng/p08_00.jpg",
+        "/images/artists/vivienne-peng/p08_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p08_00.jpg",
+      "description": "为腾讯天美 L1 工作室制作的宣传片，阐释「用户价值」这一理念。影片通过描述城市中四个不同人物的生活，呈现腾讯产品对社会产生的深刻影响。",
+      "descriptionEn": "A promotional film produced for Tencent's Timi L1 Studio, supporting the idea of user value. It demonstrates how significantly Tencent's products have impacted society by describing the lives of four different characters in the city."
+    },
+    {
+      "slug": "soil-the-land",
+      "title": "土 — 土地",
+      "titleEn": "soil — The Land",
+      "year": "2021",
+      "medium": "AR 交互作品 / 救生艇、AR 动画、钢板、光、声音等综合媒介",
+      "mediumEn": "AR interactive work / lifeboat, AR animation, steel plate, light, sound and other integrated media",
+      "category": "新媒体",
+      "categoryEn": "New Media",
+      "images": [
+        "/images/artists/vivienne-peng/p11_00.jpg",
+        "/images/artists/vivienne-peng/p10_00.jpg",
+        "/images/artists/vivienne-peng/p11_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p11_00.jpg",
+      "description": "一个幻觉与现实交叠的区域，自然物与人造物在其中被重新生成。近年来无数人亲历生死，全球生态与生态系统发生了显著变化。作品回应这些变化——包括疫情、洪水与森林大火。",
+      "descriptionEn": "A zone of conjoined illusion and reality, where both natural and artificial items are recreated. Numerous people have witnessed life and death in recent years, and global ecology and ecosystems have undergone significant alteration. The work responds to these changes, including the pandemic, floods and forest fires."
+    },
+    {
+      "slug": "electronic-disease-phantom-limb",
+      "title": "电子病 — 幻肢",
+      "titleEn": "Electronic Disease — Phantom Limb",
+      "year": "2021",
+      "medium": "实验作品 / 灯光交互、声音场景、静态装置",
+      "mediumEn": "Experimental work / lighting interaction, sound scene, static installation",
+      "category": "新媒体",
+      "categoryEn": "New Media",
+      "images": [
+        "/images/artists/vivienne-peng/p13_02.jpg",
+        "/images/artists/vivienne-peng/p12_00.jpg",
+        "/images/artists/vivienne-peng/p13_00.jpg",
+        "/images/artists/vivienne-peng/p13_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p13_02.jpg",
+      "description": "由灯光交互、声音与静态装置共同构成的艺术场景；现场聚光灯呈现循环流动的效果，制造出装置在倒退运动的错觉。「电子病」这一概念指向技术时代后期人们对电子产品的过度依赖现象。",
+      "descriptionEn": "An art scene formed through lighting interaction, sound and static installation; the on-site spotlight produces a circulating flow effect, creating the illusion that the installation is moving backwards. The concept of “electronic disease” represents the phenomenon of over-reliance on electronic products in the late technological era."
+    },
+    {
+      "slug": "burning-dust",
+      "title": "燃烧的微尘",
+      "titleEn": "Burning Dust",
+      "year": "2021",
+      "medium": "共创数字艺术装置，尺寸可变",
+      "mediumEn": "Co-created digital art installation, variable size",
+      "category": "新媒体",
+      "categoryEn": "New Media",
+      "images": [
+        "/images/artists/vivienne-peng/p16_00.jpg",
+        "/images/artists/vivienne-peng/p16_01.jpg",
+        "/images/artists/vivienne-peng/p16_02.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p16_00.jpg",
+      "description": "作品与疫情相关，更像是我们所处时代的一个缩影，思考如何以艺术回应这个时代，并对世界与中国正在发生的一切作出评估与物化呈现。疫情打断了全球化、隔绝了整个世界、并将其中的每个人限制起来——我们每个人都是时代的微尘。艺术家参与了张小涛导师动画的制作，主要负责后期合成、调色与动画制作。",
+      "descriptionEn": "Related to the epidemic, the work is like a microcosm of our time, considering how to create art in response to this era and to physically represent what is occurring worldwide and in China. The pandemic has disrupted globalisation, isolated the global community and restricted everyone within it—each of us is the dust of our time. The artist participated in the production of Tutor Zhang Xiaotao's animation, responsible for post-compositing, colour grading and animation production."
+    },
+    {
+      "slug": "imaging-world",
+      "title": "镜像世界",
+      "titleEn": "Imaging World",
+      "year": "2020",
+      "medium": "交互新媒体作品",
+      "mediumEn": "Interactive new media work",
+      "category": "新媒体",
+      "categoryEn": "New Media",
+      "images": [
+        "/images/artists/vivienne-peng/p14_00.jpg",
+        "/images/artists/vivienne-peng/p14_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p14_00.jpg",
+      "description": "每个人都拥有一个由若干「幻象」构成的自我「形象」。我们每个人都精心构建着关于自身的精神表征，以形成「我」的具身。作品将技术生成的真实影像与精神想象中的虚假影像之间的联系可视化。",
+      "descriptionEn": "Everybody has an “image” of themselves that is made up of several “illusions.” Each of us carefully creates a mental representation of who we are in order to develop an “I” embodiment. The work visualises the link between the real image created by technology and the false image of mental imagination."
+    },
+    {
+      "slug": "the-odyssey",
+      "title": "奥德赛",
+      "titleEn": "The Odyssey",
+      "year": "2020",
+      "medium": "数字视听作品",
+      "mediumEn": "Digital sound-visual work",
+      "category": "新媒体",
+      "categoryEn": "New Media",
+      "images": [
+        "/images/artists/vivienne-peng/p15_00.jpg",
+        "/images/artists/vivienne-peng/p15_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p15_00.jpg",
+      "description": "将传统的实体视觉图像以数字方式呈现，并转向虚拟领域。正如在高速信息传播的现代，响亮、单调而盲目的声音导致了信息质量的碎片化、概念化，以及准确掌握的丧失。",
+      "descriptionEn": "A digital representation of the traditional solid visual picture, directed towards the virtual realm. As though in the modern era of high-speed information transmission, loud, monotonous, blind sound causes the fragmentation of information quality, conceptualisation, and loss of accurate mastery."
+    },
+    {
+      "slug": "family-archives",
+      "title": "家庭档案",
+      "titleEn": "Family Archives",
+      "year": "2020",
+      "medium": "实验动画",
+      "mediumEn": "Experimental animation",
+      "category": "动画",
+      "categoryEn": "Animation",
+      "images": [
+        "/images/artists/vivienne-peng/p17_01.jpg",
+        "/images/artists/vivienne-peng/p17_00.jpg",
+        "/images/artists/vivienne-peng/p17_02.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p17_01.jpg",
+      "description": "一部实验影像作品，以家庭成员独特的肖像与经历为基础，并结合中国家庭在历史中的变迁与在地人文经验。",
+      "descriptionEn": "An experimental film based on the unique portraits and experiences of family members, as well as the development of Chinese families throughout history and local humanistic experience."
+    },
+    {
+      "slug": "liangliang-joining-the-army",
+      "title": "亮亮参军",
+      "titleEn": "Liangliang Joining the Army",
+      "year": "2019",
+      "medium": "联合制作实验动画",
+      "mediumEn": "Co-produced experimental animation",
+      "category": "动画",
+      "categoryEn": "Animation",
+      "images": [
+        "/images/artists/vivienne-peng/p18_00.jpg",
+        "/images/artists/vivienne-peng/p18_01.jpg",
+        "/images/artists/vivienne-peng/p18_02.jpg",
+        "/images/artists/vivienne-peng/p18_03.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p18_00.jpg",
+      "description": "影片主要讲述大人与孩子、战争与和平、英雄与冒险的故事，并促使人们思考真实的历史与孩子们真实的梦想。",
+      "descriptionEn": "The film mainly talks about stories of adults and kids, of war and peace, of heroes and adventures, and motivates people to think about actual history and real children's dreams."
+    },
+    {
+      "slug": "three-thousand-worlds-ephemera",
+      "title": "三千世界 · 蜉蝣",
+      "titleEn": "Three Thousand Worlds · Ephemera",
+      "year": "2019",
+      "medium": "实验动画 / 数据可视化",
+      "mediumEn": "Experimental animation / data visualisation",
+      "category": "动画",
+      "categoryEn": "Animation",
+      "images": [
+        "/images/artists/vivienne-peng/p19_01.jpg",
+        "/images/artists/vivienne-peng/p19_00.jpg",
+        "/images/artists/vivienne-peng/p19_02.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p19_01.jpg",
+      "description": "从微观与宏观交织的视角探索时间与空间的更替；以空间站中全球航线数据的信息可视化图像作为起点。",
+      "descriptionEn": "Explores the alternation of time and space from the perspectives of micro and macro interweaving; the information visualisation image of global airline data in the space station serves as the starting point."
+    },
+    {
+      "slug": "human-habitation",
+      "title": "人类居所",
+      "titleEn": "Human Habitation",
+      "year": "2018",
+      "medium": "二维科普动画",
+      "mediumEn": "Two-dimensional popular-science animation",
+      "category": "动画",
+      "categoryEn": "Animation",
+      "images": [
+        "/images/artists/vivienne-peng/p20_00.jpg",
+        "/images/artists/vivienne-peng/p20_01.jpg",
+        "/images/artists/vivienne-peng/p20_02.jpg",
+        "/images/artists/vivienne-peng/p20_03.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p20_00.jpg",
+      "description": "2018 年 10 月创作的二维科普动画，呈现人类生活自史前文明至今所发生的变化。",
+      "descriptionEn": "A two-dimensional popular-science animation created in October 2018, illustrating how human life has changed from the time of prehistoric civilisation to the present."
+    },
+    {
+      "slug": "tea-horse-ancient-road",
+      "title": "雅安博物馆 — 茶马古道",
+      "titleEn": "Ya'an Museum — Tea Horse Ancient Road",
+      "year": "2016",
+      "medium": "二维动画纪录片；负责部分动画合成与文案设计",
+      "mediumEn": "Two-dimensional animated documentary; responsible for partial animation synthesis and copy design",
+      "category": "纪录",
+      "categoryEn": "Documentary",
+      "images": [
+        "/images/artists/vivienne-peng/p21_01.jpg",
+        "/images/artists/vivienne-peng/p21_00.jpg",
+        "/images/artists/vivienne-peng/p21_02.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p21_01.jpg",
+      "description": "2016 年 8 月为雅安博物馆制作的二维动画纪录片，讲述茶马古道的形成、路线与发展历史。",
+      "descriptionEn": "A two-dimensional animated documentary film produced for the Ya'an Museum in August 2016, about the formation, path and development history of the Tea Horse Trail."
+    },
+    {
+      "slug": "sakya",
+      "title": "萨迦",
+      "titleEn": "Sakya",
+      "year": "2020",
+      "medium": "纪录片 / 跨媒介新媒体艺术项目",
+      "mediumEn": "Documentary / cross-media new media art project",
+      "category": "纪录",
+      "categoryEn": "Documentary",
+      "images": [
+        "/images/artists/vivienne-peng/p23_01.jpg",
+        "/images/artists/vivienne-peng/p22_00.jpg",
+        "/images/artists/vivienne-peng/p22_01.jpg",
+        "/images/artists/vivienne-peng/p23_00.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p23_01.jpg",
+      "description": "佛学研究者 Amy Heller 博士担任这部为张小涛博士所作纪录片的讲述者。《萨迦》是一项跨学科、多领域、跨媒介的新媒体艺术项目，完成于 2006 至 2011 年间。",
+      "descriptionEn": "Dr. Amy Heller, a specialist in Buddhist studies, serves as the narrator of this documentary for Dr. Zhang Xiaotao. Sakya is a cross-disciplinary, multi-disciplinary and cross-media new media art project completed between 2006 and 2011."
+    },
+    {
+      "slug": "hawaii-central-axis",
+      "title": "夏威夷 — 中轴线",
+      "titleEn": "Hawai, USA — The Central Axis",
+      "year": "2018",
+      "medium": "中央电视台纪录片",
+      "mediumEn": "Documentary for CCTV",
+      "category": "纪录",
+      "categoryEn": "Documentary",
+      "images": [
+        "/images/artists/vivienne-peng/p24_04.jpg",
+        "/images/artists/vivienne-peng/p24_00.jpg",
+        "/images/artists/vivienne-peng/p24_01.jpg",
+        "/images/artists/vivienne-peng/p24_02.jpg",
+        "/images/artists/vivienne-peng/p24_03.jpg",
+        "/images/artists/vivienne-peng/p24_05.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p24_04.jpg",
+      "description": "2018 年 3 月为中央电视台制作的纪录片，讲述元代如何确立中轴线的起源，以及它如何随中原的兴衰而发展。",
+      "descriptionEn": "A documentary made for CCTV (China Central Television) in March 2018, explaining how the Yuan Dynasty gave origin to the central axis and how it developed through the growth and collapse of the Central Plains."
+    },
+    {
+      "slug": "id-who-i-am",
+      "title": "ID：我是谁",
+      "titleEn": "ID: Who I Am",
+      "year": "2017",
+      "medium": "短片",
+      "mediumEn": "Short film",
+      "category": "影像",
+      "categoryEn": "Film",
+      "images": [
+        "/images/artists/vivienne-peng/p25_00.jpg",
+        "/images/artists/vivienne-peng/p25_01.jpg",
+        "/images/artists/vivienne-peng/p25_02.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p25_00.jpg",
+      "description": "改编自短篇故事《ID：我是谁》，讲述未来人类身份证件被转化为电子文档的故事。作品于 2017 年 1 月首次发表，讲述主人公何夕的电子文档落入谛听系统监控之下的遭遇。",
+      "descriptionEn": "Based on the short tale “ID: Who I Am,” which describes how human identification documents are converted into electronic documents in the future. First published in January 2017, the work follows the protagonist He Xi as his electronic document falls under the surveillance of the Di Ting system."
+    },
+    {
+      "slug": "mobile-phone",
+      "title": "手机",
+      "titleEn": "Mobile Phone",
+      "year": "2015",
+      "medium": "独立影像",
+      "mediumEn": "Independent film",
+      "category": "影像",
+      "categoryEn": "Film",
+      "images": [
+        "/images/artists/vivienne-peng/p26_00.jpg",
+        "/images/artists/vivienne-peng/p26_01.jpg"
+      ],
+      "thumb": "/images/artists/vivienne-peng/p26_00.jpg",
+      "description": "创作于 2015 年，讲述两个在手机上相遇并相恋的都市青年的故事。他们生活在同一空间，却总是擦肩而过，探讨手机与新一代「手机原住民」之间的关系。",
+      "descriptionEn": "Created in 2015, it tells the tale of two urban youngsters who met on their cellphones and fell in love. They live in the same space but always pass by each other, exploring the relationship between mobile phones and the new generation of mobile-phone natives."
+    }
+  ]
+}

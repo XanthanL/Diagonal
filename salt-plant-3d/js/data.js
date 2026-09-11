@@ -10,7 +10,7 @@ export const PROCESS = [
     id: 'overview', index: 0, name: '天车', subtitle: '自贡井盐木构井架',
     nameEn: 'Derrick', subtitleEn: 'Timber Headframe of Zigong Well Salt',
     model: 'well', color: 0xB33A2A, position: [0, 0, 0],
-    cam: [16, 12, 26], target: [0, 6, 0],
+    cam: [21, 15, 27], target: [0, 6.6, 0],
     principle:
       '天车是自贡井盐的标志性木构井架，矗立于盐井之上，用于冲击式顿钻凿井与提汲卤水。其以杉木为骨——但因无足够长度的整木，每根「柱」实为多根杉木并排靠拢、接头彼此错开（错缝搭接）而成的束柱，外面用竹篾一道道密缠成箍，关键节点再套手锻铁箍锁死，全程不用一钉，由低到高逐级收分；顶端置天辊、地面设地辊与大车，构成提卤滑轮组。',
     principleEn:
@@ -19,7 +19,7 @@ export const PROCESS = [
       zh: [
         '束柱：多杉并束、错缝搭接（不是一根整木）',
         '竹篾密缠成箍，间隔以手锻铁箍锁紧节点',
-        '四面收分：由低到高渐窄，并束根数递减（6→2）',
+        '四面收分：由低到高渐窄，并束根数递减（4→3→2）',
         '天辊 → 地辊 → 大车：滑轮组提卤',
         '碓架：踩板蓄能，碓头重力冲击凿井',
         '盐工寮棚 + 井台竹笆，构成井场聚落',
@@ -27,7 +27,7 @@ export const PROCESS = [
       en: [
         'Bundle columns: lashed fir trunks with offset splices — not one solid log',
         'Bamboo-cord rings, with hand-forged iron hoops locking the nodes',
-        'Four-sided taper: narrower upward, fewer trunks (6→2)',
+        'Four-sided taper: narrower upward, fewer trunks (4→3→2)',
         'Sky roller → ground roller → cart: a lifting pulley train',
         'Percussion rig: treadle stores energy, hammer falls to drill',
         'Brine-shed + bamboo screen form the well-yard settlement',
@@ -35,8 +35,8 @@ export const PROCESS = [
     },
     equipment: ['束柱（多杉并束、竹篾成箍）', '大车（提卤绞盘）', '地辊（转向定滑轮）', '碓架（冲击顿钻）', '风篾（防风拉索）', '汲卤筒（提卤桶）', '铁箍（关键节点锁紧）', '盐工寮棚 + 井台竹笆'],
     equipmentEn: ['Bundle column (lashed fir trunks)', 'Cart (draw-wheel)', 'Ground roller (deflector)', 'Duijia (percussion rig)', 'Wind stays (guy lines)', 'Bailer (draw bucket)', 'Iron hoops (joint lock)', 'Brine-shed + bamboo screen'],
-    params: ['天车高约 18 m（燊海井实制）', '束柱 6→2 根渐束', '篾箍 ≈0.5 m/道，铁箍每 4 道', '大车直径约 4.5 m', '风篾 18 根放射拉索（避让布置）'],
-    paramsEn: ['Derrick ~18 m (Shenhai Well)', 'Bundle 6→2 trunks', 'Bamboo hoop ~0.5 m, iron every 4th', 'Cart Ø ~4.5 m', '18 radiating wind stays (avoidance-routed)'],
+    params: ['塔高约 13 m（四棱锥台形制）', '束柱 4→3→2 根递减', '篾箍 ≈0.5 m/道，铁箍每 4 道', '大车直径 ≈3.4 m', '风篾 8 根伞状放射'],
+    paramsEn: ['Tower ~13 m (four-sided taper)', 'Bundle 4→3→2 trunks', 'Bamboo hoop ~0.5 m, iron every 4th', 'Cart Ø ~3.4 m', '8 radiating wind stays'],
     output: '提汲卤水（制盐原料）；维系井场工匠的日常',
     outputEn: 'Drawn brine (salt-making feed); the daily life of well-yard craftsmen',
   },
@@ -46,10 +46,9 @@ export const PROCESS = [
     id: 'column', index: 1, name: '束柱', subtitle: '多杉并束 · 竹篾成箍',
     nameEn: 'Bundle Columns', subtitleEn: 'Lashed Fir Trunks',
     color: 0x77634C, position: [-0.6, 0, 0.2],
-    cam: [8, 9, 17], target: [-0.6, 7, 0.2],
-    halo: [-0.6, 7.5, 0.2, 3.6],
+    cam: [7.5, 7, 10.5], target: [1.5, 6.2, 1.5],
     principle:
-      '天车没有数十米长的整木。每根「柱」由多根杉木并排靠拢、接头彼此错开（错缝搭接）成束，外缠竹篾一道道密箍；关键节点再套手锻铁箍锁死。越往上并束根数越少、越细，整体截面收缩，形成天车「收分」轮廓 —— 收分不是造型选择，而是「无长木可用」这一约束的自然结果。',
+      '天车没有数十米长的整木。每根「柱」由多根杉木并排靠拢、接头彼此错开（错缝搭接）成束，外缠竹篾一道道密箍；关键节点再套手锻铁箍锁死。越往上并束根数越少、越细，整体截面收缩，形成天车「收分」轮廓 —— 收分不是造型选择，而是「无长木可用」这一约束的自然结果。四根角柱自下而上分三段换径（4→3→2 根），换径处正好落在箍梁上。',
     principleEn:
       'No single fir reaches tens of metres, so each "column" is a bundle of trunks stood side-by-side with offset splices, lashed by bamboo-cord rings; key nodes are locked by hand-forged iron hoops. Higher up, fewer and thinner trunks make the cross-section shrink — producing the derrick’s taper. The taper is not a styling choice but the natural result of having no long timber.',
     reaction: {
@@ -58,7 +57,7 @@ export const PROCESS = [
         '错缝搭接：短木对接，弱面错开不同高度',
         '竹篾螺旋密缠成箍（≈0.5 m/道）',
         '每 4 道篾箍换 1 道铁箍锁紧节点',
-        '并束根数 6→2 递减，越上越细',
+        '并束根数 4→3→2 递减，越上越细',
         '收分即束柱截面的逐级收缩',
       ],
       en: [
@@ -66,12 +65,12 @@ export const PROCESS = [
         'Offset splices: short logs joined, weak faces staggered in height',
         'Bamboo-cord rings wound helically (~0.5 m pitch)',
         'One iron hoop every 4th bamboo ring locks the node',
-        'Trunk count tapers 6→2, thinner upward',
+        'Trunk count tapers 4→3→2, thinner upward',
         'The taper is the progressive shrink of the bundle',
       ],
     },
-    params: ['主天车 6 根并束', '副天车 4 根并束', '篾箍 ≈0.5 m/道', '铁箍每 4 道', '收分 正面顶半宽≈底×0.16 · 进深≈底×0.44'],
-    paramsEn: ['Main derrick 6 trunks', 'Sub derrick 4 trunks', 'Bamboo hoop ~0.5 m', 'Iron hoop every 4th', 'Taper front top half ≈ 0.16× base, depth ≈ 0.44×'],
+    params: ['角柱底段 4 根并束', '中段 3 根 · 顶段 2 根', '篾箍 ≈0.5 m/道，铁箍每 4 道', '换径处落在箍梁上', '收分 顶半宽 ≈ 底×0.33'],
+    paramsEn: ['Base stage 4 trunks', 'Mid 3 · Top 2 trunks', 'Bamboo hoop ~0.5 m, iron every 4th', 'Stepped at the ring beams', 'Taper top half-width ≈ 0.33× base'],
   },
 
   // 2 —— 天辊 · 风篾
@@ -79,32 +78,31 @@ export const PROCESS = [
     id: 'roller', index: 2, name: '天辊 · 风篾', subtitle: '提卤定滑轮 · 防风拉索',
     nameEn: 'Sky Roller & Stays', subtitleEn: 'Pulley & Guy Lines',
     color: 0xA9AC82, position: [0, 0, 0],
-    cam: [9, 15, 18], target: [0, 13, 0],
-    halo: [0, 13, 0, 3.8],
+    cam: [16, 16, 20], target: [0, 10.5, 0],
     principle:
-      '顶端天辊是为提卤绳导向的带槽定滑轮，使绳索在井架顶部平稳转向；风篾是自井架上部向外伞状放射的 12 根竹篾拉索，末端固定于地桩夯土之中，以抵抗江风侧压、稳定高耸井架。二者一柔一刚，共维天车直立。',
+      '顶端天辊是为提卤绳导向的带槽定滑轮，使绳索在井架顶部平稳转向；风篾是自天箍头向外伞状散出的 8 根竹篾拉索，末端固定于地桩夯土之中，以抵抗江风侧压、稳定高耸井架。二者一柔一刚，共维天车直立。',
     principleEn:
-      'The sky roller aloft is a grooved fixed pulley that guides the lifting rope smoothly over the headframe; the wind stays are 12 bamboo-cord guy lines radiating outward and anchored into pegged earth, resisting lateral wind load and stabilising the tall frame. One flexible, one rigid, together they hold the derrick upright.',
+      'The sky roller aloft is a grooved fixed pulley that guides the lifting rope smoothly over the headframe; the wind stays are 8 bamboo-cord guy lines radiating outward from the top collar and anchored into pegged earth, resisting lateral wind load and stabilising the tall frame. One flexible, one rigid, together they hold the derrick upright.',
     reaction: {
       zh: [
         '天辊带槽，防止提卤绳脱槽',
-        '风篾 18 根伞状放射（避让相邻装置）',
+        '风篾 8 根伞状放射（避让井场设备）',
         '地桩入土夯固，承拉不承剪',
         '篾绳节点无金属，全靠绞紧',
-        '挂点 ≈0.9 塔高，伞面开阔',
+        '挂点 ≈0.94 塔高，伞面开阔',
         '风篾随高度收紧，越上越密',
       ],
       en: [
         'Grooved sky roller keeps the rope on track',
-        '18 wind stays radiate like an umbrella',
+        '8 wind stays radiate like an umbrella',
         'Earth pegs take tension, not shear',
         'Cord joints are metal-free, held by tension',
-        'Attach at ~0.9 H opens the umbrella',
+        'Attach at ~0.94 H opens the umbrella',
         'Stays tighten with height, denser above',
       ],
     },
-    params: ['天辊 Ø ≈1.3 m', '风篾 18 根（主 10 · 副 8）', '挂点 ≈0.9 塔高', '地桩夯土固定', '篾绳无金属节点'],
-    paramsEn: ['Sky roller Ø ≈1.3 m', '18 wind stays (10 + 8)', 'Attach ≈0.9 H', 'Pegs in earth', 'Cord joints metal-free'],
+    params: ['天辊 Ø ≈1.1 m', '风篾 8 根（45° 均布）', '挂点 ≈0.94 塔高', '地桩夯土固定', '篾绳无金属节点'],
+    paramsEn: ['Sky roller Ø ≈1.1 m', '8 wind stays (45° apart)', 'Attach ≈0.94 H', 'Pegs in earth', 'Cord joints metal-free'],
   },
 
   // 3 —— 大车
@@ -112,12 +110,11 @@ export const PROCESS = [
     id: 'cart', index: 3, name: '大车', subtitle: '提卤绞盘 · 畜力/人力',
     nameEn: 'Draw Cart', subtitleEn: 'Draw-wheel',
     color: 0x8C755A, position: [-3.8, 0, 1.4],
-    cam: [4, 5, 14], target: [-3.8, 2.2, 1.4],
-    halo: [-3.8, 2.0, 1.4, 2.6],
+    cam: [-10, 4.5, 10], target: [-5.4, 2.0, 0],
     principle:
-      '地面大车是直径约 4.5 m 的木轮绞盘，由畜力或人力推动转动，将绕在轮缘的提卤绳收放，把汲卤筒自数十丈深井中绞起。它是提卤滑轮组的动力端，与天辊、地辊串成完整提卤链路。',
+      '地面大车是直径约 3.4 m 的木轮绞盘，由畜力或人力推动转动，将绕在轮缘的提卤绳收放，把汲卤筒自数十丈深井中绞起。它是提卤滑轮组的动力端，与天辊、地辊串成完整提卤链路。',
     principleEn:
-      'The ground cart is a ~4.5 m timber wheel winch turned by draft animals or workers, paying out and reeling in the lifting rope to draw the bailer from a well tens of metres deep. It is the power end of the pulley train,串联 with the sky and ground rollers.',
+      'The ground cart is a ~3.4 m timber wheel winch turned by draft animals or workers, paying out and reeling in the lifting rope to draw the bailer from a well tens of metres deep. It is the power end of the pulley train,串联 with the sky and ground rollers.',
     reaction: {
       zh: [
         '大轮低重心，转动稳',
@@ -136,8 +133,8 @@ export const PROCESS = [
         'Driven by animal or human power',
       ],
     },
-    params: ['直径 ≈4.5 m', '轴碗铁箍加固', '竹篾捆扎立柱', '辐条木轮', '畜力/人力驱动'],
-    paramsEn: ['Ø ≈4.5 m', 'Iron-hooped hub', 'Bamboo-lashed posts', 'Spoked wheel', 'Animal / human driven'],
+    params: ['直径 ≈3.4 m', '轴碗铁箍加固', '竹篾捆扎立柱', '辐条木轮', '畜力/人力驱动'],
+    paramsEn: ['Ø ≈3.4 m', 'Iron-hooped hub', 'Bamboo-lashed posts', 'Spoked wheel', 'Animal / human driven'],
   },
 
   // 4 —— 地辊
@@ -145,8 +142,7 @@ export const PROCESS = [
     id: 'ground', index: 4, name: '地辊', subtitle: '转向定滑轮',
     nameEn: 'Ground Roller', subtitleEn: 'Deflector Pulley',
     color: 0x8C755A, position: [-1.9, 0, 2.1],
-    cam: [4, 5, 12], target: [-1.9, 2.4, 2.1],
-    halo: [-1.9, 1.4, 2.1, 1.5],
+    cam: [-4.5, 3.8, 7.5], target: [-2.6, 1.4, 0],
     principle:
       '地辊置于地面，是改变提卤绳走向的定滑轮：把竖直井筒与水平绞盘之间的绳路转折连接，使大车的水平收绳能顺畅转化为汲卤筒的竖直升降。',
     principleEn:
@@ -178,8 +174,7 @@ export const PROCESS = [
     id: 'duijia', index: 5, name: '碓架', subtitle: '冲击顿钻 · 凿井',
     nameEn: 'Percussion Rig', subtitleEn: 'Impact Drilling',
     color: 0x6E5A42, position: [6.4, 0, 1.8],
-    cam: [13.8, 6, 7.5], target: [6.4, 2.5, 1.8],
-    halo: [6.4, 2.6, 1.8, 2.3],
+    cam: [11, 4.8, 8.5], target: [5.0, 2.6, 0],
     principle:
       '碓架以踩板蓄能、碓头借重力冲击，带动井下钻杆做冲击式顿钻，是凿穿岩层、加深盐井的核心机构。它通常与提卤共用同一井位，凿井与采卤交替进行。',
     principleEn:
@@ -211,8 +206,7 @@ export const PROCESS = [
     id: 'bailer', index: 6, name: '汲卤筒', subtitle: '提卤桶 · 入井',
     nameEn: 'Bailer', subtitleEn: 'Draw Bucket',
     color: 0x6B6259, position: [-0.6, 0, 0.2],
-    cam: [6, 7, 13.2], target: [-0.6, 4, 0.2],
-    halo: [-0.6, 3.2, 0.2, 1.5],
+    cam: [5.2, 4.6, 8.5], target: [0, 3.0, 0],
     principle:
       '汲卤筒是入井提卤的木桶：桶口以双道铁箍锁固、桶底收成锥尖便于沉入卤水；由提卤绳经天辊—地辊—大车升降，把井底卤水一筒筒绞上地面。',
     principleEn:
@@ -244,8 +238,7 @@ export const PROCESS = [
     id: 'shed', index: 7, name: '盐工寮棚 · 竹笆', subtitle: '井场聚落 · 遮风',
     nameEn: 'Shed & Screen', subtitleEn: 'Well-yard Shelter',
     color: 0x9A8455, position: [7.6, 0, 4.8],
-    cam: [12.5, 5.5, 11.5], target: [7.6, 2.2, 4.8],
-    halo: [7.6, 2.2, 4.8, 3.6],
+    cam: [-11, 4.5, 11], target: [-5.6, 1.6, 5.6],
     principle:
       '井台旁设草顶竹笆工棚，供盐工歇息、存放工具与卤缸；井台外缘以竹笆屏风挡风遮泥。寮棚与竹笆让冰冷的工业井架旁长出一处有人烟的「井场聚落」，是天车得以常年运转的生活基底。',
     principleEn:
