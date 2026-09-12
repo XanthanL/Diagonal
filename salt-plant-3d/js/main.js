@@ -35,9 +35,9 @@ const WOOD = 0x77634C;         // 陈年杉木主色
 const WOOD_DARK = 0x4A3B2B;    // 陈年杉木暗部（箍梁·天夹板）
 const WOOD_LIGHT = 0x8F7F64;   // 陈年杉木亮部（受光面）
 const BAMBOO = 0xC2C49C;       // 竹篾（箍·绳）
-const BAMBOO_PALE = 0xBFBD98;  // 新篾（竹笆编织面）
+const BAMBOO_PALE = 0xA6A283;  // 新篾（竹笆编织面）
 const IRON = 0x6B6259;         // 做旧铁箍
-const THATCH = 0x9A8455;       // 茅草屋面
+const THATCH = 0x8C7A54;       // 茅草屋面
 
 // 天车形制（全部几何都由这几个数推出来，改一处即整体收分）
 const DER = {
@@ -65,14 +65,14 @@ const STAY_R = 9.5;      // 落地半径
 // 井场设备布置（同时作为风篾避让与碰撞回归的依据）
 const WELL = { x: 0, z: 0 };
 const CART = { x: -5.4, z: 0, R: 1.7, axleY: 1.9 };
-const ROLLER = { x: -1.6, z: 0, R: 0.34, axleY: 1.56 };   // 绳离辊高 1.90
+const ROLLER = { x: -1.6, z: 0, R: 0.30, axleY: 0.95 };   // 绳离辊高 ≈1.25
 const DUIJIA = { x: 5.0, z: 0 };
 // 寮棚落在风篾空档方位（315°）——与 -x 侧的大车、+x 侧的碓架都不重叠，
 // 且避开默认总览机位（+x+z）的正面视线，不挡塔身
 const SHED = { x: 5.23, z: -5.23 };
 // 汲卤筒（细长竹筒）：len 筒身长、rTop/rBot 上下半径、valve 筒底阀头长
 // minTip/maxTip 为「筒底标高」的升降行程（入井时阀头没入井唇石箍）
-const BAILER = { len: 3.0, rTop: 0.15, rBot: 0.14, valve: 0.42, minTip: 0.72, maxTip: 2.2 };
+const BAILER = { len: 3.0, rTop: 0.15, rBot: 0.14, valve: 0.30, minTip: 0.72, maxTip: 2.2 };
 
 let scene, camera, renderer, controls, clock;
 // 聚焦分区：每个导航项对应一组 part，便于「聚焦件保持原色 / 其余压暗」
@@ -846,11 +846,13 @@ function buildBailer() {
   const earPin = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.34, 8), ironS());
   earPin.position.y = len + 0.06; bucket.add(earPin);
 
-  // 阀头：筒底单向阀（木舌/皮碗），收成一段锥口 —— 入井时卤水顶开、提升时自闭
-  const head = new THREE.Mesh(new THREE.CylinderGeometry(rBot + 0.014, rBot * 0.66, valve * 0.62, 14), ironS());
+  // 阀头：筒底收成一段短钝锥口 + 底口铁圈（单向阀的木舌藏在筒内，不外露成「鱼雷头」）
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(rBot + 0.016, rBot * 0.74, valve * 0.62, 14), woodTex(0x6E5A42, 0.94));
   head.position.y = -valve * 0.31; head.castShadow = true; bucket.add(head);
-  const tongue = new THREE.Mesh(new THREE.ConeGeometry(rBot * 0.66, valve * 0.38, 12), ironS());
-  tongue.position.y = -valve * 0.62 - valve * 0.19; tongue.rotation.x = Math.PI; bucket.add(tongue);
+  const mouth = new THREE.Mesh(hoopGeoC(rBot * 0.76, 0.028, 14), ironS());
+  mouth.rotation.x = Math.PI / 2; mouth.position.y = -valve * 0.62; bucket.add(mouth);
+  const tongue = new THREE.Mesh(new THREE.ConeGeometry(rBot * 0.74, valve * 0.42, 12), woodTex(0x574730, 0.9));
+  tongue.position.y = -valve * 0.62 - valve * 0.21; tongue.rotation.x = Math.PI; bucket.add(tongue);
 
   bucket.position.set(0, BAILER.minTip, 0);   // 每帧改写 position.y
   part.add(bucket);
@@ -942,15 +944,15 @@ function buildGroundRoller() {
   hub.rotation.x = Math.PI / 2; wheelGrp.add(hub);
   PART.groundWheel = wheelGrp;
 
-  // 承轴木架：两根短柱夹住辊轴，柱顶铁座，底部连一根地枕
+  // 承轴木架：两根方柱夹住辊轴，柱顶铁座，底部连一根地枕（整体压低，读作「贴地的辊」）
   [-1, 1].forEach((s) => {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.13, axleY + 0.14, 0.15), vWood(WOOD_DARK, 0.9));
-    post.position.set(x, (axleY + 0.14) / 2, z + s * 0.52); post.castShadow = true; part.add(post);
-    const seat = new THREE.Mesh(hoopGeoC(0.095, 0.026, 12), ironS());
-    seat.position.set(x, axleY, z + s * 0.45); part.add(seat);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.18, axleY + 0.12, 0.20), vWood(WOOD_DARK, 0.9));
+    post.position.set(x, (axleY + 0.12) / 2, z + s * 0.44); post.castShadow = true; part.add(post);
+    const seat = new THREE.Mesh(hoopGeoC(0.10, 0.028, 12), ironS());
+    seat.position.set(x, axleY, z + s * 0.38); part.add(seat);
   });
-  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.13, 1.36), vWood(WOOD_DARK, 0.9));
-  sill.position.set(x, 0.065, z); sill.receiveShadow = true; part.add(sill);
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 1.24), vWood(WOOD_DARK, 0.9));
+  sill.position.set(x, 0.08, z); sill.receiveShadow = true; part.add(sill);
 
   // 绳路第二段：地辊 → 大车轮缘（同高水平引出，读作绳绕上轮）
   const ropeY = axleY + R;
@@ -989,13 +991,16 @@ function buildDuijia() {
     const seat = new THREE.Mesh(hoopGeoC(0.13, 0.024, 12), ironS());
     seat.rotation.y = Math.PI / 2; seat.position.set(X + s * (POST + 0.2), axleY, Z); part.add(seat);
   });
-  // 两根落地斜撑（防摇）
+  // 落地斜撑做在 YZ 平面（左右前后各一根）——刻意避开碓梢的 XY 摆动平面，
+  // 否则几根杆在同一个视平面里交叉，读成一把乱 X
   [-1, 1].forEach((s) => {
-    part.add(strut(
-      new THREE.Vector3(X + s * POST, TOP - 0.16, Z),
-      new THREE.Vector3(X + s * (POST + 1.1), 0, Z),
-      0.085, vWood(WOOD, 0.9)
-    ));
+    [-1, 1].forEach((t) => {
+      part.add(strut(
+        new THREE.Vector3(X + s * POST, TOP - 0.14, Z),
+        new THREE.Vector3(X + s * (POST + 0.14), 0, Z + t * 1.05),
+        0.075, vWood(WOOD, 0.9)
+      ));
+    });
   });
 
   // 碓梢杠杆（绕花辊轴摆动）：前段挑碓杆、后段设踏板
@@ -1017,11 +1022,16 @@ function buildDuijia() {
   const shoe = new THREE.Mesh(new THREE.CylinderGeometry(0.195, 0.135, 0.20, 12), ironS());
   shoe.position.set(headX, -1.814, 0); shoe.castShadow = true; pivot.add(shoe);
 
-  // 踏板（踩踏端，落在人站立的高度）
-  const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.11, 0.42), woodTex(WOOD_LIGHT, 0.85));
-  pedal.position.set(1.55, -0.13, 0); pedal.castShadow = true; pivot.add(pedal);
-  const toe = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.26, 0.42), woodTex(WOOD_LIGHT, 0.85));
-  toe.position.set(1.86, 0.03, 0); pivot.add(toe);
+  // 踏板：以两根吊杆挂在碓梢后端之下 —— 是「吊起来的踏凳板」，不是一根加宽的杆
+  const pedalX = 1.58;
+  [-0.17, 0.17].forEach((zz) => {
+    const hang = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.36, 0.055), woodTex(WOOD_DARK, 0.9));
+    hang.position.set(pedalX + 0.22 * (zz > 0 ? 1 : -1), -0.30, zz); pivot.add(hang);
+  });
+  const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.13, 0.46), woodTex(WOOD_LIGHT, 0.85));
+  pedal.position.set(pedalX, -0.54, 0); pedal.castShadow = true; pivot.add(pedal);
+  const toe = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.24, 0.46), woodTex(WOOD_LIGHT, 0.85));
+  toe.position.set(pedalX + 0.36, -0.38, 0); pivot.add(toe);
   part.add(pivot);
 
   // 砧石：碓头落点处的硬石（模型展示顿钻起落，不再是插地的长杆）
@@ -1038,11 +1048,11 @@ function buildDuijia() {
 // ============================================================
 function bambooPanel(w, h) {
   const p = new THREE.Group();
-  const nV = Math.max(4, Math.round(w / 0.13));
+  const nV = Math.max(4, Math.round(w / 0.112));
   for (let i = 0; i < nV; i++) {
     const px = -w / 2 + (w / nV) * (i + 0.5);
-    const sl = new THREE.Mesh(new THREE.BoxGeometry(0.052, h * (0.93 + Math.random() * 0.11), 0.028), vBamboo(BAMBOO_PALE, 0.9));
-    sl.position.set(px, h / 2, i % 2 ? 0.021 : -0.021);
+    const sl = new THREE.Mesh(new THREE.BoxGeometry(0.082, h * (0.93 + Math.random() * 0.11), 0.028), vBamboo(BAMBOO_PALE, 0.9));
+    sl.position.set(px, h / 2, i % 2 ? 0.026 : -0.026);
     sl.rotation.z = (Math.random() - 0.5) * 0.022;
     sl.castShadow = true; p.add(sl);
   }
