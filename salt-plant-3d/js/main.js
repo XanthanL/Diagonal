@@ -52,10 +52,12 @@ const HALF = (y) => DER.a0 + (DER.a1 - DER.a0) * (y / DER.H);
 // 箍梁层级（每级围一圈方框）
 const RING_Y = [1.7, 3.4, 5.1, 6.8, 8.5, 10.2, 11.9];
 // 角柱分段（分段线落在箍梁上，束柱换径处被横梁遮住）
+// bindStep 与箍的体量要一起看：箍占柱身的比例 = 箍长 / bindStep。
+// 初版 0.30/0.52 ≈ 58%，整根柱读成理发店转灯；现在 0.17/0.62 ≈ 27%。
 const STAGE = [
-  { y0: 0, y1: 5.1, count: 4, rad: 0.100, spread: 0.135, bindStep: 0.52 },
-  { y0: 5.1, y1: 10.2, count: 3, rad: 0.082, spread: 0.105, bindStep: 0.56 },
-  { y0: 10.2, y1: DER.H, count: 2, rad: 0.065, spread: 0.075, bindStep: 0.62 },
+  { y0: 0, y1: 5.1, count: 4, rad: 0.100, spread: 0.135, bindStep: 0.62 },
+  { y0: 5.1, y1: 10.2, count: 3, rad: 0.082, spread: 0.105, bindStep: 0.68 },
+  { y0: 10.2, y1: DER.H, count: 2, rad: 0.065, spread: 0.075, bindStep: 0.76 },
 ];
 // 风篾：8 根，方位 22.5° + 45°k（与四面、四角都错开，避免正对井场设备）
 const STAY_AZ = Array.from({ length: 8 }, (_, k) => Math.PI / 8 + (k * Math.PI) / 4);
@@ -115,15 +117,18 @@ function makeFloorTexture() {
     x.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(96,90,78,${a})`;
     x.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 2, 1 + Math.random() * 2);
   }
-  for (let i = 0; i < 22; i++) {
-    const mx = Math.random() * s, my = Math.random() * s, mr = 24 + Math.random() * 58;
+  // 大尺度色斑：原来 22 个 / 半径 24~82 / alpha 0.045，在原来 ±80 的地面上够用；
+  // 地面扩到 ±210 之后，同一块贴图被看到的地方多了，这些斑就暴露成一地圆点。
+  // 改成更少、更大、更淡 —— 读作「土地的深浅」，而不是「斑点」。
+  for (let i = 0; i < 11; i++) {
+    const mx = Math.random() * s, my = Math.random() * s, mr = 52 + Math.random() * 120;
     const rg = x.createRadialGradient(mx, my, 0, mx, my, mr);
-    rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(255,255,255,0.045)' : 'rgba(92,84,70,0.045)');
+    rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(255,255,255,0.030)' : 'rgba(92,84,70,0.026)');
     rg.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = rg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
   }
   const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(16, 16); t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(42, 42); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
@@ -300,7 +305,7 @@ function vWood(color, rough) { return poolMat(`w${color}_${rough}`, TEX.wood, co
 function vStone(color, rough) { return poolMat(`s${color}_${rough}`, TEX.stone, color, rough, 5); }
 function vBamboo(color = BAMBOO_PALE, rough = 0.9) { return poolMat(`b${color}_${rough}`, TEX.wood, color, rough, 5); }
 // 共享材质（铁 / 篾 / 茅草 / 绳）——节点数量大，必须共享才能合并
-let _ironM = null, _bambooM = null, _thatchM = null, _ropeM = null;
+let _ironM = null, _bambooM = null, _thatchM = null, _thatchRoofM = null, _ropeM = null;
 function ironS() {
   if (!_ironM) _ironM = new THREE.MeshStandardMaterial({ map: TEX.rust, color: IRON, roughness: 0.72, metalness: 0.58 });
   return _ironM;
@@ -312,6 +317,18 @@ function bambooS() {
 function thatchS() {
   if (!_thatchM) _thatchM = new THREE.MeshStandardMaterial({ map: TEX.thatch, color: THATCH, roughness: 1.0, metalness: 0.0 });
   return _thatchM;
+}
+// 草顶面专用：茅草贴图的横纹（每 112px 一道）在 repeat 6 下会密成「木板拼缝」，
+// 屋面整片就读成木板台面。屋面面积大，单独用一份重复度更低的贴图。
+function thatchRoofS() {
+  if (!_thatchRoofM) {
+    const t = TEX.thatch.clone();
+    t.needsUpdate = true;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(2.0, 1.6);
+    _thatchRoofM = new THREE.MeshStandardMaterial({ map: t, color: THATCH, roughness: 1.0, metalness: 0.0 });
+  }
+  return _thatchRoofM;
 }
 function ropeS() {
   if (!_ropeM) _ropeM = new THREE.MeshStandardMaterial({ color: 0x9A8F6B, roughness: 1.0, metalness: 0.0 });
@@ -466,11 +483,46 @@ function bundleColumn(p1, p2, opt = {}) {
   // 箍环半径取木束实际外缘上限，确保箍套在木外、不切入杉木
   const bindR = (count > 1 ? spread * 1.12 : 0) + rad * 1.2;
   const n = Math.max(2, Math.round(len / bindStep));
-  const wg = windGeoC(r2(bindR), 0.3, 2, 0.022);
-  const ig = hoopGeoC(r2(bindR + 0.02), 0.046, 14);
+  const wg = windGeoC(r2(bindR), 0.17, 2, 0.013);
+  const ig = hoopGeoC(r2(bindR + 0.012), 0.030, 14);
+
+  // 疏密节奏：柱脚 / 柱顶 / 每个错缝接头是「密区」（那里才真的需要锁死），
+  // 杆身是「疏区」。做法是用密度函数对均匀采样做重映射 —— 箍的总数不变，
+  // 只是沿柱身分布不均，于是整根柱读起来有呼吸，而不是一串等距圆环。
+  const anchors = [0, 1];
+  for (let k = 1; k <= splices; k++) anchors.push(k / (splices + 1));
+  // 但箍本来就没几道的短构件（棚柱、门架柱）不能这么拉 —— 只有 4~5 道箍时，
+  // 两端成簇、中间空掉，会读成一串珠子。所以聚拢强度随箍数递减。
+  const AMP = n >= 9 ? 2.4 : n >= 6 ? 1.2 : 0.0;
+  const SIG = 0.06, M = 48;
+  const cum = [0];
+  for (let i = 1; i <= M; i++) {
+    const tt = (i - 0.5) / M;
+    let d = 1;
+    anchors.forEach((a) => { d += AMP * Math.exp(-((tt - a) * (tt - a)) / (2 * SIG * SIG)); });
+    cum.push(cum[i - 1] + d / M);
+  }
+  const tot = cum[M];
+  const ys = [];
   for (let i = 0; i <= n; i++) {
-    const y = -len / 2 + (len / n) * i;
-    if (ironEvery > 0 && i % ironEvery === 0) {
+    const target = (i / n) * tot;
+    let j = 0; while (j < M - 1 && cum[j + 1] < target) j++;
+    const span = Math.max(1e-6, cum[j + 1] - cum[j]);
+    const tt = Math.min(1, Math.max(0, (j + (target - cum[j]) / span) / M));
+    ys.push(-len / 2 + len * tt);
+  }
+  // 铁箍落在结构节点上（柱脚 / 柱顶 / 每个错缝接头），而非机械地「每第 N 道」
+  const ironAt = new Set();
+  if (ironEvery > 0) {
+    anchors.forEach((a) => {
+      const ya = -len / 2 + len * a;
+      let bi = 0, bd = Infinity;
+      ys.forEach((y, i) => { const d = Math.abs(y - ya); if (d < bd) { bd = d; bi = i; } });
+      ironAt.add(bi);
+    });
+  }
+  ys.forEach((y, i) => {
+    if (ironAt.has(i)) {
       const h = new THREE.Mesh(ig, ironS());
       h.rotation.x = Math.PI / 2; h.position.set(0, y, 0);
       grp.add(h);
@@ -480,7 +532,7 @@ function bundleColumn(p1, p2, opt = {}) {
       w.rotation.y = (i * 0.7) % Math.PI;
       grp.add(w);
     }
-  }
+  });
 
   grp.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
   grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
@@ -504,7 +556,7 @@ function strut(p1, p2, thickness, mat) {
 function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(BG);
-  scene.fog = new THREE.FogExp2(BG, 0.0072);
+  scene.fog = new THREE.FogExp2(BG, 0.0055);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
   camera.position.set(20, 14, 26);
@@ -523,7 +575,7 @@ function init() {
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.minDistance = 5;
-  controls.maxDistance = 120;
+  controls.maxDistance = 82;
   controls.maxPolarAngle = Math.PI * 0.495;
   controls.target.set(0, 6.2, 0);
 
@@ -548,6 +600,7 @@ function init() {
   Object.keys(TEX).forEach((k) => { if (TEX[k] && TEX[k].isTexture) TEX[k].anisotropy = maxAniso; });
 
   buildGround();
+  buildBackdrop();
   buildStation();
   initParts();
   bindUI();
@@ -582,14 +635,32 @@ function init() {
 // 地面：井场夯土 + 一圈极淡的场地界定环（无网格，避免工业厂房感）
 // ============================================================
 function buildGround() {
+  // 地面分两块，只为绕开一个坑：阴影相机（dir.shadow）只覆盖原点 ±56，
+  // 范围外的地面落在 shadow map 之外，采样 clamp 到边缘纹素，会被整片误判成
+  // 处在阴影里。原来地面只到 ±80，坏区只是贴边的一条；地面一放大到 ±210，
+  // 它就变成中远处一大片暗带。所以：近场接阴影、远场不接。
+  // 两块各用一份贴图 clone —— repeat 必须各自按自己的米数走，才能保持同样的
+  // 每格 10 m，接缝处看不出拼贴尺度跳变。
+  const floorInner = TEX.floor.clone();
+  floorInner.needsUpdate = true;
+  floorInner.repeat.set(14, 14);                 // 140 m / 10 m
   const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(160, 160),
-    new THREE.MeshStandardMaterial({ map: TEX.floor, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
+    new THREE.PlaneGeometry(140, 140),
+    new THREE.MeshStandardMaterial({ map: floorInner, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
   );
   plane.rotation.x = -Math.PI / 2;
   plane.position.y = GROUND_Y - 0.02;
   plane.receiveShadow = true;
   scene.add(plane);
+
+  const farGround = new THREE.Mesh(
+    new THREE.PlaneGeometry(420, 420),
+    new THREE.MeshStandardMaterial({ map: TEX.floor, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
+  );
+  farGround.rotation.x = -Math.PI / 2;
+  farGround.position.y = GROUND_Y - 0.06;        // 错开 4 cm，避免与近场共面打架
+  farGround.receiveShadow = false;
+  scene.add(farGround);
 
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(11.2, 11.55, 128),
@@ -598,6 +669,64 @@ function buildGround() {
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = GROUND_Y - 0.005;
   scene.add(ring);
+}
+
+// ============================================================
+// 远景：远处的井场与丘陵
+// 自贡的真实天际线是「天车林立、笕管纵横、锅灶密布」—— 一座孤零零的天车
+// 读不出这件事。远景只用极淡的平涂剪影：不投影、不接阴影、不进 PART
+// （因此不参与聚焦压暗），靠明度差退到纸面之后，只提供场所感，不抢主体。
+// ============================================================
+function farDerrick(h, a0, mat) {
+  const grp = new THREE.Group();
+  const a1 = a0 * 0.30;
+  const CN = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+  // 杆件要够粗：细杆在 40~70 m 外会读成「线框 / 玻璃塔」，粗一点才有体量感
+  CN.forEach(([sx, sz]) => {
+    grp.add(strut(new THREE.Vector3(sx * a0, 0, sz * a0), new THREE.Vector3(sx * a1, h, sz * a1), 0.30, mat));
+  });
+  [0.30, 0.58, 0.86].forEach((t) => {
+    const y = h * t, a = a0 + (a1 - a0) * t;
+    [[0, 1], [1, 2], [2, 3], [3, 0]].forEach(([i, j]) => {
+      grp.add(strut(new THREE.Vector3(CN[i][0] * a, y, CN[i][1] * a), new THREE.Vector3(CN[j][0] * a, y, CN[j][1] * a), 0.18, mat));
+    });
+  });
+  grp.add(strut(new THREE.Vector3(-a1 - 0.70, h, 0), new THREE.Vector3(a1 + 0.70, h, 0), 0.22, mat));
+  return grp;
+}
+
+function buildBackdrop() {
+  const g = new THREE.Group();
+  const bg = new THREE.Color(BG);
+
+  // 试过加远山，结论是此路不通：这个设计是「纸面同色天地」，山再矮再淡，
+  // 从略高的机位看下去都只能读成地上一摊浅色水洼，救不回来。所以背景只留
+  // 远处的天车 —— 「天车林立」这层意思由它们说，地平线交给雾与纸底。
+  // 远处的天车：三座，明度呈阶梯，越远越接近纸底（mix = 与 BG 的混色比例）。
+  // mix 必须明显小于「淡到看不见」的阈值，否则会读成幽灵白架子。
+  // 方位刻意错开默认机位（(20,14,26) → 视线方位角 52°，故背景正中是 232°）：
+  // 初版有一座正好落在 240°，被主塔整个挡住。现在三座分布在 198/252/305，
+  // 任一机位下最多挡住一座，绕一下才能看全 —— 这也正好是「天车林立」的意思。
+  const FAR = [
+    [40, 198, 10.5, 1.35, 0.46],
+    [56, 252, 8.5, 1.15, 0.58],
+    [70, 305, 12.0, 1.55, 0.68],
+  ];
+  FAR.forEach(([RR, deg, h, a0, mix]) => {
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(WOOD_DARK).lerp(bg, mix), fog: true });
+    const a = (deg * Math.PI) / 180;
+    const d = farDerrick(h, a0, mat);
+    d.position.set(Math.cos(a) * RR, 0, Math.sin(a) * RR);
+    d.rotation.y = a;
+    g.add(d);
+  });
+
+  // 远景件数不多、材质只有 4 种，合并后只剩 4 个 mesh
+  const holder = new THREE.Group();
+  emit(g);
+  flushBin(holder);
+  holder.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
+  scene.add(holder);
 }
 
 // ============================================================
@@ -875,13 +1004,30 @@ function buildCart() {
   wheelGrp.position.set(x, axleY, z);
   part.add(wheelGrp);
 
-  // 轮缘：厚木环，自带绳槽 —— 大车之所以做得这么巨大，
-  // 正因为提卤绳是直接绕在轮缘槽里的（不是绕在中央小鼓上）
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.15, 10, 34), woodTex(WOOD, 0.9));
+  // 轮缘：车削出的带槽木环 —— 大车之所以做得这么巨大，
+  // 正因为提卤绳是直接绕在轮缘槽里的（不是绕在中央小鼓上）。
+  // 断面：两侧法兰高起、中间一道平底绳槽；槽底半径取 R-0.055，
+  // 于是绳心正好落在 R 上 —— 绳与槽才真的咬合，而不是浮在轮外。
+  // 第一版把法兰做得很高、槽挖得很深，结果斜看时绳被法兰整条挡住 —— 等于没做。
+  // 轮缘得薄、槽得浅、盘上去的绳要露在外面，才读得出「绳绕在轮缘槽里」。
+  const rimProf = [
+    [R - 0.10, -0.17], [R + 0.02, -0.17], [R + 0.02, -0.115],
+    [R - 0.05, -0.095], [R - 0.05, 0.095], [R + 0.02, 0.115],
+    [R + 0.02, 0.17], [R - 0.10, 0.17], [R - 0.10, -0.17],
+  ].map(([r, y]) => new THREE.Vector2(r, y));
+  const rim = new THREE.Mesh(new THREE.LatheGeometry(rimProf, 40), woodTex(WOOD, 0.9));
+  rim.rotation.x = Math.PI / 2;              // 车削轴 Y → 轮轴 Z
   rim.castShadow = true; wheelGrp.add(rim);
-  wheelGrp.add(new THREE.Mesh(hoopGeoC(R, 0.035, 34), bambooS()));
-  [-0.19, 0.19].forEach((zz) => {
-    const band = new THREE.Mesh(hoopGeoC(R, 0.026, 34), ironS());
+  // 槽里盘着的两圈绳：槽底 R-0.05 + 绳半径 0.058 → 绳心 R+0.008，
+  // 绳外缘 R+0.066，比轮缘肩 R+0.02 高出 4.6 cm，斜看时是一道浅色的宽带。
+  // 用竹篾色（与篾箍同材质）—— 提卤绳本来就是竹篾绞的，正好也和暗木轮缘拉开明度。
+  [-0.058, 0.058].forEach((zz) => {
+    const turn = new THREE.Mesh(new THREE.TorusGeometry(R + 0.008, 0.058, 6, 36), bambooS());
+    turn.position.z = zz; wheelGrp.add(turn);
+  });
+  // 两道铁箍落在轮缘两肩，把木缘箍住（原来是按旧粗轮缘定的半径，已不在肩上）
+  [-0.145, 0.145].forEach((zz) => {
+    const band = new THREE.Mesh(hoopGeoC(R + 0.016, 0.020, 34), ironS());
     band.position.z = zz; wheelGrp.add(band);
   });
 
@@ -954,11 +1100,14 @@ function buildGroundRoller() {
   const sill = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.16, 1.24), vWood(WOOD_DARK, 0.9));
   sill.position.set(x, 0.08, z); sill.receiveShadow = true; part.add(sill);
 
-  // 绳路第二段：地辊 → 大车轮缘（同高水平引出，读作绳绕上轮）
+  // 绳路第二段：地辊 → 大车轮缘（同高水平引出，读作绳绕上轮）。
+  // 终点必须解轮圆求出同高度处的轮缘点，否则绳会浮在轮子外侧、根本没搭上。
   const ropeY = axleY + R;
+  const dy = ropeY - CART.axleY;
+  const dx = Math.sqrt(Math.max(0.04, CART.R * CART.R - dy * dy));
   part.add(strut(
     new THREE.Vector3(x, ropeY, z),
-    new THREE.Vector3(CART.x + CART.R + 0.16, ropeY, CART.z),
+    new THREE.Vector3(CART.x + dx, ropeY, CART.z),
     0.05, ropeS()
   ));
 }
@@ -1090,21 +1239,72 @@ function buildShed() {
     purlin.position.set(0, h, sz * D / 2); s.add(purlin);
   });
 
-  // 单坡草顶 + 压草竹条 + 脊木
+  // 单坡草顶。第一版没做对：芯板只有 10 cm 厚 + 五道比它更宽的竹条压在上面，
+  // 于是整片读成一块木板台面。草顶的体量来自「厚」，边缘的软来自「垂」——
+  // 所以芯层加厚到 26 cm，竹条减到三道、改细，出挑的一圈改成一圈垂下来的草把。
   const slope = Math.atan2(Hf - Hb, D);
-  const roofLen = D / Math.cos(slope) + 0.9;
+  const ec = Math.cos(slope), es = Math.sin(slope);
+  const roofLen = D / ec + 0.9;
+  const yc = (Hf + Hb) / 2 + 0.12;
+  const RW = W + 0.7;
+
   const roofGrp = new THREE.Group();
-  roofGrp.position.set(0, (Hf + Hb) / 2 + 0.12, 0);
+  roofGrp.position.set(0, yc, 0);
   roofGrp.rotation.x = slope;
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(W + 0.7, 0.16, roofLen), thatchS());
-  roof.castShadow = true; roof.receiveShadow = true; roofGrp.add(roof);
-  for (let i = -2; i <= 2; i++) {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(W + 0.78, 0.055, 0.07), vBamboo(BAMBOO_PALE, 0.9));
-    b.position.set(0, 0.1, i * (roofLen / 5.4)); roofGrp.add(b);
+  const core = new THREE.Mesh(new THREE.BoxGeometry(RW - 0.10, 0.26, roofLen - 0.34), thatchRoofS());
+  core.castShadow = true; core.receiveShadow = true; roofGrp.add(core);
+
+  // 压草竹条：三道细的 —— 是「绑」，不是「铺板」
+  for (let i = -1; i <= 1; i++) {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(RW - 0.02, 0.032, 0.042), vBamboo(BAMBOO_PALE, 0.9));
+    b.position.set(0, 0.155, i * (roofLen / 4.0)); roofGrp.add(b);
   }
-  const ridge = new THREE.Mesh(new THREE.BoxGeometry(W + 0.82, 0.11, 0.15), vWood(WOOD_DARK, 0.9));
-  ridge.position.set(0, 0.13, -roofLen / 2 + 0.2); roofGrp.add(ridge);
+  // 脊木 + 脊草垄：高檐收口
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(RW + 0.06, 0.09, 0.13), vWood(WOOD_DARK, 0.9));
+  ridge.position.set(0, 0.160, -roofLen / 2 + 0.26); roofGrp.add(ridge);
+  const roll = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.155, RW + 0.12, 10), thatchS());
+  roll.rotation.z = Math.PI / 2; roll.position.set(0, 0.210, -roofLen / 2 + 0.22);
+  roll.castShadow = true; roofGrp.add(roll);
   s.add(roofGrp);
+
+  // 檐口垂草：沿四条檐线往下挂，长短参差。关键是要挂在「棚体」坐标系里
+  // （不是屋顶坐标系）—— 屋顶是斜的，挂在斜坐标系里的草束会顺着坡长出去，
+  // 只有挂在棚体坐标系里才是真的受重力垂下来。
+  const eaveY = (z1) => yc - z1 * es;
+  const eaveZ = (z1) => z1 * ec;
+  const tuftG = [];
+  // 草把做细做密 + 落点抖动。粗而等距的草把（初版 0.105 宽 / 0.115 间距）之间会露缝，
+  // 整圈读成栅栏；细密且错落的才叠成一片「草裙」。
+  const hang = (px, py, pz, ln, ry) => {
+    const g = new THREE.BoxGeometry(0.052, ln, 0.046);
+    const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+      (Math.random() - 0.5) * 0.36, ry + (Math.random() - 0.5) * 0.44, (Math.random() - 0.5) * 0.36));
+    const m = new THREE.Matrix4().compose(
+      new THREE.Vector3(
+        px + (Math.random() - 0.5) * 0.045,
+        py - ln / 2 + 0.07 + (Math.random() - 0.5) * 0.035,
+        pz + (Math.random() - 0.5) * 0.03),
+      q, new THREE.Vector3(1, 1, 1));
+    tuftG.push(g.applyMatrix4(m));
+  };
+  const nx = Math.max(16, Math.round(RW / 0.036));
+  for (let i = 0; i < nx; i++) {
+    const px = -RW / 2 + (RW / nx) * (i + 0.5);
+    const zl = roofLen / 2 - 0.05 + Math.random() * 0.06;      // 低檐：滴水边，留长
+    hang(px, eaveY(zl), eaveZ(zl), 0.30 + Math.random() * 0.26, 0);
+    const zh = -roofLen / 2 + 0.12;                            // 高檐：贴着脊，短
+    hang(px, eaveY(zh), eaveZ(zh), 0.17 + Math.random() * 0.14, 0);
+  }
+  const nz = Math.max(14, Math.round(roofLen / 0.040));
+  for (let i = 0; i < nz; i++) {
+    const z1 = -roofLen / 2 + (roofLen / nz) * (i + 0.5);
+    const y = eaveY(z1), z2 = eaveZ(z1);
+    const ln = (0.22 + Math.random() * 0.18) * (0.72 + 0.5 * (z1 / roofLen + 0.5));
+    hang(-RW / 2 - 0.035, y, z2, ln, Math.PI / 2);
+    hang(RW / 2 + 0.035, y, z2, ln, Math.PI / 2);
+  }
+  const fringe = new THREE.Mesh(mergeGeos(tuftG), thatchS());
+  fringe.castShadow = true; s.add(fringe);
 
   // 三面竹笆围护（朝井的一面敞开）
   const back = bambooPanel(W - 0.12, Hb - 0.14);
