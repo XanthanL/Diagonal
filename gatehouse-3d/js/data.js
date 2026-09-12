@@ -162,7 +162,7 @@ export const PARTS = [
     name: '山水 · 雾 · 桥', subtitle: '门楼之外的一切',
     nameEn: 'Hills, Water & Mist', subtitleEn: 'Everything but the gate',
     color: 0x5fa8a0,
-    cam: [8, 6, 40], target: [-18, 2, 32],
+    cam: [12, 5.5, 42], target: [-16, 2, 33],
     principle:
       '水是楼前一湾碧水:玉色近岸、深色潭心,粼光随时间走。石桥偏左跨水,是唯一破对称处。' +
       '山是三重纸幕,一重让一重,颜色逐层提浅;灵雾在山与水之间慢漂,松三五成组,灵火满坡。',

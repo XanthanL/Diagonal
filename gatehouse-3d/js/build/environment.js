@@ -274,7 +274,8 @@ function buildBridge() {
     s.closePath();
     const hole = new THREE.Path();
     hole.moveTo(-archR, archBase);
-    hole.absarc(0, archBase, archR, Math.PI, 0, false);
+    // ⚠ clockwise=true 才走"上半圆"(PI→PI/2→0);false 会走水下下半圆,券洞等于没挖(曾出的 bug)
+    hole.absarc(0, archBase, archR, Math.PI, 0, true);
     hole.lineTo(archR, archBase);
     hole.closePath();
     s.holes.push(hole);
@@ -306,8 +307,8 @@ function buildBridge() {
   }
   // 两端雁翅(桥台)
   for (const e of [-1, 1]) {
-    const ab = new THREE.Mesh(new THREE.BoxGeometry(w + 1.8, 2.6, 3.2), stoneD);
-    ab.position.set(0, -0.9, e * (half + 1.2));
+    const ab = new THREE.Mesh(new THREE.BoxGeometry(w + 1.8, 2.2, 3.2), stoneD);
+    ab.position.set(0, -1.0, e * (half + 1.2));
     tmp.add(ab);
   }
   tmp.position.set(cx, 0, cz);
