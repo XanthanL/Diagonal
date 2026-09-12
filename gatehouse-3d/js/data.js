@@ -8,7 +8,7 @@ export const PARTS = [
     name: '总览', subtitle: '山谷中的灵光门楼',
     nameEn: 'Overview', subtitleEn: 'A spirit gate in the valley',
     color: 0x55565a,
-    cam: [32, 19, 56], target: [0, 11, 0],
+    cam: [32, 20, 56], target: [0, 12, 0],
     principle:
       '一座无名的门楼立在山谷正中:三层石台基托起白墩与三重檐,拱门里亮着一扇灵光。' +
       '水在楼前拐了一道弯,桥偏在左侧,松与灵火散在坡上,山一层让一层,最远交给雾。',
@@ -52,7 +52,7 @@ export const PARTS = [
     name: '门 · 墙 · 匾', subtitle: '唯一的入口',
     nameEn: 'Gate, Wall & Plaque', subtitleEn: 'The only entrance',
     color: 0xa03828,
-    cam: [8, 9, 21], target: [0, 7, 3],
+    cam: [8, 10, 21], target: [0, 8, 3],
     principle:
       '白灰墩子是一整块面,只在正中开一道拱门。拱门无扇——它通向灵光,不防盗。' +
       '朱红柱一圈立在墩顶,格扇窗里透出暖光,像楼里始终亮着人间灯火。' +
@@ -76,7 +76,7 @@ export const PARTS = [
     name: '三重檐 · 翘角', subtitle: '一整片连续曲面',
     nameEn: 'Three Roofs', subtitleEn: 'One continuous curve each',
     color: 0x46616a,
-    cam: [24, 21, 32], target: [0, 19, 0],
+    cam: [24, 22, 32], target: [0, 20, 0],
     principle:
       '每重檐是一片连续曲面,不是一摞板:檐口平直、只向角端起翘,屋面按举折曲线爬向顶部平座,' +
       '平座恰好托住上一重楼身。半跨 13.2 → 8.9 → 5.6 逐层收分,翘角逐层变短、变轻。',
@@ -98,7 +98,7 @@ export const PARTS = [
     name: '灵光门', subtitle: '拱洞里的漩涡',
     nameEn: 'The Spirit Portal', subtitleEn: 'A vortex in the arch',
     color: 0x7fe0c8,
-    cam: [7, 8, 22], target: [0, 5.2, 0.6],
+    cam: [4.6, 5.6, 17.5], target: [0.2, 4.75, 2.4],
     principle:
       '拱门不装门扇,装一扇灵光:玉青与暖金绞成三臂漩涡,缓缓自转,流光被一圈圈吸入门心。' +
       '它是整座建筑唯一的"非常"之物——前面的山、水、楼都按人间规制来,只有这一扇不解释。',
@@ -112,15 +112,15 @@ export const PARTS = [
         'Stream particles spiral inward, turning with the vortex',
         'Jade appears only in the portal and the seal — the site-wide highlight discipline'],
     },
-    params: ['门径 3.5 m', '漩涡 3 臂', '流光 60 粒', '自转 ≈0.26 圈/秒'],
-    paramsEn: ['Portal ⌀ 3.5 m', 'Vortex: 3 arms', 'Stream: 60 motes', 'Spin ≈0.26 rev/s'],
+    params: ['门洞 4.6 × 4.7 m', '对数双螺旋', '流光 60 粒', '自转 ≈0.26 圈/秒'],
+    paramsEn: ['Portal 4.6 × 4.7 m', 'Dual log-spiral', 'Stream: 60 motes', 'Spin ≈0.26 rev/s'],
   },
   {
     id: 'lanterns', index: 5,
     name: '檐灯', subtitle: '六盏不灭的灯',
     nameEn: 'Eave Lanterns', subtitleEn: 'Six undying lamps',
     color: 0xffd98a,
-    cam: [12, 11, 18], target: [-6, 10, -3],
+    cam: [12, 12, 18], target: [-6, 11, -3],
     principle:
       '一层檐四角各垂一盏,拱门两侧再各一盏:红灯金盖,内里一点暖芯。' +
       '灯不灭、不摇——它们是给夜行灵火引路的,不是给人照明的。',
@@ -141,7 +141,7 @@ export const PARTS = [
     name: '金顶', subtitle: '收成一粒宝珠',
     nameEn: 'The Gilded Crown', subtitleEn: 'Tapered to a pearl',
     color: 0xc9a13b,
-    cam: [8, 31, 14], target: [0, 29.5, 0],
+    cam: [8, 32, 14], target: [0, 30.5, 0],
     principle:
       '顶不再起檐,两级薄层收成一条金领,领上一只葫芦宝珠,珠尖一点灵光。' +
       '顶要么一条线收掉,要么一个尖收掉——这里选了尖。',
@@ -162,7 +162,7 @@ export const PARTS = [
     name: '山水 · 雾 · 桥', subtitle: '门楼之外的一切',
     nameEn: 'Hills, Water & Mist', subtitleEn: 'Everything but the gate',
     color: 0x5fa8a0,
-    cam: [-8, 7, 50], target: [2, 2, 28],
+    cam: [8, 6, 40], target: [-18, 2, 32],
     principle:
       '水是楼前一湾碧水:玉色近岸、深色潭心,粼光随时间走。石桥偏左跨水,是唯一破对称处。' +
       '山是三重纸幕,一重让一重,颜色逐层提浅;灵雾在山与水之间慢漂,松三五成组,灵火满坡。',

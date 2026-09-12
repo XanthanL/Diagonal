@@ -54,6 +54,8 @@ export function buildFireflies() {
         vec4 d = texture2D(map, gl_PointCoord);
         vec3 col = mix(cGold, cJade, vT);
         gl_FragColor = vec4(col, d.a * vA * 0.9);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   const pts = new THREE.Points(geo, mat);
@@ -116,6 +118,8 @@ export function buildPortalStream() {
         vec4 d = texture2D(map, gl_PointCoord);
         vec3 col = mix(cJade, cGold, smoothstep(0.3, 1.0, vK));
         gl_FragColor = vec4(col, d.a * vFade * 0.85);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   const pts = new THREE.Points(geo, mat);

@@ -20,7 +20,7 @@ export function runSelftest({ scene, camera, renderer, tickers }) {
   const names = new Set();
   scene.traverse((o) => { if (o.name) names.add(o.name); });
   const need = ['environment', 'gatehouse', 'terrain', 'water', 'hills', 'mist', 'trees', 'bridge',
-    'moon', 'terrace', 'roofs', 'halls', 'lanterns', 'crown', 'portal', 'fireflies', 'portal-stream'];
+    'sun', 'terrace', 'roofs', 'halls', 'lanterns', 'crown', 'portal', 'fireflies', 'portal-stream'];
   const missing = need.filter((n) => !names.has(n));
   add('#3 场景组齐全', missing.length === 0, missing.length ? 'missing=' + missing.join(',') : need.length + ' 组');
 

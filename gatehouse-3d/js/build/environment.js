@@ -25,9 +25,12 @@ function buildSky() {
       uniform vec3 top; uniform vec3 mid; uniform vec3 bottom;
       void main() {
         float h = clamp(vDir.y, -0.1, 1.0);
-        vec3 col = mix(mid, top, pow(max(h, 0.0), 0.62));
-        col = mix(bottom, col, smoothstep(-0.06, 0.10, h));
+        // 蓝先到:pow<1 让 mid(已是天蓝)在较低仰角就主导,蔚蓝更早铺满画面
+        vec3 col = mix(mid, top, pow(max(h, 0.0), 0.45));
+        col = mix(bottom, col, smoothstep(-0.05, 0.075, h));
         gl_FragColor = vec4(col, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   const sky = new THREE.Mesh(geo, mat);
@@ -116,7 +119,7 @@ function buildWater() {
       time: { value: 0 },
       colA: { value: new THREE.Color(C.water) },
       colB: { value: new THREE.Color(C.waterDeep) },
-      colHi: { value: new THREE.Color(0xdff2e8) },
+      colHi: { value: new THREE.Color(0xe8fbf4) },
     },
     transparent: true,
     vertexShader: `
@@ -137,12 +140,15 @@ function buildWater() {
         vec3 col = mix(colB, colA, smoothstep(0.10, 0.85, r));
         col += (rip * 0.035 + rip2 * 0.030) * (1.0 - r * 0.5);
         col = mix(col, colHi, smoothstep(0.90, 0.995, r));
-        // 粼光:随机的几道短闪(不是满屏网格)
-        float s1 = sin(vUv.x * 11.0 + time * 0.8) * sin(vUv.y * 7.0 - time * 0.6);
-        float s2 = sin(vUv.x * 17.0 - time * 1.1) * sin(vUv.y * 13.0 + time * 0.9);
-        col += (pow(max(s1, 0.0), 12.0) * 0.20 + pow(max(s2, 0.0), 16.0) * 0.14) * (1.0 - r * 0.5);
+        // 粼光:两列波同峰才亮 → 稀疏独立光点,不是成片白斑
+        float s1 = sin(vUv.x * 26.0 + time * 0.8) * sin(vUv.y * 7.0 - time * 0.6);
+        float s2 = sin(vUv.x * 34.0 - time * 1.1) * sin(vUv.y * 13.0 + time * 0.9);
+        float g = max(s1, 0.0) * max(s2, 0.0);
+        col += pow(g, 8.0) * 0.28 * (1.0 - r * 0.5);
         float a = smoothstep(1.0, 0.97, r);
         gl_FragColor = vec4(col, a);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   const mesh = new THREE.Mesh(geo, mat);
@@ -160,7 +166,7 @@ function buildMist(tex) {
   for (let i = 0; i < ENV.mist.count; i++) {
     const mat = new THREE.SpriteMaterial({
       map: tex, color: C.mist, transparent: true,
-      opacity: 0.09 + R() * 0.07, depthWrite: false,
+      opacity: 0.05 + R() * 0.05, depthWrite: false,
     });
     const s = new THREE.Sprite(mat);
     const sc = 26 + R() * 30;
@@ -176,7 +182,7 @@ function buildMist(tex) {
   group.userData.tick = (t) => {
     for (const s of items) {
       s.position.x = s.userData.baseX + Math.sin(t * 0.05 * s.userData.speed + s.userData.phase) * 9;
-      s.material.opacity = 0.10 + 0.05 * (0.5 + 0.5 * Math.sin(t * 0.12 + s.userData.phase * 2));
+      s.material.opacity = 0.06 + 0.04 * (0.5 + 0.5 * Math.sin(t * 0.12 + s.userData.phase * 2));
     }
   };
   return group;
@@ -192,11 +198,16 @@ function mulberry(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+// 松树材质必须模块级共享:若在 pine() 内 new,每棵树各持一套材质,
+// emit/flushBin 的按材质并桶就失效,30+ 棵树 = 30+ draw call。
+const PINE_MATS = {
+  trunk: new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.95 }),
+  leaf: new THREE.MeshStandardMaterial({ color: C.pine, roughness: 0.95 }),
+  leafD: new THREE.MeshStandardMaterial({ color: C.pineDeep, roughness: 0.95 }),
+};
 function pine(h) {
   const g = new THREE.Group();
-  const trunkMat = new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.95 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: C.pine, roughness: 0.95 });
-  const leafMatD = new THREE.MeshStandardMaterial({ color: C.pineDeep, roughness: 0.95 });
+  const trunkMat = PINE_MATS.trunk, leafMat = PINE_MATS.leaf, leafMatD = PINE_MATS.leafD;
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(h * 0.028, h * 0.05, h * 0.4, 6), trunkMat);
   trunk.position.y = h * 0.2;
   g.add(trunk);
@@ -242,13 +253,14 @@ function buildBridge() {
   const { cx, cz, w, span } = ENV.bridge;
   const group = new THREE.Group();
   group.name = 'bridge';
-  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#c2bcab', 18), roughness: 0.92 });
-  const stoneD = new THREE.MeshStandardMaterial({ map: grainTexture('#9d9686', 22), roughness: 0.95 });
+  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#a89f8a', 18), roughness: 0.92 });
+  const stoneD = new THREE.MeshStandardMaterial({ map: grainTexture('#7f7663', 22), roughness: 0.95 });
   const tmp = new THREE.Group();
   const half = span / 2;
-  const deckY = 2.0;                                     // 桥面脊高
+  const deckY = 3.0;                                     // 桥面脊高(拱桥要有驼峰,平了读作堤坝)
   const camber = (t) => Math.sin(Math.PI * t) * deckY;   // t:0..1 沿桥长
-  const archR = 3.4, archBase = -1.4;                    // 券洞半径 / 起拱线(没入水面下)
+  const archR = 3.8, archBase = -1.0;                    // 券洞半径 / 起拱线(没入水面下)
+  // ⚠ 约束:archBase + archR(2.8) < deckY + 0.42(券顶不得溢出桥体轮廓,同拱门 bug)
   // 两片券脸墙:外轮廓走拱背线,挖一个半圆券洞
   for (const sx of [-1, 1]) {
     const s = new THREE.Shape();
@@ -304,20 +316,20 @@ function buildBridge() {
   return group;
 }
 
-// ---------- 月:纸面上一枚淡金圆 + 晕 ----------
-function buildMoon(tex) {
+// ---------- 日轮:晴空里藏远山之后的一枚暖白太阳 + 晕 ----------
+function buildSun(tex) {
   const g = new THREE.Group();
-  g.name = 'moon';
+  g.name = 'sun';
   const disc = new THREE.Mesh(
-    new THREE.CircleGeometry(ENV.moon.r, 40),
-    new THREE.MeshBasicMaterial({ color: 0xf7ecc8, transparent: true, opacity: 0.92, fog: false })
+    new THREE.CircleGeometry(ENV.sun.r, 40),
+    new THREE.MeshBasicMaterial({ color: 0xfffdf0, transparent: true, opacity: 1.0, fog: false })
   );
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: tex, color: 0xf3e6bd, transparent: true, opacity: 0.35, fog: false, depthWrite: false,
+    map: tex, color: 0xffeeb8, transparent: true, opacity: 0.42, fog: false, depthWrite: false,
   }));
-  halo.scale.setScalar(ENV.moon.r * 6);
+  halo.scale.setScalar(ENV.sun.r * 6);
   g.add(halo, disc);
-  g.position.set(...ENV.moon.pos);
+  g.position.set(...ENV.sun.pos);
   return g;
 }
 
@@ -355,7 +367,7 @@ export function buildEnvironment() {
   const ty = (x, z) => terrainHeight(x, z);
   group.add(buildTrees(ty));
   group.add(buildBridge());
-  group.add(buildMoon(glowTex));
+  group.add(buildSun(glowTex));
 
   group.userData.terrainHeight = terrainHeight;
   return group;

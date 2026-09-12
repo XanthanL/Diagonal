@@ -1,6 +1,6 @@
 // 门楼本体:三层石台基 / 拱门白墩 / 柱枋格扇 / 参数化翘角屋顶 / 无字匾 / 灯笼 / 金顶
 import * as THREE from 'three';
-import { C, TERRACE, GATE, TIERS, CROWN, LANTERN, PORTAL, ROOF } from '../spec.js';
+import { C, TERRACE, DECK_Y, GATE, PLAQUE_Y, PLAQUE_Z, TIERS, CROWN, LANTERN, PORTAL, ROOF } from '../spec.js';
 import { emit, flushBin, glowTexture, grainTexture } from './util.js';
 
 const R = mulberry(42);
@@ -25,7 +25,9 @@ function makeMats() {
   const gold = new THREE.MeshStandardMaterial({ color: C.gold, roughness: 0.35, metalness: 0.65 });
   const red = new THREE.MeshStandardMaterial({ color: C.red, roughness: 0.68 });
   const chestnut = new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.85 });
-  const latticeD = new THREE.MeshStandardMaterial({ color: C.lattice, roughness: 0.95 });
+  const latticeD = new THREE.MeshStandardMaterial({
+    color: C.lattice, roughness: 0.95, emissive: C.windowLit, emissiveIntensity: 0.42,
+  });
   const warmGlow = new THREE.MeshStandardMaterial({
     color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 1.45, roughness: 0.6,
   });
@@ -123,35 +125,31 @@ function makeRoofGeo(tier, opts = {}) {
 function buildRoofs(group, mats) {
   const roofs = new THREE.Group();
   roofs.name = 'roofs';
+  const tmp = new THREE.Group();
   for (const tier of TIERS) {
     const { surface, fascia } = makeRoofGeo(tier);
-    const s = new THREE.Mesh(surface, mats.tile);
-    const f = new THREE.Mesh(fascia, mats.tileDeep);
-    s.castShadow = true; s.receiveShadow = true;
-    f.castShadow = true;
-    s.userData.partId = 'eaves'; f.userData.partId = 'eaves';
-    roofs.add(s, f);
+    tmp.add(new THREE.Mesh(surface, mats.tile));
+    tmp.add(new THREE.Mesh(fascia, mats.tileDeep));
     // 顶部平座:托住上一重楼身(或金顶)
-    const isLast = tier === TIERS[TIERS.length - 1];
-    const capY = tier.y + tier.h;
     const cap = new THREE.Mesh(
       new THREE.BoxGeometry(tier.topRX * 2 + 0.5, 0.42, tier.topRZ * 2 + 0.5),
-      isLast ? mats.ridge : mats.ridge
+      mats.ridge
     );
-    cap.position.y = capY - 0.21;
-    cap.castShadow = true; cap.receiveShadow = true;
-    cap.userData.partId = 'eaves';
-    roofs.add(cap);
+    cap.position.y = tier.y + tier.h - 0.21;
+    tmp.add(cap);
   }
   // 檐角点金:每个翘角末梢一枚小金珠(四檐角 × 下两层,金预算 <1%)
   for (const tier of [TIERS[0], TIERS[1]]) {
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
       const bead = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), mats.gold);
       bead.position.set(sx * (tier.ax + 0.85), tier.y + tier.cornerLift + 0.12, sz * (tier.az + 0.6));
-      bead.userData.partId = 'eaves';
-      roofs.add(bead);
+      tmp.add(bead);
     }
   }
+  // 25 个散件按材质并成 4 个 mesh(瓦面 / 檐板 / 平座 / 金珠)
+  emit(tmp);
+  flushBin(roofs);
+  roofs.userData.partId = 'eaves';   // 拾取靠向上冒泡,组级 partId 足够
   group.add(roofs);
 }
 
@@ -248,7 +246,7 @@ function buildTerrace(group, mats, terrainY) {
       for (let d = 0; d < len; d += stepLen) {
         const t = d / len;
         const px = x0 + dx * t, pz = z0 + dz * t;
-        const slab = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.34, 2.1), mats.stone);
+        const slab = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.3, 1.9), mats.stoneDeep);
         slab.position.set(px, (terrainY(px, pz) || 0) - 0.06, pz);
         slab.rotation.y = Math.atan2(dx, dz) + (i % 2 ? 0.05 : -0.04);
         tmp.add(slab);
@@ -370,16 +368,17 @@ function buildHalls(group, mats, podium) {
       }
     }
   }
-  // 无字匾:墩顶额枋之下,金框 + 玉印灵光(架空之物无名可题)
-  const plaqueY = baseY + GATE.arch.h + 0.62;
+  // 无字匾:挂在一层楼身正面的中格(该格不排格扇窗),金框 + 玉印灵光
+  // ⚠ 不能再用 baseY + arch.h 推导——那会把匾塞进拱洞里(曾出的 bug)
+  const plaqueY = PLAQUE_Y;
   const pw = GATE.plaque.w, ph = GATE.plaque.h;
-  const pz = GATE.podium.d / 2 + 0.06;
+  const pz = PLAQUE_Z;
   const pf = new THREE.Mesh(new THREE.BoxGeometry(pw + 0.24, ph + 0.24, 0.1), mats.gold);
   pf.position.set(0, plaqueY, pz - 0.02);
   tmp.add(pf);
   const pboard = new THREE.Mesh(
     new THREE.BoxGeometry(pw, ph, 0.12),
-    new THREE.MeshStandardMaterial({ color: 0x2a231c, roughness: 0.55 })
+    new THREE.MeshStandardMaterial({ color: 0x7a3422, emissive: 0x30140a, emissiveIntensity: 1.0, roughness: 0.45 })
   );
   pboard.position.set(0, plaqueY, pz + 0.02);
   tmp.add(pboard);
@@ -394,8 +393,8 @@ function buildHalls(group, mats, podium) {
   sealRing.position.set(0, plaqueY, pz + 0.1);
   tmp.add(sealRing);
   const seal = new THREE.Mesh(
-    new THREE.CircleGeometry(0.3, 24),
-    new THREE.MeshStandardMaterial({ color: C.portal, emissive: C.portal, emissiveIntensity: 1.1, roughness: 0.4 })
+    new THREE.CircleGeometry(0.36, 24),
+    new THREE.MeshStandardMaterial({ color: C.portal, emissive: C.portal, emissiveIntensity: 1.3, roughness: 0.4 })
   );
   seal.position.set(0, plaqueY, pz + 0.11);
   tmp.add(seal);
@@ -416,10 +415,14 @@ function buildLanterns(group, mats, glowTex) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     spots.push([sx * (t1.ax - 1.6), t1.y + t1.cornerLift * 0.8 - 0.3, sz * (t1.az - 0.9)]);
   }
-  spots.push([-GATE.arch.w / 2 - 1.4, TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h + GATE.podium.h - 0.4, GATE.podium.d / 2 + 0.2]);
-  spots.push([GATE.arch.w / 2 + 1.4, TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h + GATE.podium.h - 0.4, GATE.podium.d / 2 + 0.2]);
+  // 拱门两侧各一:吊点在檐口压顶之下 0.25,避免顶部压顶与灯身相交
+  spots.push([-GATE.arch.w / 2 - 1.4, DECK_Y + GATE.podium.h - 0.85, GATE.podium.d / 2 + 0.2]);
+  spots.push([GATE.arch.w / 2 + 1.4, DECK_Y + GATE.podium.h - 0.85, GATE.podium.d / 2 + 0.2]);
+  // 灯芯共用一份自发光材质:循环内 new 会让 6 盏灯各占一次 draw call
+  const coreMat = new THREE.MeshStandardMaterial({
+    color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 2.2,
+  });
   for (const [x, y, z] of spots) {
-    const top = y + LANTERN.drop;
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, LANTERN.drop, 4), mats.chestnut);
     cord.position.set(x, y + LANTERN.drop / 2, z);
     tmp.add(cord);
@@ -432,10 +435,7 @@ function buildLanterns(group, mats, glowTex) {
     tmp.add(cap1);
     const cap2 = cap1.clone(); cap2.position.y = y - LANTERN.h / 2 - 0.05;
     tmp.add(cap2);
-    const core = new THREE.Mesh(
-      new THREE.SphereGeometry(LANTERN.r * 0.45, 8, 8),
-      new THREE.MeshStandardMaterial({ color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 2.2 })
-    );
+    const core = new THREE.Mesh(new THREE.SphereGeometry(LANTERN.r * 0.45, 8, 8), coreMat);
     core.position.set(x, y, z);
     tmp.add(core);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -455,7 +455,7 @@ function buildLanterns(group, mats, glowTex) {
 export function buildPortal() {
   const g = new THREE.Group();
   g.name = 'portal';
-  const baseY = TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h;
+  const baseY = DECK_Y;
   const { halfW, straight } = PORTAL;
   // 与拱洞同形(直壁 + 半圆)的光膜,四周略内收 0.06 留一线石边
   const shape = new THREE.Shape();
@@ -513,6 +513,8 @@ export function buildPortal() {
         col += goldC   * fil * fil * 0.22;
         float edge = smoothstep(1.04, 0.90, r);
         gl_FragColor = vec4(col, edge * (0.92 + 0.06 * fil));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }`,
   });
   const disc = new THREE.Mesh(geo, mat);
@@ -585,8 +587,10 @@ export function buildGatehouse(terrainY) {
     map: glowTex, color: C.portal, transparent: true, opacity: 0.4, depthWrite: false,
   }));
   sealSprite.scale.setScalar(2.4);
-  sealSprite.position.set(0, podium.baseY + GATE.arch.h + 0.62, GATE.podium.d / 2 + 0.5);
+  sealSprite.position.set(0, PLAQUE_Y, PLAQUE_Z + 0.5);
   sealSprite.userData.partId = 'gate';
+  // 装饰性辉光不参与拾取:否则它会先于拱洞光膜挡住视线,点拱门被识别成'匾'
+  sealSprite.raycast = () => {};
   group.add(sealSprite);
   group.userData.glowTex = glowTex;
   return group;
@@ -595,7 +599,7 @@ export function buildGatehouse(terrainY) {
 // podium 组装(把白墩、门框、金框并入 gate 组)
 function buildPodiumInto(group, mats) {
   const { w, d, h } = GATE.podium;
-  const baseY = TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h;
+  const baseY = DECK_Y;
   const shape = new THREE.Shape();
   shape.moveTo(-w / 2, 0); shape.lineTo(w / 2, 0); shape.lineTo(w / 2, h); shape.lineTo(-w / 2, h); shape.closePath();
   const aw = GATE.arch.w / 2, ah = GATE.arch.h;
@@ -613,11 +617,16 @@ function buildPodiumInto(group, mats) {
   group.add(mesh);
 
   // 墩的上下收边:基座一圈青石裙 + 檐口一圈外挑压顶(白面才不空)
-  const plinth = new THREE.Mesh(new THREE.BoxGeometry(w + 0.5, 0.6, d + 0.5), mats.stoneDeep);
-  plinth.position.set(0, baseY + 0.3, 0);
-  plinth.castShadow = true; plinth.receiveShadow = true;
-  plinth.userData.partId = 'gate';
-  group.add(plinth);
+  // ⚠ 石裙必须左右分块、门洞处留空:整块 Box 横穿拱门会埋掉灵光膜底部 0.6 m
+  const skH = 0.6, skOut = 0.25;
+  const segW = (w / 2 + skOut) - aw;
+  for (const sx of [-1, 1]) {
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(segW, skH, d + 0.5), mats.stoneDeep);
+    seg.position.set(sx * (aw + segW / 2), baseY + skH / 2, 0);
+    seg.castShadow = true; seg.receiveShadow = true;
+    seg.userData.partId = 'gate';
+    group.add(seg);
+  }
   const cornice = new THREE.Mesh(new THREE.BoxGeometry(w + 0.8, 0.34, d + 0.8), mats.stone);
   cornice.position.set(0, baseY + h - 0.17, 0);
   cornice.castShadow = true; cornice.receiveShadow = true;

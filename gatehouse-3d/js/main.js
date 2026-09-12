@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { runSelftest, summarizeSelftest } from './selftest.js';
 import { PARTS, I18N } from './data.js';
-import { WORLD, PORTAL, TERRACE } from './spec.js';
+import { WORLD, PORTAL, DECK_Y } from './spec.js';
 import { buildEnvironment } from './build/environment.js';
 import { buildGatehouse, buildPortal } from './build/gatehouse.js';
 import { buildFireflies, buildPortalStream } from './build/particles.js';
@@ -173,7 +173,8 @@ function bindPick() {
     if (moved > 6) return; // 拖拽不算点击
     ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const hits = ray.intersectObjects(scene.children, true);
+    // 过滤掉 Sprite:匾额/灯笼的辉光是不可见装饰,不该抢走拱洞或窗的点击
+    const hits = ray.intersectObjects(scene.children, true).filter((h) => !h.object.isSprite);
     for (const h of hits) {
       let o = h.object;
       while (o && !o.userData.partId) o = o.parent;
@@ -187,7 +188,8 @@ function bindPick() {
   el.addEventListener('pointermove', (e) => {
     ndc.set((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const hits = ray.intersectObjects(scene.children, true);
+    // 过滤掉 Sprite:匾额/灯笼的辉光是不可见装饰,不该抢走拱洞或窗的点击
+    const hits = ray.intersectObjects(scene.children, true).filter((h) => !h.object.isSprite);
     let hover = false;
     for (const h of hits) {
       let o = h.object;
@@ -225,7 +227,7 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 1.06;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   root.appendChild(renderer.domElement);
@@ -236,7 +238,7 @@ function init() {
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
   camera.position.set(...DEFAULT_PART.cam);
 
-  // 灯光:半球环境 + 暖阳(投影) + 门内一点玉色点光
+  // 灯光:暖阳(投影) + 天空蓝/草地黄半球补光 + 一档中性环境光(把暗面抬成有色阴影,而非死黑——晴天 outdoor 的标准做法)
   const hemi = new THREE.HemisphereLight(WORLD.hemi.sky, WORLD.hemi.ground, WORLD.hemi.intensity);
   const sun = new THREE.DirectionalLight(WORLD.sun.color, WORLD.sun.intensity * 1.15);
   sun.position.set(...WORLD.sun.pos);
@@ -247,7 +249,8 @@ function init() {
   sun.shadow.camera.near = 8; sun.shadow.camera.far = 200;
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.03;
-  scene.add(hemi, sun, sun.target);
+  const amb = new THREE.AmbientLight(0xfff3e2, 0.34);
+  scene.add(hemi, sun, sun.target, amb);
 
   // 场景装配
   const env = buildEnvironment();
@@ -256,7 +259,7 @@ function init() {
   scene.add(gate);
   const portal = buildPortal();
   scene.add(portal);
-  const portalCtr = TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h + (PORTAL.straight + PORTAL.halfW) * 0.5;
+  const portalCtr = DECK_Y + (PORTAL.straight + PORTAL.halfW) * 0.5;
   const portalLight = new THREE.PointLight(0x7fe0c8, 90, 26, 2);
   portalLight.position.set(0, portalCtr, 1.8);
   portalLight.userData.partId = 'portal';
@@ -296,7 +299,8 @@ function init() {
     const p = PARTS.find((x) => x.id === focusId);
     if (p) focusOn(p, { fly: false });
   }
-  window.__gh = { scene, camera, controls, renderer, parts: PARTS };
+  // THREE 一并暴露:无头验收脚本要拿 Raycaster / Vector2 做探针反查
+  window.__gh = { scene, camera, controls, renderer, parts: PARTS, THREE };
   renderer.setAnimationLoop(tick);
   hideLoader();
 }
