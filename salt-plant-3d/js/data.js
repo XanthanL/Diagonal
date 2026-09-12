@@ -10,7 +10,7 @@ export const PROCESS = [
     id: 'overview', index: 0, name: '天车', subtitle: '自贡井盐木构井架',
     nameEn: 'Derrick', subtitleEn: 'Timber Headframe of Zigong Well Salt',
     model: 'well', color: 0xB33A2A, position: [0, 0, 0],
-    cam: [21, 15, 27], target: [0, 6.6, 0],
+    cam: [21, 12, 27], target: [0, 6.6, 0],
     principle:
       '天车是自贡井盐的标志性木构井架，矗立于盐井之上，用于冲击式顿钻凿井与提汲卤水。其以杉木为骨——但因无足够长度的整木，每根「柱」实为多根杉木并排靠拢、接头彼此错开（错缝搭接）而成的束柱，外面用竹篾一道道密缠成箍，关键节点再套手锻铁箍锁死，全程不用一钉，由低到高逐级收分；顶端置天辊、地面设地辊与大车，构成提卤滑轮组。',
     principleEn:

@@ -556,10 +556,15 @@ function strut(p1, p2, thickness, mat) {
 function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(BG);
-  scene.fog = new THREE.FogExp2(BG, 0.0055);
+  // 雾密度 0.0055 → 0.0028：原先靠浓雾把远处地面「化」进纸底来收边，现在地平线
+  // 由群山接管，雾只负责大气透视。留在 0.0055 的话 300 m 外的山会被吃掉 75%，
+  // 三层山糊成一片白，等于没做。
+  scene.fog = new THREE.FogExp2(BG, 0.0028);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
-  camera.position.set(20, 14, 26);
+  // 相机从 14 降到 12：画面上边缘的仰角由 9.6° 抬到 13.5°，三层山的峰才全部
+  // 进画（最远的峰仰角 ≈12.9°）。顺带视线略低于塔顶（13.9 m），塔反而更挺拔。
+  camera.position.set(20, 12, 26);
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -653,9 +658,15 @@ function buildGround() {
   plane.receiveShadow = true;
   scene.add(plane);
 
+  // 远场 420 → 640：最外一层山（岭线 335 + 游走 30）与地面的相交半径可达 ≈276 m，
+  // 地面必须比它更远，否则山脚落在「既无地面、又无山体」的虚空里，山下会露出
+  // 纸底色的空隙。repeat 跟着走才能保持每格 10 m（近场 14 / 远场 64）。
+  const floorFar = TEX.floor.clone();
+  floorFar.needsUpdate = true;
+  floorFar.repeat.set(64, 64);
   const farGround = new THREE.Mesh(
-    new THREE.PlaneGeometry(420, 420),
-    new THREE.MeshStandardMaterial({ map: TEX.floor, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
+    new THREE.PlaneGeometry(640, 640),
+    new THREE.MeshStandardMaterial({ map: floorFar, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
   );
   farGround.rotation.x = -Math.PI / 2;
   farGround.position.y = GROUND_Y - 0.06;        // 错开 4 cm，避免与近场共面打架
@@ -695,22 +706,126 @@ function farDerrick(h, a0, mat) {
   return grp;
 }
 
+// ------------------------------------------------------------
+// 远景：群山（天车就坐落在被它们围出的谷地里）
+//
+// 上一版远山是失败的，根因不是颜色也不是高度，而是**形状**：散落在地面上的压扁
+// 椭球，从略高机位看下去就是一个个闭合的椭圆边界 —— 只能读成地上一摊浅色水洼，
+// 加高变怪、加淡消失，没有出路。山之所以读作山，靠的是「没有底边」：
+// 底部沉到地下、彼此连绵，只在地平线上留一条起伏的脊。
+//
+// 所以这里做**一圈环形山脊带**（不是若干座孤立的山），三层，参数约束有三条：
+//   ① 坡脚半径 = ridge − RIDGE_SLOPE·h，必须 > controls.maxDistance(82)，
+//      否则相机拉到最远就贴在山脸上、整片糊掉。现三层坡脚 ≈130 / 158 / 190。
+//   ② 山脊仰角必须排成阶梯，且都落在默认机位的画面内。默认机位 (20,14,26)
+//      视线俯角 12.9°、垂直 FOV 45° → 画面上边缘在仰角 ≈9.6°。
+//      现三层 ≈4.9° / 7.4° / 9.3°，层层后退 —— 挤在一起就读不出群山，只是一堵墙。
+//   ③ 山脚 y 必须低于地面，让地面边缘和前一层山依次遮住它的下边界。
+// 大气透视由 mix（与 BG 混色）与雾共同完成：越远 mix 越大、雾越厚。
+// 山脊的「宽高比」是读不读得出山的关键。第一版主频只有 3（每层 3 个峰），
+// 近层周长 1181 m → 单峰宽 393 m、高 40 m，宽高比 ≈10:1，而默认机位水平视野
+// 只覆盖 285 m 弧长 —— 画面里连一座完整的山都装不下，看到的全是山腰，于是三层
+// 退化成三条平行的浅色带。现在把主频提到 7~11（近层单峰宽 ≈117 m、宽高比 ≈3:1），
+// 视野内能看到 2~3 座山，峰谷才成立。
+// f = 三个谐波（必须整数才能首尾闭合），wf = 脊线在半径方向的游走频率。
+const RIDGES = [
+  { seg: 112, ridge: 205, amp: 20, hMin: 24, hMax: 46, mix: 0.32, f: [11, 19, 31], wf: [3, 7],
+    shade: [0.89, 0.92, 0.96, 1.01, 1.06], seed: 9137 },
+  { seg: 120, ridge: 265, amp: 25, hMin: 44, hMax: 70, mix: 0.46, f: [9, 17, 27], wf: [3, 8],
+    shade: [0.87, 0.91, 0.95, 1.01, 1.07], seed: 2244 },
+  { seg: 128, ridge: 335, amp: 30, hMin: 66, hMax: 96, mix: 0.58, f: [7, 13, 23], wf: [2, 5],
+    shade: [0.85, 0.90, 0.95, 1.01, 1.08], seed: 5521 },
+];
+const RIDGE_INK = 0x77807E;      // 远山如黛：偏冷的灰，与暖纸底拉开冷暖（绿味要压住）
+const RIDGE_SLOPE = 1.75;        // 坡的水平/垂直比（≈30°）
+const RIDGE_BASE = -24;          // 山脚埋深（务必低于地面，否则露出底部轮廓）
+// 垂直分层：0 = 山脚，1 = 山脊。分 4 层时每两层之间是一整片平面，flatShading
+// 让它在坡面上显成一道水平的明暗台阶（读起来像等高线）；加到 5 层把折面切细。
+const RIDGE_T = [0, 0.28, 0.54, 0.78, 1];
+
+function mulberry32(a) {
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// 山脊高度剖面：多频正弦叠加后取 pow 压低谷、突出峰（pow 越大，山口越深、
+// 峰越孤立 —— 1.35 时谷太浅，整条脊线读成一个波，山与山之间没有分界）。
+// 频率由 cfg.f 给，必须是整数，否则 θ=0 与 2π 接不上、闭合处会裂一道缝。
+function ridgeProfile(t, ph, f) {
+  const s = 0.55 * Math.sin(t * 6.2832 * f[0] + ph[0])
+          + 0.29 * Math.sin(t * 6.2832 * f[1] + ph[1])
+          + 0.16 * Math.sin(t * 6.2832 * f[2] + ph[2]);
+  return Math.pow((s + 1) * 0.5, 1.6);
+}
+// 山脊在半径方向上的游走，让脊线前后错落而不是一个正圆
+function ridgeWander(t, ph, wf) {
+  return 0.62 * Math.sin(t * 6.2832 * wf[0] + ph[3])
+       + 0.38 * Math.sin(t * 6.2832 * wf[1] + ph[4]);
+}
+
+function ridgeBand(cfg, mat) {
+  const rnd = mulberry32(cfg.seed);
+  const ph = [0, 0, 0, 0, 0].map(() => rnd() * 6.2832);
+  const pos = [], col = [];
+  const base = mat.color;
+  const at = (th, h, rr, k) => {
+    const t = RIDGE_T[k];
+    const y = RIDGE_BASE + (h - RIDGE_BASE) * t;
+    // (1−t)^0.85：坡是凹的，山脚摊开、上部收陡 —— 锥体会读成帐篷，凹坡才像丘陵
+    const r = rr - RIDGE_SLOPE * h * Math.pow(1 - t, 0.85);
+    return [Math.cos(th) * r, y, Math.sin(th) * r];
+  };
+  // 竖向明暗：山脚压暗、山脊提亮。单靠 flatShading 不够 —— 谷地里看到的
+  // 全是朝向相机的内坡，法线方向接近，明暗差摊不出来，山会读成一张平色纸。
+  // 顶点色与 material.color 相乘，把这段梯度钉进几何里。
+  const put = (p, k) => {
+    pos.push(p[0], p[1], p[2]);
+    const s = cfg.shade[k];
+    col.push(base.r * s, base.g * s, base.b * s);
+  };
+  for (let i = 0; i < cfg.seg; i++) {
+    const t0 = i / cfg.seg, t1 = (i + 1) / cfg.seg;
+    const th0 = t0 * 6.2832, th1 = t1 * 6.2832;
+    const h0 = cfg.hMin + (cfg.hMax - cfg.hMin) * ridgeProfile(t0, ph, cfg.f);
+    const h1 = cfg.hMin + (cfg.hMax - cfg.hMin) * ridgeProfile(t1, ph, cfg.f);
+    const r0 = cfg.ridge + cfg.amp * ridgeWander(t0, ph, cfg.wf);
+    const r1 = cfg.ridge + cfg.amp * ridgeWander(t1, ph, cfg.wf);
+    for (let k = 0; k < RIDGE_T.length - 1; k++) {
+      const A = at(th0, h0, r0, k), B = at(th0, h0, r0, k + 1);
+      const C = at(th1, h1, r1, k + 1), D = at(th1, h1, r1, k);
+      put(A, k); put(B, k + 1); put(C, k + 1);
+      put(A, k); put(C, k + 1); put(D, k);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  // non-indexed 上 computeVertexNormals 给每个三角形独立法线，配合 flatShading
+  // 得到棱面 —— 坡面在环向上摆动 ±20°，明暗差就是山的体量感来源
+  g.computeVertexNormals();
+  return new THREE.Mesh(g, mat);
+}
+
 function buildBackdrop() {
   const g = new THREE.Group();
   const bg = new THREE.Color(BG);
 
-  // 试过加远山，结论是此路不通：这个设计是「纸面同色天地」，山再矮再淡，
-  // 从略高的机位看下去都只能读成地上一摊浅色水洼，救不回来。所以背景只留
-  // 远处的天车 —— 「天车林立」这层意思由它们说，地平线交给雾与纸底。
-  // 远处的天车：三座，明度呈阶梯，越远越接近纸底（mix = 与 BG 的混色比例）。
-  // mix 必须明显小于「淡到看不见」的阈值，否则会读成幽灵白架子。
+  // 远处的天车：三座，站在山前的平地上说「天车林立」。
+  // mix = 与 BG 的混色比例。有山之后这里连着压深过两轮：天车在 40~70 m，比最近
+  // 一层山的山脚（≈144 m）近得多，按大气透视必须明显比山深。最初 0.46/0.58/0.68
+  // 是「山不存在」时定的，对着山看正好同明度、等于隐形；0.30/0.40/0.48 又比山淡，
+  // 读成比山更远的幽灵白架子。现在 0.22/0.30/0.38，稳定落在山之前。
   // 方位刻意错开默认机位（(20,14,26) → 视线方位角 52°，故背景正中是 232°）：
   // 初版有一座正好落在 240°，被主塔整个挡住。现在三座分布在 198/252/305，
   // 任一机位下最多挡住一座，绕一下才能看全 —— 这也正好是「天车林立」的意思。
   const FAR = [
-    [40, 198, 10.5, 1.35, 0.46],
-    [56, 252, 8.5, 1.15, 0.58],
-    [70, 305, 12.0, 1.55, 0.68],
+    [40, 198, 10.5, 1.35, 0.22],
+    [56, 252, 8.5, 1.15, 0.30],
+    [70, 305, 12.0, 1.55, 0.38],
   ];
   FAR.forEach(([RR, deg, h, a0, mix]) => {
     const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(WOOD_DARK).lerp(bg, mix), fog: true });
@@ -725,6 +840,20 @@ function buildBackdrop() {
   const holder = new THREE.Group();
   emit(g);
   flushBin(holder);
+
+  // 三层山各自独立入场景，不走合并：它们面数本来就少（合计约 1.7k 三角），
+  // 而 flatShading 依赖 shader 里的 derivative，合并与否都一样，但独立 mesh
+  // 才能单独调 mix / 单独开关来排查「哪一层读不出来」。
+  RIDGES.forEach((cfg) => {
+    const mat = new THREE.MeshLambertMaterial({
+      color: new THREE.Color(RIDGE_INK).lerp(bg, cfg.mix),
+      vertexColors: true,
+      flatShading: true,
+      side: THREE.DoubleSide,     // 绕序朝外，站在谷地里看到的是内侧，双面省事
+    });
+    holder.add(ridgeBand(cfg, mat));
+  });
+
   holder.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
   scene.add(holder);
 }
