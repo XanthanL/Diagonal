@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { runSelftest, summarizeSelftest } from './selftest.js';
 import { PARTS, I18N } from './data.js';
-import { WORLD } from './spec.js';
+import { WORLD, PORTAL, TERRACE } from './spec.js';
 import { buildEnvironment } from './build/environment.js';
 import { buildGatehouse, buildPortal } from './build/gatehouse.js';
 import { buildFireflies, buildPortalStream } from './build/particles.js';
@@ -238,7 +238,7 @@ function init() {
 
   // 灯光:半球环境 + 暖阳(投影) + 门内一点玉色点光
   const hemi = new THREE.HemisphereLight(WORLD.hemi.sky, WORLD.hemi.ground, WORLD.hemi.intensity);
-  const sun = new THREE.DirectionalLight(WORLD.sun.color, WORLD.sun.intensity);
+  const sun = new THREE.DirectionalLight(WORLD.sun.color, WORLD.sun.intensity * 1.15);
   sun.position.set(...WORLD.sun.pos);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
@@ -256,8 +256,9 @@ function init() {
   scene.add(gate);
   const portal = buildPortal();
   scene.add(portal);
+  const portalCtr = TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h + (PORTAL.straight + PORTAL.halfW) * 0.5;
   const portalLight = new THREE.PointLight(0x7fe0c8, 90, 26, 2);
-  portalLight.position.set(0, 5.0, 1.6);
+  portalLight.position.set(0, portalCtr, 1.8);
   portalLight.userData.partId = 'portal';
   scene.add(portalLight);
   const fireflies = buildFireflies();

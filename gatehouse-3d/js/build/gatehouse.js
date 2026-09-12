@@ -1,6 +1,6 @@
 // 门楼本体:三层石台基 / 拱门白墩 / 柱枋格扇 / 参数化翘角屋顶 / 无字匾 / 灯笼 / 金顶
 import * as THREE from 'three';
-import { C, TERRACE, GATE, TIERS, CROWN, LANTERN, PORTAL } from '../spec.js';
+import { C, TERRACE, GATE, TIERS, CROWN, LANTERN, PORTAL, ROOF } from '../spec.js';
 import { emit, flushBin, glowTexture, grainTexture } from './util.js';
 
 const R = mulberry(42);
@@ -16,18 +16,18 @@ function mulberry(seed) {
 
 // ---------- 材质(整个门楼共用的有限几种) ----------
 function makeMats() {
-  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#cdc8ba', 16), roughness: 0.92 });
-  const stoneDeep = new THREE.MeshStandardMaterial({ map: grainTexture('#a8a294', 20), roughness: 0.95 });
-  const plaster = new THREE.MeshStandardMaterial({ map: grainTexture('#f5f0e3', 8), roughness: 0.9 });
-  const tile = new THREE.MeshStandardMaterial({ color: C.tile, roughness: 0.82 });
-  const tileDeep = new THREE.MeshStandardMaterial({ color: C.tileDeep, roughness: 0.85 });
+  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#a9a294', 18), roughness: 0.93 });
+  const stoneDeep = new THREE.MeshStandardMaterial({ map: grainTexture('#8b8578', 22), roughness: 0.95 });
+  const plaster = new THREE.MeshStandardMaterial({ map: grainTexture('#f1e9d8', 9), roughness: 0.9 });
+  const tile = new THREE.MeshStandardMaterial({ color: C.tile, roughness: 0.66, side: THREE.DoubleSide });
+  const tileDeep = new THREE.MeshStandardMaterial({ color: C.tileDeep, roughness: 0.8, side: THREE.DoubleSide });
   const ridgeM = new THREE.MeshStandardMaterial({ color: C.ridge, roughness: 0.7 });
   const gold = new THREE.MeshStandardMaterial({ color: C.gold, roughness: 0.35, metalness: 0.65 });
   const red = new THREE.MeshStandardMaterial({ color: C.red, roughness: 0.68 });
   const chestnut = new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.85 });
   const latticeD = new THREE.MeshStandardMaterial({ color: C.lattice, roughness: 0.95 });
   const warmGlow = new THREE.MeshStandardMaterial({
-    color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 0.9, roughness: 0.6,
+    color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 1.45, roughness: 0.6,
   });
   const jadeGlow = new THREE.MeshStandardMaterial({
     color: C.portal, emissive: C.portal, emissiveIntensity: 1.6, roughness: 0.4,
@@ -70,7 +70,7 @@ function makeRoofGeo(tier, opts = {}) {
     return d;
   }
   const liftAt = (s) => cornerLift * Math.exp(-((cornerDist(s) / cornerSigma) ** 2));
-  const flareAt = (s) => 0.9 * Math.exp(-((cornerDist(s) / (cornerSigma * 1.35)) ** 2));
+  const flareAt = (s) => ROOF.flare * Math.exp(-((cornerDist(s) / (cornerSigma * 1.15)) ** 2));
 
   const pos = [];
   const idx = [];
@@ -93,8 +93,8 @@ function makeRoofGeo(tier, opts = {}) {
       const y = tier.y + h * Math.pow(u, profile) + lift * Math.pow(1 - u, 1.6);
       pos.push(x, y, z);
       if (j === 0) {
-        // 檐口封边带:同一圈往下拉 fasciaH
-        const fH = 0.55 + lift * 0.22;
+        // 檐口封边带:同一圈往下拉;角端加厚,读作"挑"出的檐板而不是薄纸
+        const fH = ROOF.fasciaH + lift * 0.55;
         fasciaPos.push(x, y, z, x, y - fH, z);
       }
     }
@@ -200,34 +200,59 @@ function buildTerrace(group, mats, terrainY) {
       railRunZ(tmp, -hd + 0.3, hd - 0.3, sx * hw, rY, mats.stone);
     }
   }
-  // 正面踏道:从场坪逐台而上
+  // 正面踏道:逐台而下的三跑台阶,每跑两侧带垂带
   {
-    const stepYs = [0, TERRACE.L1.h, TERRACE.L1.h + TERRACE.L2.h, topY];
-    const depths = [TERRACE.L1.d / 2 + 2.6, TERRACE.L2.d / 2 + 2.0, TERRACE.L3.d / 2 + 1.4];
-    for (let i = 0; i < 3; i++) {
-      const y0 = stepYs[i], y1 = stepYs[i + 1];
-      const zFront = depths[i];
-      const steps = 5;
-      for (let k = 0; k < steps; k++) {
-        const h = y1 - y0;
-        const st = new THREE.Mesh(
-          new THREE.BoxGeometry(TERRACE.STEP.w, h / steps, 0.52),
-          mats.stone
-        );
-        st.position.set(0, y0 + (h / steps) * (k + 0.5), zFront + 0.26 * (steps - 1 - k) + 0.26);
+    const lvls = [
+      { y0: 0, y1: TERRACE.L1.h, z0: TERRACE.L1.d / 2 + 0.2 },
+      { y0: TERRACE.L1.h, y1: TERRACE.L1.h + TERRACE.L2.h, z0: TERRACE.L2.d / 2 + 0.2 },
+      { y0: TERRACE.L1.h + TERRACE.L2.h, y1: topY, z0: TERRACE.L3.d / 2 + 0.2 },
+    ];
+    const n = 5, tread = 0.46;
+    for (const lv of lvls) {
+      const rise = (lv.y1 - lv.y0) / n;
+      for (let k = 0; k < n; k++) {
+        const st = new THREE.Mesh(new THREE.BoxGeometry(TERRACE.STEP.w, rise, tread), mats.stone);
+        st.position.set(0, lv.y0 + rise * (k + 0.5), lv.z0 + tread * (n - 1 - k) + tread / 2);
+        tmp.add(st);
+      }
+      // 垂带:两侧各一条斜条石,把台阶收边
+      const runLen = tread * n;
+      for (const sx of [-1, 1]) {
+        const st = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, runLen + 0.8), mats.stoneDeep);
+        st.position.set(sx * (TERRACE.STEP.w / 2 + 0.2), (lv.y0 + lv.y1) / 2 + 0.3, lv.z0 + runLen / 2);
+        st.rotation.x = -Math.atan2(lv.y1 - lv.y0, runLen);
         tmp.add(st);
       }
     }
+    // 月台:底跑之前一块铺石场坪(半埋入地,读作铺装而不是浮板)
+    const apron = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.5, 4.4), mats.stone);
+    apron.position.set(0, -0.23, TERRACE.L1.d / 2 + 4.4);
+    tmp.add(apron);
+    for (const dz of [-1.6, 0, 1.6]) {
+      const seam = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.06, 0.09), mats.stoneDeep);
+      seam.position.set(0, 0.02, TERRACE.L1.d / 2 + 4.4 + dz);
+      tmp.add(seam);
+    }
+    const seamX = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 4.4), mats.stoneDeep);
+    seamX.position.set(0, 0.02, TERRACE.L1.d / 2 + 4.4);
+    tmp.add(seamX);
   }
-  // 前导石径:从桥头蜿蜒到踏道(卵石板)
+  // 前导石径:从桥头沿水岸铺到月台(固定步距的连续石板,不是几块散板)
   {
-    const pts = [[-14, 30], [-9, 26], [-4, 21], [-1, 17], [0, 14.5]];
+    const pts = [[-22, 22.6], [-16, 20.6], [-10, 19.4], [-4, 18.4], [0, 17.2]];
+    const stepLen = 2.0;
     for (let i = 0; i < pts.length - 1; i++) {
       const [x0, z0] = pts[i], [x1, z1] = pts[i + 1];
-      const seg = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.14, 2.3), mats.stone);
-      seg.position.set((x0 + x1) / 2, (terrainY((x0 + x1) / 2, (z0 + z1) / 2) || 0) + 0.05, (z0 + z1) / 2);
-      seg.rotation.y = Math.atan2(x1 - x0, z1 - z0);
-      tmp.add(seg);
+      const dx = x1 - x0, dz = z1 - z0;
+      const len = Math.hypot(dx, dz);
+      for (let d = 0; d < len; d += stepLen) {
+        const t = d / len;
+        const px = x0 + dx * t, pz = z0 + dz * t;
+        const slab = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.34, 2.1), mats.stone);
+        slab.position.set(px, (terrainY(px, pz) || 0) - 0.06, pz);
+        slab.rotation.y = Math.atan2(dx, dz) + (i % 2 ? 0.05 : -0.04);
+        tmp.add(slab);
+      }
     }
   }
   emit(tmp);
@@ -261,28 +286,27 @@ function railRunZ(tmp, z0, z1, x, rY, mat) {
   tmp.add(m);
 }
 
-// ---------- 灵光门(拱洞里的玉金漩涡) ----------
-function latticePanel(wd, ht, mats, tmp) {
-  // 暗底板 + 暖光内芯 + 栗木格条
+// ---------- 格扇窗:实心暗板 + 朝外一面的暖光芯与栗木格条 ----------
+// outDir 指出「朝外」的法向;本地 +z 会被旋到该方向,保证格条与光芯永远朝街
+function latticePanel(wd, ht, mats, tmp, outDir = new THREE.Vector3(0, 0, 1)) {
   const g = new THREE.Group();
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(wd, ht), mats.latticeD);
-  const glow = new THREE.Mesh(
-    new THREE.PlaneGeometry(wd * 0.8, ht * 0.72),
-    new THREE.MeshStandardMaterial({ color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 0.75 })
-  );
-  glow.position.z = -0.02;
-  g.add(back, glow);
-  const nV = Math.max(2, Math.round(wd / 0.38));
+  const back = new THREE.Mesh(new THREE.BoxGeometry(wd, ht, 0.14), mats.latticeD);
+  g.add(back);
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(wd * 0.84, ht * 0.74), mats.warmGlow);
+  glow.position.z = 0.08;
+  g.add(glow);
+  const nV = Math.max(2, Math.round(wd / 0.42));
   for (let i = 0; i <= nV; i++) {
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.055, ht, 0.055), mats.chestnut);
-    bar.position.set(-wd / 2 + (wd / nV) * i, 0, 0.03);
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.06, ht, 0.06), mats.chestnut);
+    bar.position.set(-wd / 2 + (wd / nV) * i, 0, 0.11);
     g.add(bar);
   }
-  for (let j = 0; j <= 3; j++) {
-    const bar = new THREE.Mesh(new THREE.BoxGeometry(wd, 0.055, 0.055), mats.chestnut);
-    bar.position.set(0, -ht / 2 + (ht / 3) * j, 0.03);
+  for (let j = 0; j <= 2; j++) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(wd, 0.06, 0.06), mats.chestnut);
+    bar.position.set(0, -ht / 2 + (ht / 2) * j, 0.11);
     g.add(bar);
   }
+  g.rotation.y = Math.atan2(outDir.x, outDir.z);
   tmp.add(g);
   return g;
 }
@@ -323,42 +347,57 @@ function buildHalls(group, mats, podium) {
     const band = new THREE.Mesh(new THREE.BoxGeometry(w + 1.6, 0.5, d + 1.6), mats.tileDeep);
     band.position.y = y + colH + 0.28;
     tmp.add(band);
-    // 格扇窗:背面整排 + 两侧;正面留中(匾位)
+    // 格扇窗:前后两排 + 两侧;一层正面中格让给匾
     const bayW = (w / (colsX.length - 1)) - 0.55;
     const winH = colH - 1.1;
     const winY = y + (colH - winH) / 2 - 0.1;
     for (const z of colsZ) {
+      const outDir = new THREE.Vector3(0, 0, z > 0 ? 1 : -1);
       for (let i = 0; i < colsX.length - 1; i++) {
         const cx = (colsX[i] + colsX[i + 1]) / 2;
         const isFront = z > 0;
         const isCenter = Math.abs(cx) < bayW * 0.55;
         if (isFront && isCenter && y === tiers[0].y) continue; // 一层正面中格让给匾
-        const p = latticePanel(bayW, winH, mats, tmp);
-        p.position.set(cx, winY, z + (z > 0 ? -0.18 : 0.18));
-        if (z < 0) p.rotation.y = Math.PI;
+        const p = latticePanel(bayW, winH, mats, tmp, outDir);
+        p.position.set(cx, winY, z + (z > 0 ? 0.02 : -0.02));
       }
     }
     for (const x of [-(w / 2), w / 2]) {
+      const outDir = new THREE.Vector3(x > 0 ? 1 : -1, 0, 0);
       for (const zz of [-d / 4, d / 4]) {
-        const p = latticePanel(d / 2 - 0.7, winH, mats, tmp);
-        p.position.set(x + (x > 0 ? -0.18 : 0.18), winY, zz);
-        p.rotation.y = x > 0 ? -Math.PI / 2 : Math.PI / 2;
-        tmp.add(p);
+        const p = latticePanel(d / 2 - 0.9, winH, mats, tmp, outDir);
+        p.position.set(x + (x > 0 ? 0.02 : -0.02), winY, zz);
       }
     }
   }
-  // 无字匾:一层正面,金框 + 玉印灵光
-  const plaqueY = baseY + GATE.podium.h + 0.4;
+  // 无字匾:墩顶额枋之下,金框 + 玉印灵光(架空之物无名可题)
+  const plaqueY = baseY + GATE.arch.h + 0.62;
   const pw = GATE.plaque.w, ph = GATE.plaque.h;
   const pz = GATE.podium.d / 2 + 0.06;
   const pf = new THREE.Mesh(new THREE.BoxGeometry(pw + 0.24, ph + 0.24, 0.1), mats.gold);
   pf.position.set(0, plaqueY, pz - 0.02);
   tmp.add(pf);
-  const pb = new THREE.Mesh(new THREE.BoxGeometry(pw, ph, 0.12), mats.latticeD);
-  pb.position.set(0, plaqueY, pz + 0.02);
-  tmp.add(pb);
-  const seal = new THREE.Mesh(new THREE.CircleGeometry(0.34, 24), mats.jadeGlow);
-  seal.position.set(0, plaqueY, pz + 0.09);
+  const pboard = new THREE.Mesh(
+    new THREE.BoxGeometry(pw, ph, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x2a231c, roughness: 0.55 })
+  );
+  pboard.position.set(0, plaqueY, pz + 0.02);
+  tmp.add(pboard);
+  // 内圈一道细金线(匾的"框内框",让黑面不空)
+  for (const [w2, h2, oy, ox] of [[pw * 0.86, 0.03, ph * 0.3, 0], [pw * 0.86, 0.03, -ph * 0.3, 0], [0.03, ph * 0.64, 0, pw * 0.43], [0.03, ph * 0.64, 0, -pw * 0.43]]) {
+    const line = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, 0.03), mats.gold);
+    line.position.set(ox, plaqueY + oy, pz + 0.09);
+    tmp.add(line);
+  }
+  // 玉印:金环托底 + 一枚发光的玉印(架空之物无名可题,只留这一枚印)
+  const sealRing = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.035, 8, 24), mats.gold);
+  sealRing.position.set(0, plaqueY, pz + 0.1);
+  tmp.add(sealRing);
+  const seal = new THREE.Mesh(
+    new THREE.CircleGeometry(0.3, 24),
+    new THREE.MeshStandardMaterial({ color: C.portal, emissive: C.portal, emissiveIntensity: 1.1, roughness: 0.4 })
+  );
+  seal.position.set(0, plaqueY, pz + 0.11);
   tmp.add(seal);
   emit(tmp);
   flushBin(halls);
@@ -412,47 +451,74 @@ function buildLanterns(group, mats, glowTex) {
   group.add(lans);
 }
 
-// ---------- 灵光门(拱洞里的玉金漩涡) ----------
+// ---------- 灵光门:一张填满拱洞的光膜(玉金三臂漩涡) ----------
 export function buildPortal() {
   const g = new THREE.Group();
   g.name = 'portal';
   const baseY = TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h;
-  const geo = new THREE.CircleGeometry(PORTAL.r, 40);
+  const { halfW, straight } = PORTAL;
+  // 与拱洞同形(直壁 + 半圆)的光膜,四周略内收 0.06 留一线石边
+  const shape = new THREE.Shape();
+  shape.moveTo(-halfW + 0.06, 0.05);
+  shape.lineTo(-halfW + 0.06, straight);
+  shape.absarc(0, straight, halfW - 0.06, Math.PI, 0, true);
+  shape.lineTo(halfW - 0.06, 0.05);
+  shape.closePath();
+  const geo = new THREE.ShapeGeometry(shape, 30);
+  const spanY = straight + halfW;
+  // 拱洞深处压一层暗幕:光膜贴着一片黑,漩涡才读作"深处有光"
+  const backing = new THREE.Mesh(
+    new THREE.ShapeGeometry(shape, 24),
+    new THREE.MeshBasicMaterial({ color: 0x0d1a1c })
+  );
+  backing.scale.setScalar(1.04);
+  backing.position.set(0, baseY, PORTAL.z - 1.5);
+  backing.userData.partId = 'portal';
+  g.add(backing);
   const mat = new THREE.ShaderMaterial({
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     uniforms: {
       time: { value: 0 },
-      jade: { value: new THREE.Color(C.portal) },
+      jadeDeep: { value: new THREE.Color(0x0d5c54) },
+      jadeMid: { value: new THREE.Color(0x3fbfa4) },
       goldC: { value: new THREE.Color(C.portalGold) },
+      halfSpan: { value: new THREE.Vector2(halfW, spanY) },
     },
     vertexShader: `
-      varying vec2 vUv;
-      void main() { vUv = uv * 2.0 - 1.0;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: `
-      varying vec2 vUv;
-      uniform float time; uniform vec3 jade; uniform vec3 goldC;
+      varying vec2 vLocal;
       void main() {
-        float r = length(vUv);
-        if (r > 1.0) discard;
-        float a = atan(vUv.y, vUv.x);
-        // 三臂漩涡 + 径向脉动
-        float sw = sin(a * 3.0 - time * 1.6 + r * 7.0);
-        float sw2 = sin(a * 5.0 + time * 0.9 - r * 11.0);
-        vec3 col = mix(jade, goldC, 0.28 + 0.24 * sw);
-        float glow = pow(1.0 - r, 1.6);
-        col *= 0.75 + 0.35 * glow + 0.12 * sw2;
-        float alpha = smoothstep(1.0, 0.72, r) * (0.72 + 0.2 * sw);
-        // 核心亮心
-        col += goldC * pow(max(0.0, 1.0 - r * 2.6), 2.0) * 0.9;
-        gl_FragColor = vec4(col, alpha);
+        vLocal = position.xy;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`,
+    fragmentShader: `
+      varying vec2 vLocal;
+      uniform float time; uniform vec3 jadeDeep; uniform vec3 jadeMid; uniform vec3 goldC; uniform vec2 halfSpan;
+      void main() {
+        // 归一化膜内坐标:底部 0 → 顶部 1
+        vec2 n = vec2(vLocal.x / halfSpan.x, vLocal.y / halfSpan.y - 0.42);
+        float r = length(n * vec2(1.0, 1.05));
+        float a = atan(n.y, n.x);
+        // 对数螺旋:细亮丝绕着门心转,而不是几块亮斑
+        float sp  = a * 3.0 + log(max(r, 0.07)) * 6.0 - time * 1.6;
+        float sp2 = a * -5.0 + log(max(r, 0.07)) * 9.0 + time * 1.05;
+        float fil  = pow(0.5 + 0.5 * sin(sp), 6.0);
+        float fil2 = pow(0.5 + 0.5 * sin(sp2), 10.0);
+        float core = pow(max(0.0, 1.0 - r * 3.6), 3.0);
+        vec3 col = mix(jadeDeep, jadeMid, 0.18 + 0.30 * core);
+        col += jadeMid * fil  * 0.80;
+        col += jadeMid * fil2 * 0.35;
+        col += goldC   * core * 0.45;
+        col += goldC   * fil * fil * 0.22;
+        float edge = smoothstep(1.04, 0.90, r);
+        gl_FragColor = vec4(col, edge * (0.92 + 0.06 * fil));
       }`,
   });
   const disc = new THREE.Mesh(geo, mat);
-  disc.position.set(0, baseY + GATE.arch.h * 0.52, 0.5);
+  disc.position.set(0, baseY, PORTAL.z);
   disc.renderOrder = 2;
+  disc.userData.partId = 'portal';
   g.add(disc);
   g.userData.disc = disc;
   return g;
@@ -519,7 +585,7 @@ export function buildGatehouse(terrainY) {
     map: glowTex, color: C.portal, transparent: true, opacity: 0.4, depthWrite: false,
   }));
   sealSprite.scale.setScalar(2.4);
-  sealSprite.position.set(0, podium.baseY + GATE.podium.h + 0.4, GATE.podium.d / 2 + 0.4);
+  sealSprite.position.set(0, podium.baseY + GATE.arch.h + 0.62, GATE.podium.d / 2 + 0.5);
   sealSprite.userData.partId = 'gate';
   group.add(sealSprite);
   group.userData.glowTex = glowTex;
@@ -546,17 +612,34 @@ function buildPodiumInto(group, mats) {
   mesh.userData.partId = 'gate';
   group.add(mesh);
 
-  const frame = new THREE.Group();
-  const fw = 0.34;
-  for (const s of [-1, 1]) {
-    const jamb = new THREE.Mesh(new THREE.BoxGeometry(fw, GATE.arch.h, 0.36), mats.chestnut);
-    jamb.position.set(s * (aw + fw / 2), baseY + GATE.arch.h / 2, d / 2 + 0.06);
-    frame.add(jamb);
-  }
-  const lintel = new THREE.Mesh(new THREE.BoxGeometry(aw * 2 + fw * 2, fw, 0.36), mats.chestnut);
-  lintel.position.set(0, baseY + GATE.arch.h + fw / 2, d / 2 + 0.06);
-  frame.add(lintel);
-  for (const o of frame.children) o.userData.partId = 'gate';
-  group.add(frame);
+  // 墩的上下收边:基座一圈青石裙 + 檐口一圈外挑压顶(白面才不空)
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(w + 0.5, 0.6, d + 0.5), mats.stoneDeep);
+  plinth.position.set(0, baseY + 0.3, 0);
+  plinth.castShadow = true; plinth.receiveShadow = true;
+  plinth.userData.partId = 'gate';
+  group.add(plinth);
+  const cornice = new THREE.Mesh(new THREE.BoxGeometry(w + 0.8, 0.34, d + 0.8), mats.stone);
+  cornice.position.set(0, baseY + h - 0.17, 0);
+  cornice.castShadow = true; cornice.receiveShadow = true;
+  cornice.userData.partId = 'gate';
+  group.add(cornice);
+
+  // 券脸:拱洞外一圈略深的石圈(券石),拱门唯一的"收边"
+  const aw2 = aw + 0.34, ah2 = ah + 0.34;
+  const ringShape = new THREE.Shape();
+  ringShape.moveTo(-aw2, 0); ringShape.lineTo(-aw2, ah2);
+  ringShape.absarc(0, ah2, aw2, Math.PI, 0, true);
+  ringShape.lineTo(aw2, 0); ringShape.closePath();
+  const ringHole = new THREE.Path();
+  ringHole.moveTo(-aw, 0); ringHole.lineTo(-aw, ah);
+  ringHole.absarc(0, ah, aw, Math.PI, 0, true);
+  ringHole.lineTo(aw, 0); ringHole.closePath();
+  ringShape.holes.push(ringHole);
+  const ringGeo = new THREE.ExtrudeGeometry(ringShape, { depth: 0.4, bevelEnabled: false, curveSegments: 28 });
+  const ring = new THREE.Mesh(ringGeo, mats.stoneDeep);
+  ring.position.set(0, baseY, d / 2 - 0.02);
+  ring.castShadow = true; ring.receiveShadow = true;
+  ring.userData.partId = 'gate';
+  group.add(ring);
   return { mesh, baseY };
 }

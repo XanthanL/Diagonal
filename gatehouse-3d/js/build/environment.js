@@ -1,4 +1,4 @@
-// 环境层:渐变天穹 / 起伏地坪 / 三重雾山 / 碧水 shader / 灵雾 / 松 / 石桥 / 月
+// 环境层:渐变天穹 / 起伏地坪 / 三重雾山 / 碧水 shader / 灵雾 / 松 / 石拱桥 / 月
 import * as THREE from 'three';
 import { C, WORLD, ENV } from '../spec.js';
 import { emit, flushBin, glowTexture, grainTexture } from './util.js';
@@ -35,34 +35,46 @@ function buildSky() {
   return sky;
 }
 
-// ---------- 地坪:中心平整、水湾下凹、四缘缓缓隆起 ----------
+// ---------- 地坪:场心平整、水湾下凹、四缘缓缓隆起 ----------
 const smoothstep = (a, b, x) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
 function terrainHeight(x, z) {
   const r = Math.hypot(x, z);
-  const lift = Math.max(0, (r - 36) / 59) ** 1.6 * 7.5;           // 远处隆起接山
-  const und = Math.sin(x * 0.055 + 1.7) * Math.cos(z * 0.047) * 0.35
-            + Math.sin(x * 0.021 - z * 0.03) * 0.5;               // 近处细起伏
-  const flat = Math.exp(-((r / 26) ** 2));                        // 场心压平
-  let h = lift + und * (1 - flat) * Math.min(1, r / 18);
-  // 水湾洼地:椭圆距离场,内部压到 -1 m,岸肩微微隆起收边
+  const lift = Math.max(0, (r - 42) / 58) ** 1.7 * 6.0;           // 远处隆起,把视线托向山
+  const und = Math.sin(x * 0.055 + 1.7) * Math.cos(z * 0.047) * 0.30
+            + Math.sin(x * 0.021 - z * 0.03) * 0.42;              // 近处细起伏(轻)
+  const flat = smoothstep(18, 34, r);                             // 场心(含踏道与石径)压平
+  let h = lift + und * flat;
+  // 水湾洼地:椭圆距离场,内部压到 -1.1 m;岸肩微抬收边
   const { cx, cz, rx, rz } = ENV.water;
-  const d = Math.hypot((x - cx) / (rx * 1.12), (z - cz) / (rz * 1.38));
-  const bowl = 1 - smoothstep(0.85, 1.05, d);
-  h = h * (1 - bowl) + -1.0 * bowl;
-  h += Math.exp(-(((d - 1.1) / 0.07) ** 2)) * 0.22 * (1 - bowl);
+  const d = Math.hypot((x - cx) / (rx * 1.1), (z - cz) / (rz * 1.34));
+  const bowl = 1 - smoothstep(0.88, 1.06, d);
+  h = h * (1 - bowl) + -1.1 * bowl;
+  h += Math.exp(-(((d - 1.12) / 0.075) ** 2)) * 0.26 * (1 - bowl);
   return h;
 }
 function buildTerrain(mat) {
-  const size = ENV.terrain.r * 2, seg = 96;
+  const size = ENV.terrain.r * 2, seg = 100;
   const geo = new THREE.PlaneGeometry(size, size, seg, seg);
   geo.rotateX(-Math.PI / 2);
   const p = geo.attributes.position;
+  const col = new Float32Array(p.count * 3);
+  const cDeep = new THREE.Color(C.mossDeep), cMid = new THREE.Color(C.moss), cHigh = new THREE.Color(C.mossHigh);
+  const tmpC = new THREE.Color();
   for (let i = 0; i < p.count; i++) {
-    p.setY(i, terrainHeight(p.getX(i), p.getZ(i)));
+    const x = p.getX(i), z = p.getZ(i);
+    const y = terrainHeight(x, z);
+    p.setY(i, y);
+    // 明度分层:低处深苔、台前中绿、远处提浅接山;再叠一点点横向笔触
+    tmpC.copy(cDeep).lerp(cMid, smoothstep(-1.1, 1.8, y));
+    tmpC.lerp(cHigh, smoothstep(3.5, 9.0, y));
+    const streak = 0.5 + 0.5 * Math.sin(x * 0.021 + z * 0.017);
+    const k = 0.93 + streak * 0.10;
+    col[i * 3] = tmpC.r * k; col[i * 3 + 1] = tmpC.g * k; col[i * 3 + 2] = tmpC.b * k;
   }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   geo.computeVertexNormals();
   const m = new THREE.Mesh(geo, mat);
   m.receiveShadow = true;
@@ -71,38 +83,40 @@ function buildTerrain(mat) {
 }
 
 // ---------- 雾山:heightfield 长卷,一山一色,山外有山 ----------
-function buildHill({ w = 300, depth = 26, h, seg = 80, color, amp }) {
-  const geo = new THREE.PlaneGeometry(w, depth, seg, 3);
+function buildHill({ w = 320, depth = 30, h, seg = 80, color, amp }) {
+  const geo = new THREE.PlaneGeometry(w, depth, seg, 4);
   geo.rotateY(Math.PI); // 面朝 +z(相机)
   const p = geo.attributes.position;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i);
-    // 多重正弦叠出山脊:主峰 + 次峰 + 抖动,端头压到 0.25 避免断面穿帮
     const t = x / (w / 2);
-    const end = Math.max(0.12, 1 - t * t);
+    const end = Math.max(0.14, 1 - t * t);
+    // 三重正弦叠一条连续山脊线(主峰群 + 次峰 + 细齿),端头渐收
     const y =
-      (Math.sin(x * 0.032 + 1.3) * 0.5 + 0.5) * 0.62 +
-      (Math.sin(x * 0.071 + 4.1) * 0.5 + 0.5) * 0.28 +
-      (Math.sin(x * 0.15 + 2.2) * 0.5 + 0.5) * 0.10;
-    p.setZ(i, (0.18 + y * amp) * h * end);
+      0.50 + 0.50 * Math.sin(x * 0.026 + 1.1) +
+      0.26 * Math.sin(x * 0.061 + 3.4) +
+      0.08 * Math.sin(x * 0.133 + 0.7);
+    const peak = Math.max(0, y * 0.76);
+    p.setZ(i, (0.12 + peak * amp) * h * end);
   }
   geo.computeVertexNormals();
   const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: C[color] }));
-  mesh.position.y = -0.4;
+  mesh.position.y = -0.6;
   return mesh;
 }
 
 // ---------- 碧水:一湾会呼吸的水(漩纹 + 近岸提亮 + 粼光) ----------
 function buildWater() {
   const { cx, cz, rx, rz } = ENV.water;
-  const geo = new THREE.CircleGeometry(1, 72);
+  const geo = new THREE.CircleGeometry(1, 80);
+  geo.rotateX(-Math.PI / 2);        // 先躺平到 XZ 面,再按椭圆拉伸
   geo.scale(rx, 1, rz);
   const mat = new THREE.ShaderMaterial({
     uniforms: {
       time: { value: 0 },
       colA: { value: new THREE.Color(C.water) },
       colB: { value: new THREE.Color(C.waterDeep) },
-      colHi: { value: new THREE.Color(0xeaf6ee) },
+      colHi: { value: new THREE.Color(0xdff2e8) },
     },
     transparent: true,
     vertexShader: `
@@ -117,17 +131,16 @@ function buildWater() {
       void main() {
         float r = length(vUv);
         if (r > 1.0) discard;
-        // 涟漪:两组相向行走的同心纹
-        float rip = sin(r * 26.0 - time * 1.1) * 0.5 + 0.5;
-        float rip2 = sin(r * 13.0 + time * 0.6 + vUv.x * 3.0) * 0.5 + 0.5;
-        vec3 col = mix(colA, colB, smoothstep(0.25, 1.0, r));
-        col += (rip * 0.05 + rip2 * 0.04) * (1.0 - r * 0.55);
-        // 近岸一圈玉色浅水
-        col = mix(colHi, col, smoothstep(0.86, 0.985, r));
-        // 粼光:高频碎片闪
-        float gl = pow(max(0.0, sin(vUv.x * 47.0 + time * 0.9) * sin(vUv.y * 53.0 - time * 0.7)), 24.0);
-        col += gl * 0.35 * (1.0 - r * 0.4);
-        // 边缘软一点点,贴纸面
+        // 水色:潭心深、外圈碧,近岸才提亮一圈玉色浅滩
+        float rip = sin(r * 22.0 - time * 1.0) * 0.5 + 0.5;
+        float rip2 = sin(r * 9.0 + time * 0.5 + vUv.y * 2.0) * 0.5 + 0.5;
+        vec3 col = mix(colB, colA, smoothstep(0.10, 0.85, r));
+        col += (rip * 0.035 + rip2 * 0.030) * (1.0 - r * 0.5);
+        col = mix(col, colHi, smoothstep(0.90, 0.995, r));
+        // 粼光:随机的几道短闪(不是满屏网格)
+        float s1 = sin(vUv.x * 11.0 + time * 0.8) * sin(vUv.y * 7.0 - time * 0.6);
+        float s2 = sin(vUv.x * 17.0 - time * 1.1) * sin(vUv.y * 13.0 + time * 0.9);
+        col += (pow(max(s1, 0.0), 12.0) * 0.20 + pow(max(s2, 0.0), 16.0) * 0.14) * (1.0 - r * 0.5);
         float a = smoothstep(1.0, 0.97, r);
         gl_FragColor = vec4(col, a);
       }`,
@@ -170,22 +183,32 @@ function buildMist(tex) {
 }
 
 // ---------- 松:一群三两棵,有主次;全部并桶 ----------
+function mulberry(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 function pine(h) {
   const g = new THREE.Group();
   const trunkMat = new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.95 });
   const leafMat = new THREE.MeshStandardMaterial({ color: C.pine, roughness: 0.95 });
   const leafMatD = new THREE.MeshStandardMaterial({ color: C.pineDeep, roughness: 0.95 });
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(h * 0.03, h * 0.05, h * 0.34, 6), trunkMat);
-  trunk.position.y = h * 0.17;
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(h * 0.028, h * 0.05, h * 0.4, 6), trunkMat);
+  trunk.position.y = h * 0.2;
   g.add(trunk);
-  let y = h * 0.3;
-  let r = h * 0.24;
+  let y = h * 0.26;
+  let r = h * 0.26;
   const mats = [leafMatD, leafMat, leafMat];
   for (let i = 0; i < 3; i++) {
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(r, h * (0.30 - i * 0.05), 7), mats[i]);
-    cone.position.y = y + h * (0.30 - i * 0.05) / 2;
+    const ch = h * (0.34 - i * 0.055);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(r, ch, 8), mats[i]);
+    cone.position.y = y + ch / 2;
     g.add(cone);
-    y += h * (0.30 - i * 0.05) * 0.62;
+    y += ch * 0.6;
     r *= 0.72;
   }
   return g;
@@ -193,12 +216,12 @@ function pine(h) {
 function buildTrees(terrainY) {
   const group = new THREE.Group();
   group.name = 'trees';
-  // 三个群落,每个群落一大几小
   const clusters = [
-    { cx: -24, cz: 12, n: 3, base: 7.5 },
-    { cx: 26, cz: 6, n: 2, base: 6.0 },
-    { cx: -20, cz: -16, n: 2, base: 8.5 },
-    { cx: 34, cz: -22, n: 1, base: 9.5 },
+    { cx: -30, cz: 8, n: 3, base: 13 },
+    { cx: 27, cz: 9, n: 2, base: 11 },
+    { cx: -26, cz: -18, n: 2, base: 15 },
+    { cx: 36, cz: -26, n: 1, base: 17 },
+    { cx: 8, cz: -34, n: 2, base: 12 },
   ];
   const R = mulberry(11);
   for (const c of clusters) {
@@ -214,46 +237,66 @@ function buildTrees(terrainY) {
   return group;
 }
 
-function mulberry(seed) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-// ---------- 石拱桥:逐列插值的缓拱 + 实砌桥身 ----------
+// ---------- 石拱桥:券洞 + 拱背 + 雁翅(跨水,唯一破对称处) ----------
 function buildBridge() {
   const { cx, cz, w, span } = ENV.bridge;
   const group = new THREE.Group();
   group.name = 'bridge';
-  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#cfcabd', 14), color: 0xffffff, roughness: 0.9 });
-  const stoneD = new THREE.MeshStandardMaterial({ map: grainTexture('#b4ac9d', 16), color: 0xffffff, roughness: 0.92 });
-  const R = mulberry(23);
-  const n = 22;
+  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#c2bcab', 18), roughness: 0.92 });
+  const stoneD = new THREE.MeshStandardMaterial({ map: grainTexture('#9d9686', 22), roughness: 0.95 });
   const tmp = new THREE.Group();
-  for (let i = 0; i <= n; i++) {
-    const u = i / n;
-    const x = (u - 0.5) * span;
-    const y = Math.sin(u * Math.PI) * 1.15;                 // 缓拱
-    const dep = 2.6 + Math.sin(u * Math.PI) * 0.5;
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(span / n + 0.12, 0.5, dep), stone);
-    slab.position.set(x, y + 1.55, 0);
+  const half = span / 2;
+  const deckY = 2.0;                                     // 桥面脊高
+  const camber = (t) => Math.sin(Math.PI * t) * deckY;   // t:0..1 沿桥长
+  const archR = 3.4, archBase = -1.4;                    // 券洞半径 / 起拱线(没入水面下)
+  // 两片券脸墙:外轮廓走拱背线,挖一个半圆券洞
+  for (const sx of [-1, 1]) {
+    const s = new THREE.Shape();
+    const N = 18;
+    s.moveTo(-half, -1.8);
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      s.lineTo(-half + span * t, camber(t) + 0.42);
+    }
+    s.lineTo(half, -1.8);
+    s.closePath();
+    const hole = new THREE.Path();
+    hole.moveTo(-archR, archBase);
+    hole.absarc(0, archBase, archR, Math.PI, 0, false);
+    hole.lineTo(archR, archBase);
+    hole.closePath();
+    s.holes.push(hole);
+    const geo = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: false, curveSegments: 24 });
+    geo.rotateY(Math.PI / 2);                            // Shape 在 x-y 面 → 转到 z-y 面,挤出沿 x
+    const m = new THREE.Mesh(geo, stone);
+    m.position.set(sx * (w / 2), 0, 0);
+    tmp.add(m);
+  }
+  // 桥面石板 + 两侧望柱
+  for (let i = 0; i <= 14; i++) {
+    const t = i / 14;
+    const zz = -half + span * t;
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(w + 0.5, 0.26, span / 14 + 0.1), stoneD);
+    slab.position.set(0, camber(t) + 0.55, zz);
     tmp.add(slab);
-    // 桥身两侧向水下收的墩
-    if (i % 3 === 0) {
-      const pk = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.6, dep * 0.9), stoneD);
-      pk.position.set(x, y + 0.1, 0);
-      tmp.add(pk);
+    if (i % 2 === 0) {
+      for (const sx of [-1, 1]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.5, 0.22), stoneD);
+        post.position.set(sx * (w / 2 + 0.1), camber(t) + 0.9, zz);
+        tmp.add(post);
+      }
     }
   }
-  // 两侧低矮踏步边
-  for (const s of [-1, 1]) {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(span, 0.16, 0.3), stoneD);
-    rail.position.set(0, 2.86, (s * w) / 2);
+  for (const sx of [-1, 1]) {
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, span), stoneD);
+    rail.position.set(sx * (w / 2 + 0.1), camber(0.5) + 1.02, 0);
     tmp.add(rail);
+  }
+  // 两端雁翅(桥台)
+  for (const e of [-1, 1]) {
+    const ab = new THREE.Mesh(new THREE.BoxGeometry(w + 1.8, 2.6, 3.2), stoneD);
+    ab.position.set(0, -0.9, e * (half + 1.2));
+    tmp.add(ab);
   }
   tmp.position.set(cx, 0, cz);
   emit(tmp);
@@ -283,12 +326,12 @@ export function buildEnvironment() {
   const group = new THREE.Group();
   group.name = 'environment';
   const glowTex = glowTexture();
-  const dotTex = glowTexture(); // 占位,粒子层自己再生成
 
   group.add(buildSky());
 
-  const gTex = grainTexture('#ffffff', 10);
-  const terrainMat = new THREE.MeshStandardMaterial({ map: gTex, color: C.moss, roughness: 1.0 });
+  const gTex = grainTexture('#ffffff', 12);
+  gTex.repeat.set(26, 26);
+  const terrainMat = new THREE.MeshStandardMaterial({ map: gTex, vertexColors: true, roughness: 1.0 });
   group.add(buildTerrain(terrainMat));
 
   const hills = new THREE.Group();
@@ -299,7 +342,7 @@ export function buildEnvironment() {
     hills.add(m);
   }
   for (const s of ENV.sideHills) {
-    const m = buildHill({ w: 240, depth: 26, h: s.h, seg: 60, color: s.color, amp: s.amp });
+    const m = buildHill({ w: 240, depth: 30, h: s.h, seg: 60, color: s.color, amp: s.amp });
     m.rotation.y = s.rot;
     m.position.x = s.x;
     m.position.z = -14;

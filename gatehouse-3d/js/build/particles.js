@@ -84,7 +84,13 @@ export function buildPortalStream() {
       map: { value: dotTexture() },
       cJade: { value: new THREE.Color(C.portal) },
       cGold: { value: new THREE.Color(C.portalGold) },
-      origin: { value: new THREE.Vector3(0, TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h + GATE.arch.h * 0.52, 0.5) },
+      origin: {
+        value: new THREE.Vector3(
+          0,
+          TERRACE.L1.h + TERRACE.L2.h + TERRACE.L3.h + (PORTAL.straight + PORTAL.halfW) * 0.5,
+          PORTAL.z
+        ),
+      },
     },
     vertexShader: `
       attribute vec4 aSeed;

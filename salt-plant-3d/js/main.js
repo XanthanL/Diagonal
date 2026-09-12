@@ -5,6 +5,8 @@
 //   搭接，外缠竹篾密箍、关键节点套手锻铁箍，全程无钉。每一级以四面水平箍梁围成
 //   方框，层间四面各施一根斜撑并逐层换向。塔顶立天夹板承天辊，井口正压塔心，
 //   提卤绳自天辊垂直落入井中；八根风篾自天箍头伞状散出、连地桩。
+//   辅机：大车（轮缘绕绳的立式绞盘）、地辊（塔内导辊）、碓架（踩碓顿钻）、
+//   汲卤筒（细长竹筒）、盐工寮棚。井台不再铺大石板，只留井口踩实的夯土。
 //   整座模型只 buildStation 一次，置于原点；PROCESS 的 8 项仅作构件导览（相机聚焦
 //   + 双语详情），不再各自实体化。
 // ============================================================
@@ -63,10 +65,14 @@ const STAY_R = 9.5;      // 落地半径
 // 井场设备布置（同时作为风篾避让与碰撞回归的依据）
 const WELL = { x: 0, z: 0 };
 const CART = { x: -5.4, z: 0, R: 1.7, axleY: 1.9 };
-const ROLLER = { x: -2.6, z: 0, R: 0.42, axleY: 1.48 };
+const ROLLER = { x: -1.6, z: 0, R: 0.34, axleY: 1.56 };   // 绳离辊高 1.90
 const DUIJIA = { x: 5.0, z: 0 };
-// 寮棚落在风篾空档方位（45°），与 -x 侧的大车、+x 侧的碓架都不重叠
-const SHED = { x: 5.23, z: 5.23 };
+// 寮棚落在风篾空档方位（315°）——与 -x 侧的大车、+x 侧的碓架都不重叠，
+// 且避开默认总览机位（+x+z）的正面视线，不挡塔身
+const SHED = { x: 5.23, z: -5.23 };
+// 汲卤筒（细长竹筒）：len 筒身长、rTop/rBot 上下半径、valve 筒底阀头长
+// minTip/maxTip 为「筒底标高」的升降行程（入井时阀头没入井唇石箍）
+const BAILER = { len: 3.0, rTop: 0.15, rBot: 0.14, valve: 0.42, minTip: 0.72, maxTip: 2.2 };
 
 let scene, camera, renderer, controls, clock;
 // 聚焦分区：每个导航项对应一组 part，便于「聚焦件保持原色 / 其余压暗」
@@ -109,21 +115,21 @@ function makeFloorTexture() {
     x.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(96,90,78,${a})`;
     x.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 2, 1 + Math.random() * 2);
   }
-  for (let i = 0; i < 26; i++) {
-    const mx = Math.random() * s, my = Math.random() * s, mr = 40 + Math.random() * 110;
+  for (let i = 0; i < 22; i++) {
+    const mx = Math.random() * s, my = Math.random() * s, mr = 24 + Math.random() * 58;
     const rg = x.createRadialGradient(mx, my, 0, mx, my, mr);
-    rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(255,255,255,0.10)' : 'rgba(88,80,66,0.10)');
+    rg.addColorStop(0, Math.random() > 0.5 ? 'rgba(255,255,255,0.045)' : 'rgba(92,84,70,0.045)');
     rg.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = rg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
   }
   const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(10, 10); t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(16, 16); t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
 
 function makeStoneTexture() {
   const s = 512, c = cv(s), x = c.getContext('2d');
-  x.fillStyle = '#9b968c'; x.fillRect(0, 0, s, s);
+  x.fillStyle = '#EFEBE3'; x.fillRect(0, 0, s, s);
   for (let i = 0; i < 5200; i++) {
     const a = Math.random() * 0.12;
     x.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${a})` : `rgba(40,38,34,${a})`;
@@ -198,7 +204,7 @@ function makeThatchTexture() {
 // 陈年杉木：深褐灰底 + 波动竖纹 + 雨蚀泛白 + 木节 + 干裂 + 近地青苔
 function makeWoodTexture() {
   const s = 512, c = cv(s), x = c.getContext('2d');
-  x.fillStyle = '#77634c'; x.fillRect(0, 0, s, s);
+  x.fillStyle = '#C9B79B'; x.fillRect(0, 0, s, s);
   for (let i = 0; i < 320; i++) {
     const gx = Math.random() * s, w = 1 + Math.random() * 3;
     const dark = Math.random() > 0.5;
@@ -214,7 +220,7 @@ function makeWoodTexture() {
     x.lineWidth = 1 + Math.random() * 2;
     x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx + (Math.random() - 0.5) * 4, s); x.stroke();
   }
-  x.strokeStyle = 'rgba(46,30,14,0.5)'; x.lineWidth = 3;
+  x.strokeStyle = 'rgba(46,30,14,0.22)'; x.lineWidth = 2;
   for (let i = 0; i <= s; i += 128) { x.beginPath(); x.moveTo(0, i); x.lineTo(s, i); x.stroke(); }
   for (let i = 0; i < 16; i++) {
     const kx = Math.random() * s, ky = Math.random() * s, r = 4 + Math.random() * 9;
@@ -498,7 +504,7 @@ function strut(p1, p2, thickness, mat) {
 function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(BG);
-  scene.fog = new THREE.Fog(BG, 62, 155);
+  scene.fog = new THREE.FogExp2(BG, 0.0072);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
   camera.position.set(20, 14, 26);
@@ -525,9 +531,9 @@ function init() {
   const dir = new THREE.DirectionalLight(0xffffff, 1.15);
   dir.position.set(26, 44, 22); dir.castShadow = true;
   dir.shadow.mapSize.set(2048, 2048);
-  dir.shadow.camera.near = 1; dir.shadow.camera.far = 140;
-  dir.shadow.camera.left = -32; dir.shadow.camera.right = 32;
-  dir.shadow.camera.top = 32; dir.shadow.camera.bottom = -32;
+  dir.shadow.camera.near = 1; dir.shadow.camera.far = 240;
+  dir.shadow.camera.left = -56; dir.shadow.camera.right = 56;
+  dir.shadow.camera.top = 56; dir.shadow.camera.bottom = -56;
   dir.shadow.bias = -0.0009;
   scene.add(dir);
   const fill = new THREE.DirectionalLight(0xcfc7ba, 0.42); fill.position.set(-28, 18, -22); scene.add(fill);
@@ -537,6 +543,9 @@ function init() {
   TEX.stone = makeStoneTexture();
   TEX.rust = makeRustTexture();
   TEX.thatch = makeThatchTexture();
+  // 各向异性过滤：地面/石材在掠射角下才不会糊成一片、读成一条 mipmap 色带
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
+  Object.keys(TEX).forEach((k) => { if (TEX[k] && TEX[k].isTexture) TEX[k].anisotropy = maxAniso; });
 
   buildGround();
   buildStation();
@@ -552,7 +561,7 @@ function init() {
   animate();
 
   // 调试/自动化钩子：无头截图脚本可据此改写相机机位
-  window.__sp = { scene, camera, controls, renderer, PART, PROCESS, focusOn, applyFocus };
+  window.__sp = { THREE, scene, camera, controls, renderer, PART, PROCESS, focusOn, applyFocus };
 
   // 首帧渲染完成后揭幕：纸面同方向右移（与首页转场一致），双 rAF 确保场景已实际绘制一帧
   const loaderEl = document.getElementById('loader');
@@ -610,7 +619,6 @@ function buildStation() {
   buildGroundRoller();
   buildDuijia();
   buildShed();
-  buildYardScreens();
 
   scene.add(g);
 }
@@ -623,25 +631,26 @@ function buildWell() {
   const { x: X, z: Z } = WELL;
   const part = PART.well;
 
-  // 石板井台（薄圆盘，直径 7.6，把四角础石与井口连成一体）
-  const apron = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 3.85, 0.18, 56), vStone(0x9C978D, 0.97));
-  apron.position.set(X, 0.09, Z); apron.receiveShadow = true; part.add(apron);
-  const edge = new THREE.Mesh(hoopGeoC(3.8, 0.05, 64), ironS());
-  edge.rotation.x = Math.PI / 2; edge.position.set(X, 0.18, Z); part.add(edge);
+  // 井口踩踏面：一圈被踩实的夯土（薄、与地面同质——不再是一块突兀的石板）
+  const apron = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.5, 1.8, 0.06, 40),
+    new THREE.MeshStandardMaterial({ map: TEX.floor, color: 0xD6CFC1, roughness: 0.99 })
+  );
+  apron.position.set(X, 0.035, Z); apron.receiveShadow = true; part.add(apron);
 
   // 石砌井唇：一圈石块箍住井口，防潮固壁
   const ringN = 16;
   for (let i = 0; i < ringN; i++) {
     const a = (i / ringN) * Math.PI * 2;
     const blk = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.72, 0.30), vStone(0x948F85, 0.96));
-    blk.position.set(X + Math.cos(a) * 0.78, 0.36, Z + Math.sin(a) * 0.78);
+    blk.position.set(X + Math.cos(a) * 0.84, 0.36, Z + Math.sin(a) * 0.84);
     blk.rotation.y = -a;
     blk.scale.set(1, 0.94 + Math.random() * 0.12, 1);
     blk.castShadow = true; blk.receiveShadow = true; part.add(blk);
   }
-  const cap = new THREE.Mesh(hoopGeoC(0.9, 0.1, 32), vStone(0x8B867D, 0.95));
+  const cap = new THREE.Mesh(hoopGeoC(0.97, 0.1, 32), vStone(0x8B867D, 0.95));
   cap.rotation.x = Math.PI / 2; cap.position.set(X, 0.74, Z); cap.castShadow = true; part.add(cap);
-  const band = new THREE.Mesh(hoopGeoC(0.94, 0.035, 32), ironS());
+  const band = new THREE.Mesh(hoopGeoC(1.01, 0.035, 32), ironS());
   band.rotation.x = Math.PI / 2; band.position.set(X, 0.44, Z); part.add(band);
 
   // 井筒暗孔：汲卤筒下探时没入此孔
@@ -812,27 +821,45 @@ function buildStays() {
 // ------------------------------------------------------------
 function buildBailer() {
   const part = PART.bailer;
+  const { len, rTop, rBot, valve } = BAILER;
   const bucket = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.40, 0.34, 1.05, 18), woodTex(0x7E6748, 0.95));
-  body.castShadow = true; bucket.add(body);
-  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.10, 18), ironS());
-  lid.position.y = 0.56; bucket.add(lid);
-  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.42, 18), woodTex(0x6E5A42, 0.95));
-  tip.position.y = -0.72; tip.rotation.x = Math.PI; bucket.add(tip);
-  const ear = new THREE.Mesh(hoopGeoC(0.19, 0.042, 18), ironS());
-  ear.position.y = 0.64; bucket.add(ear);
-  [-0.30, 0.28].forEach((yy) => {
-    const bh = new THREE.Mesh(hoopGeoC(0.39, 0.033, 18), ironS());
-    bh.rotation.x = Math.PI / 2; bh.position.y = yy; bucket.add(bh);
+
+  // 筒身：一整截楠竹（上稍粗下稍细），不是拼接木桶
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, len, 16), vBamboo(0xA8926C, 0.92));
+  body.position.y = len / 2; body.castShadow = true; bucket.add(body);
+
+  // 篾箍：沿筒身均布（井场筒箍全靠篾扎，不钉不铆）
+  const nBind = Math.max(3, Math.round(len / 0.72));
+  for (let i = 1; i < nBind; i++) {
+    const y = (i / nBind) * len;
+    const b = new THREE.Mesh(hoopGeoC(rTop + 0.012, 0.026, 14), bambooS());
+    b.rotation.x = Math.PI / 2; b.position.y = y; bucket.add(b);
+  }
+  // 筒口两道铁箍（提环受力处必须熟铁）
+  [0.20, 0.58].forEach((dy) => {
+    const ir = new THREE.Mesh(hoopGeoC(rTop + 0.022, 0.030, 14), ironS());
+    ir.rotation.x = Math.PI / 2; ir.position.y = len - dy; bucket.add(ir);
   });
-  bucket.position.set(0, 3.6, 0);
+  // 提环：铁环自筒顶起吊
+  const ear = new THREE.Mesh(hoopGeoC(0.15, 0.034, 16), ironS());
+  ear.position.y = len + 0.16; bucket.add(ear);
+  const earPin = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.034, 0.34, 8), ironS());
+  earPin.position.y = len + 0.06; bucket.add(earPin);
+
+  // 阀头：筒底单向阀（木舌/皮碗），收成一段锥口 —— 入井时卤水顶开、提升时自闭
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(rBot + 0.014, rBot * 0.66, valve * 0.62, 14), ironS());
+  head.position.y = -valve * 0.31; head.castShadow = true; bucket.add(head);
+  const tongue = new THREE.Mesh(new THREE.ConeGeometry(rBot * 0.66, valve * 0.38, 12), ironS());
+  tongue.position.y = -valve * 0.62 - valve * 0.19; tongue.rotation.x = Math.PI; bucket.add(tongue);
+
+  bucket.position.set(0, BAILER.minTip, 0);   // 每帧改写 position.y
   part.add(bucket);
 
   // 提卤绳：每帧由 orientCylinder 改写 position/scale/quaternion
-  const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1, 6), ropeS());
+  const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 1, 6), ropeS());
   part.add(rope);
 
-  return { bucket, rope, prevY: 3.6 };
+  return { bucket, rope, prevY: BAILER.minTip };
 }
 
 // ------------------------------------------------------------
@@ -841,75 +868,95 @@ function buildBailer() {
 function buildCart() {
   const part = PART.cart;
   const { x, z, R, axleY } = CART;
-  const woodDark = woodTex(WOOD_DARK, 0.92);
 
   const wheelGrp = new THREE.Group();
   wheelGrp.position.set(x, axleY, z);
   part.add(wheelGrp);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.17, 12, 36), woodTex(WOOD, 0.9));
+
+  // 轮缘：厚木环，自带绳槽 —— 大车之所以做得这么巨大，
+  // 正因为提卤绳是直接绕在轮缘槽里的（不是绕在中央小鼓上）
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.15, 10, 34), woodTex(WOOD, 0.9));
   rim.castShadow = true; wheelGrp.add(rim);
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(R - 0.26, R - 0.26, 0.5, 28), woodTex(0x6E5A42, 0.94));
-  drum.rotation.x = Math.PI / 2; wheelGrp.add(drum);
+  wheelGrp.add(new THREE.Mesh(hoopGeoC(R, 0.035, 34), bambooS()));
+  [-0.19, 0.19].forEach((zz) => {
+    const band = new THREE.Mesh(hoopGeoC(R, 0.026, 34), ironS());
+    band.position.z = zz; wheelGrp.add(band);
+  });
+
+  // 辐：12 根，敞口透光（不设中央大鼓，免得整只轮读成一块实心圆盘）
   for (let i = 0; i < 12; i++) {
-    const sp = new THREE.Mesh(new THREE.BoxGeometry(0.11, (R - 0.2) * 2, 0.11), woodDark);
+    const sp = new THREE.Mesh(new THREE.BoxGeometry(0.105, (R - 0.08) * 2, 0.115), woodTex(WOOD_LIGHT, 0.88));
     sp.rotation.z = (i / 12) * Math.PI * 2; sp.castShadow = true; wheelGrp.add(sp);
   }
-  for (let s = -1; s <= 1; s += 2) {
-    const ring = new THREE.Mesh(hoopGeoC(R - 0.26, 0.035, 28), ironS());
-    ring.rotation.x = Math.PI / 2; ring.position.z = s * 0.26; wheelGrp.add(ring);
-  }
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.9, 12), woodDark);
+  // 毂：短木鼓 + 两端铁箍；轴另用一根长木穿出，落在门架上
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.20, 1.05, 12), woodTex(WOOD_DARK, 0.92));
   hub.rotation.x = Math.PI / 2; wheelGrp.add(hub);
+  [-0.53, 0.53].forEach((zz) => {
+    const hb = new THREE.Mesh(hoopGeoC(0.215, 0.028, 14), ironS());
+    hb.rotation.x = Math.PI / 2; hb.position.z = zz; wheelGrp.add(hb);
+  });
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.095, 2.4, 10), woodTex(0x574730, 0.92));
+  axle.rotation.x = Math.PI / 2; wheelGrp.add(axle);
 
-  // 承轴门架：两根束柱 + 顶枕木 + 斜撑
+  // 承轴门架：两根束柱 + 轴座铁箍 + 地枕
   [-1, 1].forEach((s) => {
     part.add(bundleColumn(
-      new THREE.Vector3(x, 0, z + s * 0.9),
-      new THREE.Vector3(x, axleY + 0.16, z + s * 0.72),
+      new THREE.Vector3(x, 0, z + s * 0.95),
+      new THREE.Vector3(x, axleY + 0.20, z + s * 0.80),
       { count: 3, rad: 0.11, spread: 0.11, color: WOOD, rough: 0.9, bindStep: 0.5, ironEvery: 4, splices: 1 }
     ));
+    const seat = new THREE.Mesh(hoopGeoC(0.135, 0.028, 12), ironS());
+    seat.position.set(x, axleY, z + s * 0.66); part.add(seat);
   });
-  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.22, 2.4), vWood(WOOD_DARK, 0.92));
-  sill.position.set(x, 0.12, z); sill.castShadow = true; part.add(sill);
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.22, 2.7), vWood(WOOD_DARK, 0.92));
+  sill.position.set(x, 0.12, z); sill.castShadow = true; sill.receiveShadow = true; part.add(sill);
 
   PART.cartWheel = wheelGrp;
 
-  // 绳路：天辊底 → 地辊（转向）→ 大车轮缘切点
-  part.add(strut(new THREE.Vector3(0, DER.topY - 0.62, 0), new THREE.Vector3(ROLLER.x, ROLLER.axleY + ROLLER.R, ROLLER.z), 0.05, ropeS()));
-  // 切线段另在 buildGroundRoller 里接续（roller→cart）
+  // 绳路第一段：天辊底 → 地辊（在塔身内部垂直下走，不斜穿塔架）
+  part.add(strut(
+    new THREE.Vector3(0, DER.topY - 0.62, 0),
+    new THREE.Vector3(ROLLER.x, ROLLER.axleY + ROLLER.R, ROLLER.z),
+    0.05, ropeS()
+  ));
 }
 
 // 地辊（地面转向定滑轮）：把竖直绳路转为水平引向大车
 function buildGroundRoller() {
   const part = PART.ground;
   const { x, z, R, axleY } = ROLLER;
+
   const wheelGrp = new THREE.Group();
   wheelGrp.position.set(x, axleY, z);
   part.add(wheelGrp);
-  const wheel = new THREE.Mesh(new THREE.TorusGeometry(R, 0.1, 10, 24), woodTex(WOOD_LIGHT, 0.85));
-  wheel.castShadow = true; wheelGrp.add(wheel);
-  for (let i = 0; i < 4; i++) {
-    const sp = new THREE.Mesh(new THREE.BoxGeometry(0.07, R * 1.8, 0.07), woodTex(WOOD_DARK, 0.9));
-    sp.rotation.z = (i / 4) * Math.PI * 2; wheelGrp.add(sp);
+
+  // 立式导辊：轮面在 XY 平面（轴沿 z），绳自上而下绕过、转为水平引向大车
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 0.085, 8, 26), woodTex(WOOD_LIGHT, 0.86));
+  rim.castShadow = true; wheelGrp.add(rim);
+  wheelGrp.add(new THREE.Mesh(hoopGeoC(R, 0.03, 26), bambooS()));
+  for (let i = 0; i < 6; i++) {
+    const sp = new THREE.Mesh(new THREE.BoxGeometry(0.055, R * 1.7, 0.055), woodTex(WOOD_DARK, 0.9));
+    sp.rotation.z = (i / 6) * Math.PI * 2; wheelGrp.add(sp);
   }
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.5, 10), woodTex(WOOD_DARK, 0.9));
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 1.06, 10), woodTex(WOOD_DARK, 0.9));
   hub.rotation.x = Math.PI / 2; wheelGrp.add(hub);
   PART.groundWheel = wheelGrp;
 
+  // 承轴木架：两根短柱夹住辊轴，柱顶铁座，底部连一根地枕
   [-1, 1].forEach((s) => {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, axleY, 8), vWood(WOOD_DARK, 0.9));
-    post.position.set(x, axleY / 2, z + s * 0.34); post.castShadow = true; part.add(post);
-    const cap = new THREE.Mesh(hoopGeoC(0.085, 0.024, 12), ironS());
-    cap.rotation.x = Math.PI / 2; cap.position.set(x, axleY, z + s * 0.26); part.add(cap);
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.13, axleY + 0.14, 0.15), vWood(WOOD_DARK, 0.9));
+    post.position.set(x, (axleY + 0.14) / 2, z + s * 0.52); post.castShadow = true; part.add(post);
+    const seat = new THREE.Mesh(hoopGeoC(0.095, 0.026, 12), ironS());
+    seat.position.set(x, axleY, z + s * 0.45); part.add(seat);
   });
-  const bind = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.36, 12), bambooS());
-  bind.rotation.x = Math.PI / 2; bind.position.set(x, axleY, z); part.add(bind);
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.13, 1.36), vWood(WOOD_DARK, 0.9));
+  sill.position.set(x, 0.065, z); sill.receiveShadow = true; part.add(sill);
 
-  // 地辊 → 大车的切向绳段（自地辊顶水平引出，切于大车轮缘）
-  const tangentX = CART.x + Math.sqrt(Math.max(0.01, CART.R * CART.R - Math.pow(CART.axleY - (axleY + R), 2))) - 0.17;
+  // 绳路第二段：地辊 → 大车轮缘（同高水平引出，读作绳绕上轮）
+  const ropeY = axleY + R;
   part.add(strut(
-    new THREE.Vector3(x, axleY + R, z),
-    new THREE.Vector3(tangentX, axleY + R, CART.z),
+    new THREE.Vector3(x, ropeY, z),
+    new THREE.Vector3(CART.x + CART.R + 0.16, ropeY, CART.z),
     0.05, ropeS()
   ));
 }
@@ -920,47 +967,67 @@ function buildGroundRoller() {
 function buildDuijia() {
   const part = PART.duijia;
   const X = DUIJIA.x, Z = DUIJIA.z;
-  const H = 4.4, POST = 1.4, TOP = H;
+  const POST = 1.25, TOP = 1.45;
+  const axleY = TOP + 0.17;
 
+  // 两根门柱（小束柱，呼应天车营造逻辑）+ 础石
   [-POST, POST].forEach((sx) => {
     part.add(bundleColumn(
       new THREE.Vector3(X + sx, 0.05, Z),
       new THREE.Vector3(X + sx, TOP, Z),
-      { count: 3, rad: 0.095, spread: 0.095, color: WOOD, rough: 0.9, bindStep: 0.56, ironEvery: 4, splices: 1 }
+      { count: 3, rad: 0.095, spread: 0.095, color: WOOD, rough: 0.9, bindStep: 0.52, ironEvery: 4, splices: 1 }
     ));
-    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.24, 0.5), vStone(0x928D84, 0.96));
-    pl.position.set(X + sx, 0.17, Z); pl.receiveShadow = true; part.add(pl);
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.22, 0.48), vStone(0x928D84, 0.96));
+    pl.position.set(X + sx, 0.15, Z); pl.receiveShadow = true; part.add(pl);
   });
-  const beam = new THREE.Mesh(new THREE.BoxGeometry(2 * POST + 0.3, 0.28, 0.28), vWood(WOOD_DARK, 0.9));
+  // 门梁 + 花辊轴（铰轴，两端出挑）
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(2 * POST + 0.5, 0.24, 0.28), vWood(WOOD_DARK, 0.9));
   beam.position.set(X, TOP, Z); beam.castShadow = true; part.add(beam);
-  // 花辊轴（固定铰接轴）架在顶横梁之上
-  const pivotY = TOP + 0.26;
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 2 * POST, 10), woodTex(WOOD_DARK, 0.92));
-  hub.rotation.z = Math.PI / 2; hub.position.set(X, pivotY, Z); part.add(hub);
+  const spindle = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.125, 2 * POST + 0.66, 10), woodTex(WOOD_DARK, 0.92));
+  spindle.rotation.z = Math.PI / 2; spindle.position.set(X, axleY, Z); part.add(spindle);
+  [-1, 1].forEach((s) => {
+    const seat = new THREE.Mesh(hoopGeoC(0.13, 0.024, 12), ironS());
+    seat.rotation.y = Math.PI / 2; seat.position.set(X + s * (POST + 0.2), axleY, Z); part.add(seat);
+  });
+  // 两根落地斜撑（防摇）
+  [-1, 1].forEach((s) => {
+    part.add(strut(
+      new THREE.Vector3(X + s * POST, TOP - 0.16, Z),
+      new THREE.Vector3(X + s * (POST + 1.1), 0, Z),
+      0.085, vWood(WOOD, 0.9)
+    ));
+  });
 
-  // 杠杆组（绕花辊轴摆动）
+  // 碓梢杠杆（绕花辊轴摆动）：前段挑碓杆、后段设踏板
   const pivot = new THREE.Group();
-  pivot.position.set(X, pivotY, Z);
-  const lever = new THREE.Mesh(new THREE.BoxGeometry(2 * POST + 0.2, 0.15, 0.34), woodTex(WOOD, 0.9));
+  pivot.position.set(X, axleY, Z);
+  const lever = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, 0.28), woodTex(WOOD, 0.9));
   lever.castShadow = true; pivot.add(lever);
-  const headX = -0.45;
-  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.42, 1.3, 12), woodTex(WOOD_DARK, 0.92));
-  head.position.set(headX, -0.92, 0); head.castShadow = true; pivot.add(head);
-  [-0.40, -1.44].forEach((yy) => {
-    const hb = new THREE.Mesh(hoopGeoC(0.37, 0.045, 16), ironS());
+
+  // 碓杆 + 碓头 + 熟铁靴（硬连接在杠杆前端，随梢摆动起落）
+  const headX = -1.45;
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.115, 1.15, 10), woodTex(0x574730, 0.92));
+  shaft.position.set(headX, -0.77, 0); shaft.castShadow = true; pivot.add(shaft);
+  const head = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.245, 0.38, 14), woodTex(WOOD_DARK, 0.92));
+  head.position.set(headX, -1.535, 0); head.castShadow = true; pivot.add(head);
+  [-1.36, -1.72].forEach((yy) => {
+    const hb = new THREE.Mesh(hoopGeoC(0.255, 0.030, 16), ironS());
     hb.rotation.x = Math.PI / 2; hb.position.set(headX, yy, 0); pivot.add(hb);
   });
-  const shoe = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.30, 0.36, 12), ironS());
-  shoe.position.set(headX, -1.72, 0); shoe.castShadow = true; pivot.add(shoe);
-  // 钻杆：自碓头直下入地（井口另设，此处为碓架自身钻具）
-  const drill = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.6, 8), woodTex(0x473A2B, 0.9));
-  drill.position.set(headX, -3.2, 0); pivot.add(drill);
-  const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.14, 0.44), woodTex(WOOD_LIGHT, 0.85));
-  pedal.position.set(1.1, -0.08, 0); pivot.add(pedal);
+  const shoe = new THREE.Mesh(new THREE.CylinderGeometry(0.195, 0.135, 0.20, 12), ironS());
+  shoe.position.set(headX, -1.814, 0); shoe.castShadow = true; pivot.add(shoe);
+
+  // 踏板（踩踏端，落在人站立的高度）
+  const pedal = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.11, 0.42), woodTex(WOOD_LIGHT, 0.85));
+  pedal.position.set(1.55, -0.13, 0); pedal.castShadow = true; pivot.add(pedal);
+  const toe = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.26, 0.42), woodTex(WOOD_LIGHT, 0.85));
+  toe.position.set(1.86, 0.03, 0); pivot.add(toe);
   part.add(pivot);
 
-  part.add(strut(new THREE.Vector3(X - POST, TOP - 0.2, Z), new THREE.Vector3(X - POST - 1.1, 0, Z), 0.09, vWood(WOOD, 0.9)));
-  part.add(strut(new THREE.Vector3(X + POST, TOP - 0.2, Z), new THREE.Vector3(X + POST + 1.1, 0, Z), 0.09, vWood(WOOD, 0.9)));
+  // 砧石：碓头落点处的硬石（模型展示顿钻起落，不再是插地的长杆）
+  const anvil = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.18, 0.60), vStone(0x847F76, 0.96));
+  anvil.position.set(X + headX - 0.50, 0.09, Z);
+  anvil.castShadow = true; anvil.receiveShadow = true; part.add(anvil);
 
   PART.duijiaPivot = pivot;
 }
@@ -1061,35 +1128,6 @@ function buildShed() {
   emit(s);
   flushBin(part);
 }
-
-// 井台外缘的竹笆屏：挡风遮泥，兼晾晒篾绳（落在风篾空隙的方位上）
-function buildScreen(x, z, w = 3.2, h = 1.5) {
-  const part = PART.shed;
-  const p = new THREE.Group();
-  p.position.set(x, 0, z);
-  p.rotation.y = Math.atan2(x, z);
-  [-1, 0, 1].forEach((k) => {
-    const px = k * w / 2;
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, h + 0.34, 7), vWood(WOOD_DARK, 0.9));
-    post.position.set(px, (h + 0.34) / 2 - 0.14, 0); post.castShadow = true; p.add(post);
-    const cap = new THREE.Mesh(hoopGeoC(0.1, 0.022, 10), ironS());
-    cap.rotation.x = Math.PI / 2; cap.position.set(px, h + 0.11, 0); p.add(cap);
-  });
-  const panel = bambooPanel(w - 0.06, h);
-  panel.position.y = 0.05; p.add(panel);
-  emit(p);
-  flushBin(part);
-}
-
-function buildYardScreens() {
-  // 方位取风篾之间的空档（135°、225°），既不挡绳也围出井场
-  const R = 7.2;
-  [[135, 3.4, 1.5], [225, 3.0, 1.35]].forEach(([deg, w, h]) => {
-    const a = (deg * Math.PI) / 180;
-    buildScreen(Math.cos(a) * R, Math.sin(a) * R, w, h);
-  });
-}
-
 // 把单位高度(沿 Y)的圆柱网格摆放为连接 p1→p2 的杆（供提卤绳随桶伸缩）
 const _cylQ = new THREE.Quaternion(), _cylUp = new THREE.Vector3(0, 1, 0), _cylDir = new THREE.Vector3();
 function orientCylinder(mesh, p1, p2) {
@@ -1109,8 +1147,8 @@ function easeInOut(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2
 function duijiaAngle(t) {
   const period = 2.6;
   const p = (t % period) / period;
-  if (p < 0.7) return -0.30 * easeInOut(p / 0.7);
-  return -0.30 + 0.30 * easeInOut((p - 0.7) / 0.3);
+  if (p < 0.7) return -0.30 - 0.32 * easeInOut(p / 0.7);
+  return -0.62 + 0.32 * easeInOut((p - 0.7) / 0.3);
 }
 
 function focusOn(index) {
@@ -1230,14 +1268,14 @@ function runSelfTest() {
   // 提卤绳（天辊底 → 汲卤筒顶）不得穿塔身箍梁与斜撑
   const w = PART.bailerAnim;
   const anchor = [0, DER.topY - 0.62, 0];
-  [[1.2, 'lift-top'], [4.8, 'lift-bottom']].forEach(([yy, label]) => {
+  [[BAILER.maxTip, 'lift-top'], [BAILER.minTip, 'lift-bottom']].forEach(([yy, label]) => {
     checked += 1;
-    const hits = segmentHits(anchor, [0, yy + 0.64, 0], ['cols', 'top'], label);
+    const hits = segmentHits(anchor, [0, yy + BAILER.len + 0.30, 0], ['cols', 'top'], label);
     if (hits.length) collisionErrors.push(...hits);
   });
   // 汲卤筒最低行程：筒体必须仍在井口之上、不埋进石板井台
   const prevY = w.bucket.position.y;
-  w.bucket.position.y = 1.2;
+  w.bucket.position.y = BAILER.minTip;
   scene.updateMatrixWorld(true);
   const box = new THREE.Box3();
   w.bucket.traverse((o) => { if (o.isMesh) box.expandByObject(o); });
@@ -1247,7 +1285,7 @@ function runSelfTest() {
     Math.abs(box.min.z - cz), Math.abs(box.max.z - cz)
   );
   if (box.min.y < 0.15) collisionErrors.push({ label: 'bailer-bottom', detail: `tipY=${box.min.y.toFixed(2)}` });
-  if (maxR > 0.75) collisionErrors.push({ label: 'bailer-radius', detail: `r=${maxR.toFixed(2)}` });
+  if (maxR > 0.34) collisionErrors.push({ label: 'bailer-radius', detail: `r=${maxR.toFixed(2)}` });
   w.bucket.position.y = prevY;
   scene.updateMatrixWorld(true);
 
@@ -1438,10 +1476,10 @@ function animate() {
 
     // 提卤叙事：汲卤筒升降 + 提卤绳联动天辊 / 地辊 / 大车
     const w = PART.bailerAnim;
-    const p = (t % 8.0) / 8.0;
-    const yy = 1.2 + (4.8 - 1.2) * (0.5 - 0.5 * Math.cos(p * Math.PI * 2));
+    const p = (t % 9.0) / 9.0;
+    const yy = BAILER.minTip + (BAILER.maxTip - BAILER.minTip) * (0.5 - 0.5 * Math.cos(p * Math.PI * 2));
     w.bucket.position.y = yy;
-    orientCylinder(w.rope, new THREE.Vector3(0, DER.topY - 0.62, 0), new THREE.Vector3(0, yy + 0.64, 0));
+    orientCylinder(w.rope, new THREE.Vector3(0, DER.topY - 0.62, 0), new THREE.Vector3(0, yy + BAILER.len + 0.30, 0));
     const vel = (yy - w.prevY) / Math.max(dt, 1e-3);
     w.prevY = yy;
     const dW = -vel * 0.22 * dt;   // 桶升→收绳：三只轮同向转

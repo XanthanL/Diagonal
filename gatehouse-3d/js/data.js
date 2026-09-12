@@ -8,7 +8,7 @@ export const PARTS = [
     name: '总览', subtitle: '山谷中的灵光门楼',
     nameEn: 'Overview', subtitleEn: 'A spirit gate in the valley',
     color: 0x55565a,
-    cam: [30, 16, 46], target: [0, 8, 0],
+    cam: [32, 19, 56], target: [0, 11, 0],
     principle:
       '一座无名的门楼立在山谷正中:三层石台基托起白墩与三重檐,拱门里亮着一扇灵光。' +
       '水在楼前拐了一道弯,桥偏在左侧,松与灵火散在坡上,山一层让一层,最远交给雾。',
@@ -22,8 +22,8 @@ export const PARTS = [
         'The spirit light is the single highlight — everything else stays quiet',
         'The bridge leaning left is the one deliberate break in symmetry'],
     },
-    params: ['通高 ≈23 m', '檐 3 重 / 台基 3 层', '灵光门 1 扇', '檐灯 6 盏'],
-    paramsEn: ['Height ≈23 m', '3 roofs / 3 terraces', '1 spirit portal', '6 eave lanterns'],
+    params: ['通高 ≈31 m', '檐 3 重 / 台基 3 层', '灵光门 1 扇', '檐灯 6 盏'],
+    paramsEn: ['Height ≈31 m', '3 roofs / 3 terraces', '1 spirit portal', '6 eave lanterns'],
   },
   {
     id: 'terrace', index: 1,
@@ -52,7 +52,7 @@ export const PARTS = [
     name: '门 · 墙 · 匾', subtitle: '唯一的入口',
     nameEn: 'Gate, Wall & Plaque', subtitleEn: 'The only entrance',
     color: 0xa03828,
-    cam: [8, 8.5, 20], target: [0, 6.5, 3],
+    cam: [8, 9, 21], target: [0, 7, 3],
     principle:
       '白灰墩子是一整块面,只在正中开一道拱门。拱门无扇——它通向灵光,不防盗。' +
       '朱红柱一圈立在墩顶,格扇窗里透出暖光,像楼里始终亮着人间灯火。' +
@@ -68,15 +68,15 @@ export const PARTS = [
         'The warm window light says "inhabited", kin to the spirit fires outside',
         'A gilded frame, no words — only one glowing jade seal'],
     },
-    params: ['墩 19 × 12 × 3.1 m', '拱门宽 4.6 m', '柱高 4.3 m', '匾 3.6 × 1.5 m'],
-    paramsEn: ['Podium 19 × 12 × 3.1 m', 'Arch 4.6 m wide', 'Columns 4.3 m', 'Plaque 3.6 × 1.5 m'],
+    params: ['墩 19 × 12 × 4.6 m', '拱门宽 4.6 m', '柱高 4.0 m', '匾 3.4 × 1.2 m'],
+    paramsEn: ['Podium 19 × 12 × 4.6 m', 'Arch 4.6 m wide', 'Columns 4.0 m', 'Plaque 3.4 × 1.2 m'],
   },
   {
     id: 'eaves', index: 3,
     name: '三重檐 · 翘角', subtitle: '一整片连续曲面',
     nameEn: 'Three Roofs', subtitleEn: 'One continuous curve each',
     color: 0x46616a,
-    cam: [19, 16, 26], target: [0, 13.5, 0],
+    cam: [24, 21, 32], target: [0, 19, 0],
     principle:
       '每重檐是一片连续曲面,不是一摞板:檐口平直、只向角端起翘,屋面按举折曲线爬向顶部平座,' +
       '平座恰好托住上一重楼身。半跨 13.2 → 8.9 → 5.6 逐层收分,翘角逐层变短、变轻。',
@@ -90,15 +90,15 @@ export const PARTS = [
         'A dark course under the eave keeps the big faces clean',
         'One gold bead at each horn tip — that is the whole gold budget'],
     },
-    params: ['半跨 13.2 → 8.9 → 5.6 m', '翘角抬升 1.5 / 1.15 / 0.85 m', '举折指数 1.55', '金珠 8 粒'],
-    paramsEn: ['Half-spans 13.2 → 8.9 → 5.6 m', 'Horn lift 1.5 / 1.15 / 0.85 m', 'Rise exponent 1.55', 'Gold beads: 8'],
+    params: ['半跨 11.6 → 7.9 → 5.1 m', '翘角抬升 1.05 / 0.8 / 0.55 m', '举折指数 1.55', '金珠 8 粒'],
+    paramsEn: ['Half-spans 11.6 → 7.9 → 5.1 m', 'Horn lift 1.05 / 0.8 / 0.55 m', 'Rise exponent 1.55', 'Gold beads: 8'],
   },
   {
     id: 'portal', index: 4,
     name: '灵光门', subtitle: '拱洞里的漩涡',
     nameEn: 'The Spirit Portal', subtitleEn: 'A vortex in the arch',
     color: 0x7fe0c8,
-    cam: [5, 6, 12.5], target: [0, 4.8, 0.5],
+    cam: [7, 8, 22], target: [0, 5.2, 0.6],
     principle:
       '拱门不装门扇,装一扇灵光:玉青与暖金绞成三臂漩涡,缓缓自转,流光被一圈圈吸入门心。' +
       '它是整座建筑唯一的"非常"之物——前面的山、水、楼都按人间规制来,只有这一扇不解释。',
@@ -112,8 +112,8 @@ export const PARTS = [
         'Stream particles spiral inward, turning with the vortex',
         'Jade appears only in the portal and the seal — the site-wide highlight discipline'],
     },
-    params: ['门径 4.3 m', '漩涡 3 臂', '流光 60 粒', '自转 ≈0.26 圈/秒'],
-    paramsEn: ['Portal ⌀ 4.3 m', 'Vortex: 3 arms', 'Stream: 60 motes', 'Spin ≈0.26 rev/s'],
+    params: ['门径 3.5 m', '漩涡 3 臂', '流光 60 粒', '自转 ≈0.26 圈/秒'],
+    paramsEn: ['Portal ⌀ 3.5 m', 'Vortex: 3 arms', 'Stream: 60 motes', 'Spin ≈0.26 rev/s'],
   },
   {
     id: 'lanterns', index: 5,
@@ -141,7 +141,7 @@ export const PARTS = [
     name: '金顶', subtitle: '收成一粒宝珠',
     nameEn: 'The Gilded Crown', subtitleEn: 'Tapered to a pearl',
     color: 0xc9a13b,
-    cam: [7, 25, 12], target: [0, 23, 0],
+    cam: [8, 31, 14], target: [0, 29.5, 0],
     principle:
       '顶不再起檐,两级薄层收成一条金领,领上一只葫芦宝珠,珠尖一点灵光。' +
       '顶要么一条线收掉,要么一个尖收掉——这里选了尖。',
@@ -154,8 +154,8 @@ export const PARTS = [
         'The collar is narrower than the top plateau: not another stack of boxes',
         'The tip spark matches the portal jade — a rhyme between top and gate'],
     },
-    params: ['金领 ⌀ 1.1 m', '宝珠 2 级', '顶灵光 ⌀ 0.28 m', '总高 ≈23 m'],
-    paramsEn: ['Collar ⌀ 1.1 m', 'Pearl: 2 courses', 'Tip spark ⌀ 0.28 m', 'Total ≈23 m'],
+    params: ['金领 ⌀ 1.1 m', '宝珠 2 级', '顶灵光 ⌀ 0.28 m', '总高 ≈31 m'],
+    paramsEn: ['Collar ⌀ 1.1 m', 'Pearl: 2 courses', 'Tip spark ⌀ 0.28 m', 'Total ≈31 m'],
   },
   {
     id: 'landscape', index: 7,

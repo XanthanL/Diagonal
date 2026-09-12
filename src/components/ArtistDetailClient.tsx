@@ -190,11 +190,11 @@ function ArtistProfileView({
           role="dialog"
           aria-modal="true"
           aria-label={zh ? active.title : active.titleEn}
-          className="fixed inset-0 z-[95] bg-[#FAFAF8]/95 backdrop-blur-sm flex items-center justify-center p-6"
+          className="fixed inset-0 z-[95] bg-[#FAFAF8]/95 backdrop-blur-sm flex items-start lg:items-center justify-center p-6 overflow-y-auto overscroll-contain"
           onClick={() => setOpenWork(null)}
         >
           <div
-            className="max-w-6xl w-full max-h-[88vh] grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10"
+            className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-10 lg:max-h-[88vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 大图 */}
@@ -230,7 +230,7 @@ function ArtistProfileView({
             </div>
 
             {/* 信息与缩略图 */}
-            <aside className="overflow-y-auto max-h-[88vh]">
+            <aside className="lg:overflow-y-auto lg:max-h-[88vh]">
               <p className="archive-text text-[10px] text-diagonal-red font-bold">
                 {active.year} · {zh ? active.category : active.categoryEn}
               </p>
