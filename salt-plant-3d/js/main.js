@@ -36,7 +36,8 @@ const WOOD_DARK = 0x4A3B2B;    // 陈年杉木暗部（箍梁·天夹板）
 const WOOD_LIGHT = 0x8F7F64;   // 陈年杉木亮部（受光面）
 const BAMBOO = 0xC2C49C;       // 竹篾（箍·绳）
 const BAMBOO_PALE = 0xA6A283;  // 新篾（竹笆编织面）
-const IRON = 0x6B6259;         // 做旧铁箍
+const CORE_INK = 0x352A1E;     // 束柱芯柱：填在木束中心的暗木，缝里透出的就是它（假 AO）
+const IRON = 0x77706A;         // 做旧铁箍（metalness 降下来之后要补一点明度，否则读成黑）
 const THATCH = 0x8C7A54;       // 茅草屋面
 
 // 天车形制（全部几何都由这几个数推出来，改一处即整体收分）
@@ -213,7 +214,10 @@ function makeWoodTexture() {
   for (let i = 0; i < 320; i++) {
     const gx = Math.random() * s, w = 1 + Math.random() * 3;
     const dark = Math.random() > 0.5;
-    x.strokeStyle = (dark ? 'rgba(48,38,26,' : 'rgba(178,163,138,') + (0.04 + Math.random() * 0.11) + ')';
+    // 竖纹对比原来只有 0.04~0.15：512px 的贴图铺到一根 13 m 的柱身上之后
+    // 全被平均掉了，柱子读成一根均匀的棕色管子 —— 这是「塑料管」的一半原因。
+    // 提到 0.09~0.29 才看得见木纤维。另一半原因（没有凹凸）由下面的 bumpMap 补。
+    x.strokeStyle = (dark ? 'rgba(48,38,26,' : 'rgba(178,163,138,') + (0.09 + Math.random() * 0.20) + ')';
     x.lineWidth = w;
     x.beginPath(); x.moveTo(gx, 0);
     for (let y = 0; y <= s; y += 14) x.lineTo(gx + Math.sin(y * 0.035 + gx) * 2.4, y);
@@ -221,7 +225,7 @@ function makeWoodTexture() {
   }
   for (let i = 0; i < 90; i++) {
     const gx = Math.random() * s;
-    x.strokeStyle = `rgba(214,205,186,${0.03 + Math.random() * 0.05})`;
+    x.strokeStyle = `rgba(214,205,186,${0.05 + Math.random() * 0.08})`;
     x.lineWidth = 1 + Math.random() * 2;
     x.beginPath(); x.moveTo(gx, 0); x.lineTo(gx + (Math.random() - 0.5) * 4, s); x.stroke();
   }
@@ -284,11 +288,17 @@ function woodTex(color, rough = 0.85) {
 // 逐构件色调/粗糙度扰动（做旧：让每根木构、每块石料略有差异，避免塑料感）
 function vTint(map, color, rough) {
   const c = new THREE.Color(color), hsl = {}; c.getHSL(hsl);
-  hsl.l = Math.min(1, Math.max(0.05, hsl.l * (0.85 + Math.random() * 0.3)));
-  hsl.s = Math.min(1, hsl.s * (0.9 + Math.random() * 0.2));
+  // 明度 ±22%、饱和度 ±18%。原来 ±15% / ±10% 太小 —— 一排柱子并排时颜色
+  // 几乎一样，读成同一批注塑件，看不出「每根木头的老化程度各不相同」。
+  hsl.l = Math.min(1, Math.max(0.05, hsl.l * (0.78 + Math.random() * 0.44)));
+  hsl.s = Math.min(1, hsl.s * (0.82 + Math.random() * 0.36));
   c.setHSL(hsl.h, hsl.s, hsl.l);
   return new THREE.MeshStandardMaterial({
     map, color: c,
+    // bumpMap 复用同一张程序贴图：木纹石纹本来就有起伏，只上颜色不上凹凸的话，
+    // 侧光打过来表面依然是平的 —— 这是「塑料感」的另一半成因。0.012 是
+    // 「看得出纤维、但不会变成搓衣板」的量级。
+    bumpMap: map, bumpScale: 0.012,
     roughness: Math.min(1, Math.max(0.3, rough + (Math.random() - 0.5) * 0.14)),
     metalness: 0.0,
   });
@@ -307,11 +317,19 @@ function vBamboo(color = BAMBOO_PALE, rough = 0.9) { return poolMat(`b${color}_$
 // 共享材质（铁 / 篾 / 茅草 / 绳）——节点数量大，必须共享才能合并
 let _ironM = null, _bambooM = null, _thatchM = null, _thatchRoofM = null, _ropeM = null;
 function ironS() {
-  if (!_ironM) _ironM = new THREE.MeshStandardMaterial({ map: TEX.rust, color: IRON, roughness: 0.72, metalness: 0.58 });
+  // metalness 0.58 → 0.30：铁箍本就该是全场最深的构件（比木暗），但在这种
+  // 「纸底 + 弱环境反射」的场景里，高 metalness 会把颜色直接吃掉，读成一颗
+  // 黑色橡胶 O 型圈。降下来之后它仍是全场最深的，但看得见锈迹与哑光。
+  if (!_ironM) _ironM = new THREE.MeshStandardMaterial({ map: TEX.rust, color: IRON, roughness: 0.80, metalness: 0.30 });
   return _ironM;
 }
 function bambooS() {
-  if (!_bambooM) _bambooM = new THREE.MeshStandardMaterial({ color: BAMBOO, roughness: 0.95, metalness: 0.0 });
+  // 纯色无贴图的篾箍在强侧光下会读成「一圈圈白色塑料扎带」。给它同一张纤维
+  // 贴图：底色相乘之后明度自然落到「新篾」该在的位置，还带上细纹与凹凸。
+  if (!_bambooM) _bambooM = new THREE.MeshStandardMaterial({
+    map: TEX.wood, color: BAMBOO, bumpMap: TEX.wood, bumpScale: 0.010,
+    roughness: 0.92, metalness: 0.0,
+  });
   return _bambooM;
 }
 function thatchS() {
@@ -350,7 +368,10 @@ function hoopGeoC(radius, tubeR, seg = 16) {
   return cachedGeo(`h${radius}|${tubeR}|${seg}`, () => new THREE.TorusGeometry(radius, tubeR, 6, seg));
 }
 function unitCylG() {
-  return cachedGeo('unitCyl', () => new THREE.CylinderGeometry(0.94, 1, 1, 7));
+  // 7 → 10 段。7 段的「七棱柱」在近景会露出一道道竖向明暗棱（每个侧面一个明度），
+  // 这是低模感最顽固的一处 —— 贴图救不了，只能加段数。10 段已经读作圆木，
+  // 三角面只多 ~40%（束柱合计约 +900）。保留一点点锥度（0.94/1），原木本就有收分。
+  return cachedGeo('unitCyl', () => new THREE.CylinderGeometry(0.94, 1, 1, 10));
 }
 
 // ---------- 静态几何合并（自实现，避免额外 vendor 依赖） ----------
@@ -433,7 +454,10 @@ function helixWindGeo(radius, length, turns, tubeR) {
 function trunkMesh(ox, oz, y0, y1, rad, color, rough) {
   const h = Math.max(0.02, y1 - y0);
   const m = new THREE.Mesh(unitCylG(), vWood(color, rough));
-  m.scale.set(rad, h, rad);                       // 共享单位圆柱，靠缩放得到粗细/长短
+  // 每根略呈椭圆：真实杉木没有正圆的。原来一律 scale(rad, h, rad)，一排柱子
+  // 并排看过去就是一根根完全一样的圆管。
+  const ecc = (Math.random() - 0.5) * 0.14;
+  m.scale.set(rad * (1 + ecc), h, rad * (1 - ecc));   // 共享单位圆柱，靠缩放得到粗细/长短
   m.position.set(ox, (y0 + y1) / 2, oz);
   m.rotation.y = Math.random() * Math.PI;         // 转一下，木纹不重复
   m.castShadow = true;
@@ -444,7 +468,7 @@ function trunkMesh(ox, oz, y0, y1, rad, color, rough) {
 // 每根切成若干截、接缝高度逐根错开（错缝搭接）；竹篾箍等距密缠，每 ironEvery 道换一道铁箍。
 function bundleColumn(p1, p2, opt = {}) {
   const {
-    count = 3, rad = 0.085, spread = 0.105,
+    count = 3, rad = 0.068, spread = 0.125,
     color = WOOD, rough = 0.88,
     bindStep = 0.55, ironEvery = 4, splices = 2,
   } = opt;
@@ -453,19 +477,21 @@ function bundleColumn(p1, p2, opt = {}) {
   const len = dir.length();
   if (len < 1e-3) return grp;
 
-  const hasCore = count >= 5;
-  const ringN = hasCore ? count - 1 : count;
+  // 束柱的视觉成立靠两件事，缺一不可：
+  //   ① 外层木之间真的留出缝 —— 原来的 rad 0.085 / spread 0.105 会让相邻两根
+  //      互相重叠（圆心距 0.148 < 半径和 0.17），整根柱子读起来就是一根实心方柱。
+  //      收到 0.068 / 放到 0.125 之后，外缘几乎不变（0.1900 → 0.1930），缝出来了。
+  //   ② 柱心有一根暗木 —— 缝里透出的就是它的暗，等于不花一分钱的环境光遮蔽。
+  //      原代码只有 count>=5 才有芯柱，塔身 4→3→2 根的段全都没有。
   const phase = Math.random() * Math.PI * 2;
   const trunks = [];
   for (let i = 0; i < count; i++) {
-    let ox = 0, oz = 0;
-    if (!(hasCore && i === 0)) {
-      const k = hasCore ? i - 1 : i;
-      const a = (k / Math.max(1, ringN)) * Math.PI * 2 + phase;
-      const rr = spread * (0.9 + Math.random() * 0.2);
-      ox = Math.cos(a) * rr; oz = Math.sin(a) * rr;
-    }
-    trunks.push({ ox, oz, r: rad * (0.86 + Math.random() * 0.28) });
+    const a = (i / count) * Math.PI * 2 + phase;
+    const rr = spread * (0.9 + Math.random() * 0.2);
+    trunks.push({ ox: Math.cos(a) * rr, oz: Math.sin(a) * rr, r: rad * (0.86 + Math.random() * 0.28) });
+  }
+  if (count >= 2) {
+    trunks.push({ ox: 0, oz: 0, r: Math.max(0.018, spread - rad - 0.012), core: true });
   }
 
   trunks.forEach((t) => {
@@ -476,7 +502,7 @@ function bundleColumn(p1, p2, opt = {}) {
     for (let k = 0; k < cuts.length - 1; k++) {
       const y0 = -len / 2 + len * cuts[k] - (k > 0 ? 0.06 : 0);
       const y1 = -len / 2 + len * cuts[k + 1] + (k < cuts.length - 2 ? 0.06 : 0);
-      grp.add(trunkMesh(t.ox, t.oz, y0, y1, t.r, color, rough));
+      grp.add(trunkMesh(t.ox, t.oz, y0, y1, t.r, t.core ? CORE_INK : color, rough));
     }
   });
 
@@ -525,11 +551,17 @@ function bundleColumn(p1, p2, opt = {}) {
     if (ironAt.has(i)) {
       const h = new THREE.Mesh(ig, ironS());
       h.rotation.x = Math.PI / 2; h.position.set(0, y, 0);
+      h.scale.setScalar(0.97 + Math.random() * 0.06);
       grp.add(h);
     } else {
+      // 同一个几何反复实例化会给出一道道完全等径、等距、同相位的环，读成
+      // 「机器缠出来的塑料带」。给每道箍各自的松紧（半径 ±4%）与起始角，
+      // 才有手工缠篾的呼吸感 —— 这是近景里最能拉开「制品」与「模型」的东西。
       const w = new THREE.Mesh(wg, bambooS());
-      w.position.set(0, y, 0);
-      w.rotation.y = (i * 0.7) % Math.PI;
+      const tight = 0.96 + Math.random() * 0.085;
+      w.scale.set(tight, 1, tight);
+      w.position.set(0, y + (Math.random() - 0.5) * 0.012, 0);
+      w.rotation.y = (i * 0.7 + Math.random() * 0.9) % Math.PI;
       grp.add(w);
     }
   });
@@ -543,7 +575,9 @@ function bundleColumn(p1, p2, opt = {}) {
 function strut(p1, p2, thickness, mat) {
   const dx = p2.x - p1.x, dy = p2.y - p1.y, dz = p2.z - p1.z;
   const len = Math.hypot(dx, dy, dz);
-  const m = new THREE.Mesh(new THREE.BoxGeometry(thickness, len, thickness), mat);
+  // 截面略呈矩形而非正方形：真实方木是锯出来的，不会是正方的
+  const t2 = thickness * (0.90 + Math.random() * 0.20);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(thickness, len, t2), mat);
   m.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz).normalize());
   m.castShadow = true;
@@ -584,16 +618,32 @@ function init() {
   controls.maxPolarAngle = Math.PI * 0.495;
   controls.target.set(0, 6.2, 0);
 
-  const hemi = new THREE.HemisphereLight(0xffffff, 0xece8df, 1.0); scene.add(hemi);
-  const dir = new THREE.DirectionalLight(0xffffff, 1.15);
-  dir.position.set(26, 44, 22); dir.castShadow = true;
-  dir.shadow.mapSize.set(2048, 2048);
+  // 光照分三层：半球环境（托底）→ 主方向光（塑形）→ 补光（只提暗部）。
+  //
+  // 旧配比 hemi 1.0 / dir 1.15 / fill 0.42 —— 环境光占了近一半能量，把方向光的
+  // 塑形能力稀释殆尽：塔的受光面与背光面几乎同明度，整座塔读成「无光的棚拍
+  // 塑料模型」。更致命的是主光方位角 40° 与默认机位视线 52° 只差 12°，等于顺光，
+  // 可见面几乎全是受光面，连一条明暗交界线都没有 —— 没有交界线就没有体积。
+  //
+  // 现在：环境光压到 0.62（只保证暗部不死黑），主光提到 2.0 并挪到侧光位
+  // （方位 147°、仰角 38°，与视线差 95°），让明暗交界线落在塔身上，用它刻画形体。
+  // 主光色偏暖（0xfff6e8）、环境天光偏冷（0xf4f6fa）—— 冷暖对置，暗部才不会脏。
+  const hemi = new THREE.HemisphereLight(0xf4f6fa, 0xe6dcc8, 0.62); scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xfff6e8, 2.0);
+  dir.position.set(-45, 42, 29); dir.castShadow = true;
+  // 阴影相机范围必须 ≥ 接阴影的那块地面（近场 140 → ±70）。原来只到 ±56，
+  // 近场有 14 m 宽的一圈落在 shadow map 之外，采样 clamp 到边缘纹素，被整片
+  // 误判成处在阴影里 —— 表现就是地面上一圈固定半径的暗环。取 ±72 留余量，
+  // 同时把 mapSize 提到 3072，把每纹素从 7 cm 拉回 4.7 cm，阴影边缘才不糊。
+  dir.shadow.mapSize.set(3072, 3072);
   dir.shadow.camera.near = 1; dir.shadow.camera.far = 240;
-  dir.shadow.camera.left = -56; dir.shadow.camera.right = 56;
-  dir.shadow.camera.top = 56; dir.shadow.camera.bottom = -56;
+  dir.shadow.camera.left = -72; dir.shadow.camera.right = 72;
+  dir.shadow.camera.top = 72; dir.shadow.camera.bottom = -72;
   dir.shadow.bias = -0.0009;
   scene.add(dir);
-  const fill = new THREE.DirectionalLight(0xcfc7ba, 0.42); fill.position.set(-28, 18, -22); scene.add(fill);
+  // 补光从主光的对侧来，只负责把背光面从死黑里拉回来。旧值 0.42 太强，
+  // 等于把明暗交界线又抹平了一次；0.20 是「能看见暗部细节、但暗部依然是暗部」。
+  const fill = new THREE.DirectionalLight(0xd8d2c6, 0.20); fill.position.set(30, 16, -26); scene.add(fill);
 
   TEX.floor = makeFloorTexture();
   TEX.wood = makeWoodTexture();
@@ -639,6 +689,94 @@ function init() {
 // ============================================================
 // 地面：井场夯土 + 一圈极淡的场地界定环（无网格，避免工业厂房感）
 // ============================================================
+// ============================================================
+// 井场痕迹：一张「独一无二、不重复」的贴花，铺在近场地面上。
+//
+// 天车本体已经很细，脚下一片干净的地反而穿帮 —— 读成「新建的展台」而不是
+// 「用了两百年的井场」。这里补的不是构件（加了就是往里堆东西），是**痕迹**：
+//   ① 井口周围被反复踩实的土
+//   ② 卤水溅出、水分蒸发后析出的盐霜 —— 自贡盐井最标志性的一件事
+//   ③ 风篾锚桩四周的脚印（人在那儿站过、拉过绳）
+// 全部低对比、只在中近景隐约可辨。贴图只铺一次（repeat 1），所以不会重复，
+// 也不与地面那层 repeat 的夯土纹理打架。
+// 径向对称，因此平面的 UV 朝向即使反了也看不出。
+// ============================================================
+function makeYardMarksTexture() {
+  const s = 1024, c = cv(s), x = c.getContext('2d');
+  x.clearRect(0, 0, s, s);
+  const K = s / 140;                     // 近场地面 140 m → 每米像素
+  const mid = s / 2;
+
+  // ① 井口周围被踩实的土：深浅不一、不闭合的弧
+  for (let i = 0; i < 110; i++) {
+    const r = (1.4 + Math.random() * 2.8) * K;
+    const a0 = Math.random() * Math.PI * 2;
+    const a1 = a0 + 0.15 + Math.random() * 0.55;
+    x.strokeStyle = 'rgba(118,102,76,' + (0.05 + Math.random() * 0.07).toFixed(3) + ')';
+    x.lineWidth = 2 + Math.random() * 10;
+    x.beginPath();
+    for (let k = 0; k <= 8; k++) {
+      const a = a0 + (a1 - a0) * (k / 8);
+      const rr = r * (1 + (Math.random() - 0.5) * 0.06);
+      const px = mid + Math.cos(a) * rr, py = mid + Math.sin(a) * rr;
+      if (k === 0) x.moveTo(px, py); else x.lineTo(px, py);
+    }
+    x.stroke();
+  }
+
+  // ② 盐霜：越靠近井口越密，向外迅速稀疏
+  for (let i = 0; i < 2000; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.pow(Math.random(), 0.62) * 6.5 * K;
+    const px = mid + Math.cos(a) * r, py = mid + Math.sin(a) * r;
+    const rr = K * (0.05 + Math.random() * 0.3);
+    const g = x.createRadialGradient(px, py, 0, px, py, rr);
+    g.addColorStop(0, 'rgba(255,254,248,' + (0.10 + Math.random() * 0.16).toFixed(3) + ')');
+    g.addColorStop(1, 'rgba(255,254,248,0)');
+    x.fillStyle = g;
+    x.beginPath(); x.arc(px, py, rr, 0, Math.PI * 2); x.fill();
+  }
+
+  // ③ 锚桩四周的脚印：风篾落地半径 9.5 m、方位 22.5° + 45°k（与 STAY_AZ 一致）
+  for (let k = 0; k < 8; k++) {
+    const a = Math.PI / 8 + (k * Math.PI) / 4;
+    const ax = mid + Math.cos(a) * 9.5 * K, az = mid + Math.sin(a) * 9.5 * K;
+    for (let i = 0; i < 30; i++) {
+      const aa = Math.random() * Math.PI * 2;
+      const rr = K * (0.2 + Math.random() * 0.9);
+      const px = ax + Math.cos(aa) * rr, py = az + Math.sin(aa) * rr;
+      x.fillStyle = 'rgba(114,99,76,' + (0.06 + Math.random() * 0.07).toFixed(3) + ')';
+      x.save();
+      x.translate(px, py); x.rotate(aa + (Math.random() - 0.5) * 0.8);
+      x.beginPath(); x.ellipse(0, 0, K * 0.075, K * 0.2, 0, 0, Math.PI * 2); x.fill();
+      x.restore();
+    }
+  }
+
+  // ④ 干裂纹：夯土失水后的细裂缝，从井口一侧向外爬（那里踩得最实、最先开裂）
+  for (let i = 0; i < 80; i++) {
+    const a = Math.random() * Math.PI * 2;
+    let r = (1.5 + Math.random() * 5.5) * K;
+    let px = mid + Math.cos(a) * r, py = mid + Math.sin(a) * r;
+    x.strokeStyle = 'rgba(102,90,72,' + (0.05 + Math.random() * 0.07).toFixed(3) + ')';
+    x.lineWidth = 0.8 + Math.random() * 1.3;
+    x.beginPath(); x.moveTo(px, py);
+    const segs = 3 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < segs; k++) {
+      r += (0.25 + Math.random() * 0.7) * K;
+      const aa = a + (Math.random() - 0.5) * 0.45;
+      px = mid + Math.cos(aa) * r; py = mid + Math.sin(aa) * r;
+      x.lineTo(px, py);
+    }
+    x.stroke();
+  }
+
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
 function buildGround() {
   // 地面分两块，只为绕开一个坑：阴影相机（dir.shadow）只覆盖原点 ±56，
   // 范围外的地面落在 shadow map 之外，采样 clamp 到边缘纹素，会被整片误判成
@@ -651,7 +789,11 @@ function buildGround() {
   floorInner.repeat.set(14, 14);                 // 140 m / 10 m
   const plane = new THREE.Mesh(
     new THREE.PlaneGeometry(140, 140),
-    new THREE.MeshStandardMaterial({ map: floorInner, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
+    // dithering 治的是「色阶带」：暖纸底(#FAFAF8)与地面(#E7E3D9)色差很小，雾把
+    // 地面沿相机距离逐渐推向纸底时，8-bit 量化会在这条几乎看不见的渐变上切出一圈圈
+    // 同心弧形台阶 —— 俯视与拉远机位下最刺眼，读成「地上有水波」。three 的 dithering
+    // 在片元输出前加一点点噪声把台阶打碎，是渲染器里的标准解法，代价为零。
+    new THREE.MeshStandardMaterial({ map: floorInner, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0, dithering: true })
   );
   plane.rotation.x = -Math.PI / 2;
   plane.position.y = GROUND_Y - 0.02;
@@ -666,12 +808,26 @@ function buildGround() {
   floorFar.repeat.set(64, 64);
   const farGround = new THREE.Mesh(
     new THREE.PlaneGeometry(640, 640),
-    new THREE.MeshStandardMaterial({ map: floorFar, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0 })
+    new THREE.MeshStandardMaterial({ map: floorFar, color: 0xE7E3D9, roughness: 0.97, metalness: 0.0, dithering: true })
   );
   farGround.rotation.x = -Math.PI / 2;
   farGround.position.y = GROUND_Y - 0.06;        // 错开 4 cm，避免与近场共面打架
   farGround.receiveShadow = false;
   scene.add(farGround);
+
+  // 痕迹层压在近场地面之上 8 mm。用 Standard 而非 Basic：它必须跟着吃光照与
+  // 阴影 —— 否则塔的投影盖过来时，底下的盐霜兀自发亮，一眼假。
+  const marks = new THREE.Mesh(
+    new THREE.PlaneGeometry(140, 140),
+    new THREE.MeshStandardMaterial({
+      map: makeYardMarksTexture(), transparent: true, depthWrite: false,
+      roughness: 1.0, metalness: 0.0,
+    })
+  );
+  marks.rotation.x = -Math.PI / 2;
+  marks.position.y = GROUND_Y - 0.012;
+  marks.receiveShadow = true;
+  scene.add(marks);
 
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(11.2, 11.55, 128),
@@ -729,14 +885,18 @@ function farDerrick(h, a0, mat) {
 // 视野内能看到 2~3 座山，峰谷才成立。
 // f = 三个谐波（必须整数才能首尾闭合），wf = 脊线在半径方向的游走频率。
 const RIDGES = [
-  { seg: 112, ridge: 205, amp: 20, hMin: 24, hMax: 46, mix: 0.32, f: [11, 19, 31], wf: [3, 7],
+  { seg: 112, ridge: 205, amp: 20, hMin: 24, hMax: 46, mix: 0.50, f: [11, 19, 31], wf: [3, 7],
     shade: [0.89, 0.92, 0.96, 1.01, 1.06], seed: 9137 },
-  { seg: 120, ridge: 265, amp: 25, hMin: 44, hMax: 70, mix: 0.46, f: [9, 17, 27], wf: [3, 8],
+  { seg: 120, ridge: 265, amp: 25, hMin: 44, hMax: 70, mix: 0.62, f: [9, 17, 27], wf: [3, 8],
     shade: [0.87, 0.91, 0.95, 1.01, 1.07], seed: 2244 },
-  { seg: 128, ridge: 335, amp: 30, hMin: 66, hMax: 96, mix: 0.58, f: [7, 13, 23], wf: [2, 5],
+  { seg: 128, ridge: 335, amp: 30, hMin: 66, hMax: 96, mix: 0.72, f: [7, 13, 23], wf: [2, 5],
     shade: [0.85, 0.90, 0.95, 1.01, 1.08], seed: 5521 },
 ];
 const RIDGE_INK = 0x77807E;      // 远山如黛：偏冷的灰，与暖纸底拉开冷暖（绿味要压住）
+// 烘焙光照参数。RIDGE_LH 是主光位置 (-45,42,29) 的水平分量归一化方向，
+// 只用来判「朝阳面 / 背阴面」；RIDGE_AMP 是明暗摆幅（±18%），均值恒为 1.0。
+const RIDGE_LH = [-0.84, 0.54];
+const RIDGE_AMP = 0.18;
 const RIDGE_SLOPE = 1.75;        // 坡的水平/垂直比（≈30°）
 const RIDGE_BASE = -24;          // 山脚埋深（务必低于地面，否则露出底部轮廓）
 // 垂直分层：0 = 山脚，1 = 山脊。分 4 层时每两层之间是一整片平面，flatShading
@@ -782,10 +942,40 @@ function ridgeBand(cfg, mat) {
   // 竖向明暗：山脚压暗、山脊提亮。单靠 flatShading 不够 —— 谷地里看到的
   // 全是朝向相机的内坡，法线方向接近，明暗差摊不出来，山会读成一张平色纸。
   // 顶点色与 material.color 相乘，把这段梯度钉进几何里。
-  const put = (p, k) => {
+  // 面明暗：这一步是「烘焙光照」。山从 MeshLambertMaterial（吃实时方向光）改成
+  // MeshBasicMaterial（不吃光）之后，明暗必须自己算进顶点色 —— 否则三层山会跟着
+  // 场景主光一起被照亮，而谷地四周的内坡法线全都朝向圆心（≈朝向光源），结果整环
+  // 一起变亮、只剩少数外坡发暗，读成大片折纸，比塔还抢眼。
+  // 只用「水平法线」判朝阳/背阴：坡面倾角会把光向的竖直分量带进来，把该有的
+  // 明暗差摊平掉。几何是 non-indexed，每个顶点只属于一个三角形，所以按面算、把
+  // 同一个值写给该面的三个顶点，正好等价于 flatShading 的效果。
+  // 顶点色只写「灰度乘数」（围绕 1.0 的相对明暗），不写颜色本身 —— three 里最终
+  // 颜色 = material.color × vertexColor，顶点色里若再乘一遍 base，等于把颜色平方了
+  // 一次，整环会塌进暗部（实测近层山因此只有 136~160，与地面 161 撞在一起、
+  // 读不出「退到纸面之后」）。颜色交给 material.color 单独承载。
+  const put = (p, k, lit) => {
     pos.push(p[0], p[1], p[2]);
-    const s = cfg.shade[k];
-    col.push(base.r * s, base.g * s, base.b * s);
+    const s = cfg.shade[k] * lit;
+    col.push(s, s, s);
+  };
+  const nrm = (p, q, r) => {
+    const ux = q[0] - p[0], uy = q[1] - p[1], uz = q[2] - p[2];
+    const vx = r[0] - p[0], vy = r[1] - p[1], vz = r[2] - p[2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const l = Math.hypot(nx, ny, nz) || 1;
+    return [nx / l, ny / l, nz / l];
+  };
+  const litOf = (p, q, r) => {
+    const n = nrm(p, q, r);
+    // 取内坡：法线翻到朝向谷地（圆心）的那一侧，再看它朝不朝光
+    let nx = n[0], nz = n[2];
+    const cx = -(p[0] + q[0] + r[0]) / 3, cz = -(p[2] + q[2] + r[2]) / 3;
+    if (nx * cx + nz * cz < 0) { nx = -nx; nz = -nz; }
+    const nl = Math.hypot(nx, nz) || 1;
+    const d = (nx / nl) * RIDGE_LH[0] + (nz / nl) * RIDGE_LH[1];
+    // 围绕 1.0 来回摆：朝阳面 +18%、背阴面 −18%。均值因此恒为 1.0，material.color
+    // 就能直接当成「山的平均明度」来标定 —— 调 mix 时不必再补偿烘焙的整体压暗。
+    return 1 + RIDGE_AMP * d;
   };
   for (let i = 0; i < cfg.seg; i++) {
     const t0 = i / cfg.seg, t1 = (i + 1) / cfg.seg;
@@ -797,8 +987,10 @@ function ridgeBand(cfg, mat) {
     for (let k = 0; k < RIDGE_T.length - 1; k++) {
       const A = at(th0, h0, r0, k), B = at(th0, h0, r0, k + 1);
       const C = at(th1, h1, r1, k + 1), D = at(th1, h1, r1, k);
-      put(A, k); put(B, k + 1); put(C, k + 1);
-      put(A, k); put(C, k + 1); put(D, k);
+      const l1 = litOf(A, B, C);
+      put(A, k, l1); put(B, k + 1, l1); put(C, k + 1, l1);
+      const l2 = litOf(A, C, D);
+      put(A, k, l2); put(C, k + 1, l2); put(D, k, l2);
     }
   }
   const g = new THREE.BufferGeometry();
@@ -845,10 +1037,14 @@ function buildBackdrop() {
   // 而 flatShading 依赖 shader 里的 derivative，合并与否都一样，但独立 mesh
   // 才能单独调 mix / 单独开关来排查「哪一层读不出来」。
   RIDGES.forEach((cfg) => {
-    const mat = new THREE.MeshLambertMaterial({
+    // MeshBasic 而非 Lambert：明暗已经烘进顶点色，材质不再吃场景光。这样山与
+    // 「远天车」（本来就是 Basic + mix）说同一套语言，都退到纸面之后；更重要的是
+    // 调主光时不会再牵动远景 —— 之前改一次光位，三层山的明度就得重调一遍。
+    const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color(RIDGE_INK).lerp(bg, cfg.mix),
       vertexColors: true,
-      flatShading: true,
+      dithering: true,            // 淡渐变在 8-bit 下会切出色阶带，同地面
+      fog: true,
       side: THREE.DoubleSide,     // 绕序朝外，站在谷地里看到的是内侧，双面省事
     });
     holder.add(ridgeBand(cfg, mat));
@@ -900,23 +1096,27 @@ function buildWell() {
   const ringN = 16;
   for (let i = 0; i < ringN; i++) {
     const a = (i / ringN) * Math.PI * 2;
-    const blk = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.72, 0.30), vStone(0x948F85, 0.96));
-    blk.position.set(X + Math.cos(a) * 0.84, 0.36, Z + Math.sin(a) * 0.84);
+    // 井唇由 0.72 降到 0.56。0.72 高的石圈会把井口整个围成一根石柱，
+    // 从任何接近人眼的高度都看不见井 —— 而「这儿有一口深井」正是这个场景的题眼。
+    const blk = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.56, 0.30), vStone(0xA89A82, 0.96));
+    blk.position.set(X + Math.cos(a) * 0.84, 0.28, Z + Math.sin(a) * 0.84);
     blk.rotation.y = -a;
     blk.scale.set(1, 0.94 + Math.random() * 0.12, 1);
     blk.castShadow = true; blk.receiveShadow = true; part.add(blk);
   }
-  const cap = new THREE.Mesh(hoopGeoC(0.97, 0.1, 32), vStone(0x8B867D, 0.95));
-  cap.rotation.x = Math.PI / 2; cap.position.set(X, 0.74, Z); cap.castShadow = true; part.add(cap);
+  const cap = new THREE.Mesh(hoopGeoC(0.97, 0.1, 32), vStone(0x9C8F78, 0.95));
+  cap.rotation.x = Math.PI / 2; cap.position.set(X, 0.58, Z); cap.castShadow = true; part.add(cap);
   const band = new THREE.Mesh(hoopGeoC(1.01, 0.035, 32), ironS());
-  band.rotation.x = Math.PI / 2; band.position.set(X, 0.44, Z); part.add(band);
+  band.rotation.x = Math.PI / 2; band.position.set(X, 0.38, Z); part.add(band);
 
   // 井筒暗孔：汲卤筒下探时没入此孔
+  // 顶面抬到 0.50（井唇口 0.56 之下）：略高的机位能看进这个暗孔，才读得出是井。
+  // 原来顶面在 0.62、井唇顶在 0.72 —— 洞口永远藏在石圈里，从外面看就是一块石墩。
   const shaft = new THREE.Mesh(
     new THREE.CylinderGeometry(0.62, 0.62, 1.4, 28),
-    new THREE.MeshStandardMaterial({ color: 0x241F1B, roughness: 0.98, metalness: 0.0 })
+    new THREE.MeshStandardMaterial({ color: 0x1C1814, roughness: 1.0, metalness: 0.0 })
   );
-  shaft.position.set(X, -0.08, Z); part.add(shaft);
+  shaft.position.set(X, -0.20, Z); part.add(shaft);
 }
 
 // ------------------------------------------------------------
@@ -972,8 +1172,9 @@ function buildTower() {
 
   // 础石：四角角柱落地处
   CORNER.forEach(([sx, sz]) => {
-    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.38, 0.66), vStone(0x928D84, 0.96));
-    pl.position.set(sx * DER.a0, 0.28, sz * DER.a0);
+    // 原来 y=0.28、高 0.38 → 底面在 +0.09，整块础石浮在地面上方 9 cm
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.38, 0.66), vStone(0xA5977E, 0.96));
+    pl.position.set(sx * DER.a0, 0.17, sz * DER.a0);
     pl.rotation.y = (Math.random() - 0.5) * 0.24;
     pl.castShadow = true; pl.receiveShadow = true; part.add(pl);
   });
@@ -1257,7 +1458,7 @@ function buildDuijia() {
       new THREE.Vector3(X + sx, TOP, Z),
       { count: 3, rad: 0.095, spread: 0.095, color: WOOD, rough: 0.9, bindStep: 0.52, ironEvery: 4, splices: 1 }
     ));
-    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.22, 0.48), vStone(0x928D84, 0.96));
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.22, 0.48), vStone(0xA5977E, 0.96));
     pl.position.set(X + sx, 0.15, Z); pl.receiveShadow = true; part.add(pl);
   });
   // 门梁 + 花辊轴（铰轴，两端出挑）
@@ -1313,7 +1514,7 @@ function buildDuijia() {
   part.add(pivot);
 
   // 砧石：碓头落点处的硬石（模型展示顿钻起落，不再是插地的长杆）
-  const anvil = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.18, 0.60), vStone(0x847F76, 0.96));
+  const anvil = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.18, 0.60), vStone(0x968A74, 0.96));
   anvil.position.set(X + headX - 0.50, 0.09, Z);
   anvil.castShadow = true; anvil.receiveShadow = true; part.add(anvil);
 
@@ -1359,7 +1560,7 @@ function buildShed() {
       new THREE.Vector3(sx * W / 2, h, sz * D / 2),
       { count: 3, rad: 0.055, spread: 0.055, color: WOOD_DARK, rough: 0.9, bindStep: 0.56, ironEvery: 0, splices: 1 }
     ));
-    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.34), vStone(0x8F8A80, 0.96));
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.34), vStone(0xA2967F, 0.96));
     pl.position.set(sx * W / 2, 0.09, sz * D / 2); pl.receiveShadow = true; s.add(pl);
   });
 
