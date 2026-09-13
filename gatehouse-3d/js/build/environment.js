@@ -13,6 +13,8 @@ function buildSky() {
       top: { value: new THREE.Color(WORLD.sky.top) },
       mid: { value: new THREE.Color(WORLD.sky.mid) },
       bottom: { value: new THREE.Color(WORLD.sky.bottom) },
+      sunDir: { value: new THREE.Vector3(...WORLD.sun.pos).normalize() },
+      sunTint: { value: new THREE.Color(0xfff4d8) },
     },
     vertexShader: `
       varying vec3 vDir;
@@ -23,11 +25,16 @@ function buildSky() {
     fragmentShader: `
       varying vec3 vDir;
       uniform vec3 top; uniform vec3 mid; uniform vec3 bottom;
+      uniform vec3 sunDir; uniform vec3 sunTint;
       void main() {
         float h = clamp(vDir.y, -0.1, 1.0);
         // 蓝先到:pow<1 让 mid(已是天蓝)在较低仰角就主导,蔚蓝更早铺满画面
         vec3 col = mix(mid, top, pow(max(h, 0.0), 0.45));
         col = mix(bottom, col, smoothstep(-0.05, 0.075, h));
+        // 日光:天空只朝太阳一侧泛暖白(与主光方向一致,而非整片均匀提亮)
+        float sd = max(dot(normalize(vDir), sunDir), 0.0);
+        col = mix(col, sunTint, pow(sd, 6.0) * 0.5);
+        col += sunTint * pow(sd, 60.0) * 0.45;
         gl_FragColor = vec4(col, 1.0);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -74,7 +81,9 @@ function buildTerrain(mat) {
     tmpC.copy(cDeep).lerp(cMid, smoothstep(-1.1, 1.8, y));
     tmpC.lerp(cHigh, smoothstep(3.5, 9.0, y));
     const streak = 0.5 + 0.5 * Math.sin(x * 0.021 + z * 0.017);
-    const k = 0.93 + streak * 0.10;
+    // 低频斑块:草地不是一块均匀色板(两个不同频率相乘,避免看出周期)
+    const patch = 0.5 + 0.5 * Math.sin(x * 0.083 + 2.3) * Math.cos(z * 0.071 - 1.1);
+    const k = 0.885 + streak * 0.085 + patch * 0.075;
     col[i * 3] = tmpC.r * k; col[i * 3 + 1] = tmpC.g * k; col[i * 3 + 2] = tmpC.b * k;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
@@ -102,8 +111,18 @@ function buildHill({ w = 320, depth = 30, h, seg = 80, color, amp }) {
     const peak = Math.max(0, y * 0.76);
     p.setZ(i, (0.12 + peak * amp) * h * end);
   }
+  // 竖向明暗:山脚暗、山脊亮 —— 平涂剪影没有体积,这是最省的一招
+  const base = new THREE.Color(C[color]);
+  const colArr = new Float32Array(p.count * 3);
+  const tmpC = new THREE.Color();
+  for (let i = 0; i < p.count; i++) {
+    const t = Math.min(1, Math.max(0, p.getZ(i) / (h * 0.9)));
+    tmpC.copy(base).multiplyScalar(0.74 + 0.30 * t);
+    colArr[i * 3] = tmpC.r; colArr[i * 3 + 1] = tmpC.g; colArr[i * 3 + 2] = tmpC.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
   geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: C[color] }));
+  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors: true }));
   mesh.position.y = -0.6;
   return mesh;
 }
@@ -120,6 +139,7 @@ function buildWater() {
       colA: { value: new THREE.Color(C.water) },
       colB: { value: new THREE.Color(C.waterDeep) },
       colHi: { value: new THREE.Color(0xe8fbf4) },
+      colSky: { value: new THREE.Color(WORLD.sky.mid) },
     },
     transparent: true,
     vertexShader: `
@@ -130,7 +150,7 @@ function buildWater() {
       }`,
     fragmentShader: `
       varying vec2 vUv;
-      uniform float time; uniform vec3 colA; uniform vec3 colB; uniform vec3 colHi;
+      uniform float time; uniform vec3 colA; uniform vec3 colB; uniform vec3 colHi; uniform vec3 colSky;
       void main() {
         float r = length(vUv);
         if (r > 1.0) discard;
@@ -138,6 +158,7 @@ function buildWater() {
         float rip = sin(r * 22.0 - time * 1.0) * 0.5 + 0.5;
         float rip2 = sin(r * 9.0 + time * 0.5 + vUv.y * 2.0) * 0.5 + 0.5;
         vec3 col = mix(colB, colA, smoothstep(0.10, 0.85, r));
+        col = mix(col, colSky, 0.16);   // 水面拾一点天光,不再是纯材料色
         col += (rip * 0.035 + rip2 * 0.030) * (1.0 - r * 0.5);
         col = mix(col, colHi, smoothstep(0.90, 0.995, r));
         // 粼光:两列波同峰才亮 → 稀疏独立光点,不是成片白斑
@@ -204,16 +225,18 @@ const PINE_MATS = {
   trunk: new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.95 }),
   leaf: new THREE.MeshStandardMaterial({ color: C.pine, roughness: 0.95 }),
   leafD: new THREE.MeshStandardMaterial({ color: C.pineDeep, roughness: 0.95 }),
+  leafWarm: new THREE.MeshStandardMaterial({ color: 0x3d8f4d, roughness: 0.95 }),  // 向阳的暖绿
+  cypress: new THREE.MeshStandardMaterial({ color: 0x26663a, roughness: 0.95 }),   // 柏:更深更窄
 };
-function pine(h) {
+function pine(h, leafA = PINE_MATS.leaf) {
   const g = new THREE.Group();
-  const trunkMat = PINE_MATS.trunk, leafMat = PINE_MATS.leaf, leafMatD = PINE_MATS.leafD;
+  const trunkMat = PINE_MATS.trunk, leafMatD = PINE_MATS.leafD;
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(h * 0.028, h * 0.05, h * 0.4, 6), trunkMat);
   trunk.position.y = h * 0.2;
   g.add(trunk);
   let y = h * 0.26;
   let r = h * 0.26;
-  const mats = [leafMatD, leafMat, leafMat];
+  const mats = [leafMatD, leafA, leafA];
   for (let i = 0; i < 3; i++) {
     const ch = h * (0.34 - i * 0.055);
     const cone = new THREE.Mesh(new THREE.ConeGeometry(r, ch, 8), mats[i]);
@@ -222,6 +245,20 @@ function pine(h) {
     y += ch * 0.6;
     r *= 0.72;
   }
+  return g;
+}
+// 柏:两段窄锥叠成的塔柏(与松拉开剪影差异,免得满坡"复制粘贴")
+function cypress(h) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(h * 0.03, h * 0.045, h * 0.34, 6), PINE_MATS.trunk);
+  trunk.position.y = h * 0.17;
+  g.add(trunk);
+  const c1 = new THREE.Mesh(new THREE.ConeGeometry(h * 0.165, h * 0.74, 7), PINE_MATS.cypress);
+  c1.position.y = h * 0.28 + h * 0.37;
+  g.add(c1);
+  const c2 = new THREE.Mesh(new THREE.ConeGeometry(h * 0.108, h * 0.5, 7), PINE_MATS.cypress);
+  c2.position.y = h * 0.69 + h * 0.25;
+  g.add(c2);
   return g;
 }
 function buildTrees(terrainY) {
@@ -233,12 +270,13 @@ function buildTrees(terrainY) {
     { cx: -26, cz: -18, n: 2, base: 15 },
     { cx: 36, cz: -26, n: 1, base: 17 },
     { cx: 8, cz: -34, n: 2, base: 12 },
+    { cx: -34, cz: -4, n: 2, base: 14 },
   ];
   const R = mulberry(11);
   for (const c of clusters) {
     for (let i = 0; i < c.n; i++) {
       const h = c.base * (i === 0 ? 1 : 0.55 + R() * 0.3);
-      const t = pine(h);
+      const t = R() < 0.28 ? cypress(h * 1.05) : pine(h, R() < 0.35 ? PINE_MATS.leafWarm : PINE_MATS.leaf);
       t.position.set(c.cx + (R() - 0.5) * 6, terrainY(c.cx, c.cz) - 0.2, c.cz + (R() - 0.5) * 6);
       t.rotation.y = R() * Math.PI * 2;
       emit(t);
@@ -331,6 +369,8 @@ function buildSun(tex) {
   halo.scale.setScalar(ENV.sun.r * 6);
   g.add(halo, disc);
   g.position.set(...ENV.sun.pos);
+  // 轮面朝世界原点:相机绕原点转,盘面就一直是正对镜头
+  disc.lookAt(0, ENV.sun.pos[1], 0);
   return g;
 }
 

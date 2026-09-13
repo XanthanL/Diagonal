@@ -114,4 +114,41 @@ function grainTexture(base = '#ffffff', amp = 18) {
   return t;
 }
 
-export { mergeGeos, emit, flushBin, glowTexture, dotTexture, grainTexture };
+/** 青瓦瓦垄贴图:横向一个"筒瓦拱 + 板瓦沟"周期(无缝),纵向带极轻雨痕。
+ *  瓦垄是跟着 uv.x 走的:调用方把 uv.x 设成 弧长/垄距,所以贴图横向周期必须=1。 */
+function roofTileTexture(tileHex, ridgeHex, deepHex) {
+  const W = 96, H = 64;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const img = ctx.createImageData(W, H);
+  const hx = (h) => [(h >> 16) & 255, (h >> 8) & 255, h & 255];
+  const A = hx(tileHex), R = hx(ridgeHex), D = hx(deepHex);
+  const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  for (let y = 0; y < H; y++) {
+    const dirt = 1 - (y / H) * 0.05;                  // 顺坡往下略脏(雨痕),幅度极小
+    for (let x = 0; x < W; x++) {
+      const t = x / W;
+      // 0~0.46 板瓦(凹沟压暗) / 0.46~1 筒瓦(半圆拱提亮)
+      const k = t < 0.46
+        ? -0.32 * Math.sin((t / 0.46) * Math.PI)
+        : 0.72 * Math.pow(Math.sin(((t - 0.46) / 0.54) * Math.PI), 0.8);
+      const col = k >= 0 ? mix(A, R, Math.min(1, k)) : mix(A, D, Math.min(1, -k));
+      const n = 1 + (Math.random() - 0.5) * 0.05;
+      const i = (y * W + x) * 4;
+      img.data[i] = Math.min(255, col[0] * dirt * n);
+      img.data[i + 1] = Math.min(255, col[1] * dirt * n);
+      img.data[i + 2] = Math.min(255, col[2] * dirt * n);
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+export { mergeGeos, emit, flushBin, glowTexture, dotTexture, grainTexture, roofTileTexture };

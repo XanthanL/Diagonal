@@ -1,7 +1,7 @@
 // 门楼本体:三层石台基 / 拱门白墩 / 柱枋格扇 / 参数化翘角屋顶 / 无字匾 / 灯笼 / 金顶
 import * as THREE from 'three';
 import { C, TERRACE, DECK_Y, GATE, PLAQUE_Y, PLAQUE_Z, TIERS, CROWN, LANTERN, PORTAL, ROOF } from '../spec.js';
-import { emit, flushBin, glowTexture, grainTexture } from './util.js';
+import { emit, flushBin, glowTexture, grainTexture, roofTileTexture } from './util.js';
 
 const R = mulberry(42);
 function mulberry(seed) {
@@ -16,10 +16,16 @@ function mulberry(seed) {
 
 // ---------- 材质(整个门楼共用的有限几种) ----------
 function makeMats() {
-  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#a9a294', 18), roughness: 0.93 });
-  const stoneDeep = new THREE.MeshStandardMaterial({ map: grainTexture('#8b8578', 22), roughness: 0.95 });
-  const plaster = new THREE.MeshStandardMaterial({ map: grainTexture('#f1e9d8', 9), roughness: 0.9 });
-  const tile = new THREE.MeshStandardMaterial({ color: C.tile, roughness: 0.66, side: THREE.DoubleSide });
+  // 石色直接对齐 spec.C(此前这里写死了另一组灰,是隐藏的不一致)
+  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#b2ab98', 18), roughness: 0.93 });
+  const stoneDeep = new THREE.MeshStandardMaterial({ map: grainTexture('#918a77', 22), roughness: 0.95 });
+  // 白灰墙:颗粒加粗一档、色相偏暖 —— 否则整面白墙读作一张纸
+  const plaster = new THREE.MeshStandardMaterial({ map: grainTexture('#efe6d1', 15), roughness: 0.92 });
+  // 瓦面走程序瓦垄贴图:颜色全部由贴图给出,color 必须是白(否则相乘偏色)
+  const tile = new THREE.MeshStandardMaterial({
+    map: roofTileTexture(C.tile, C.ridge, C.tileDeep), color: 0xffffff,
+    roughness: 0.66, side: THREE.DoubleSide,
+  });
   const tileDeep = new THREE.MeshStandardMaterial({ color: C.tileDeep, roughness: 0.8, side: THREE.DoubleSide });
   const ridgeM = new THREE.MeshStandardMaterial({ color: C.ridge, roughness: 0.7 });
   const gold = new THREE.MeshStandardMaterial({ color: C.gold, roughness: 0.35, metalness: 0.65 });
@@ -51,6 +57,8 @@ function makeRoofGeo(tier, opts = {}) {
   const M = opts.segU ?? 14;
   const per = 2 * (ax + topRX) + 2 * (az + topRZ) * 0 + 2 * (ax - topRX) + 2 * (az - topRZ) + 0; // unused
   const PERIM = 4 * ax + 4 * az; // 以檐口矩形周长参数化
+  // 瓦垄:周长整除成整数垄数 → 贴图首尾无缝(接缝正落在檐角,被垂脊盖住)
+  const pitch = PERIM / Math.max(8, Math.round(PERIM / 0.55));
 
   // 檐口矩形周界点(从 (+ax,+az) 逆时针)与其外法线
   function eaveAt(s) {
@@ -74,7 +82,31 @@ function makeRoofGeo(tier, opts = {}) {
   const liftAt = (s) => cornerLift * Math.exp(-((cornerDist(s) / cornerSigma) ** 2));
   const flareAt = (s) => ROOF.flare * Math.exp(-((cornerDist(s) / (cornerSigma * 1.15)) ** 2));
 
+  // 垂脊:檐角(带翘起与外撇)由屋面爬到顶部平座角的那条母线。用与屋面完全相同的
+  // 公式求值,所以脊线精确贴在瓦面上(否则会浮空)。
+  const cornerS = [0, 2 * ax, 2 * ax + 2 * az, 4 * ax + 2 * az];
+  function hipLine(s) {
+    const e = eaveAt(s);
+    const out = [];
+    for (let j = 0; j <= 14; j++) {
+      const u = j / 14;
+      const lift = liftAt(s);
+      const flare = flareAt(s) * Math.pow(1 - u, 2);
+      const ex = e.x + e.nx * flare, ez = e.z + e.nz * flare;
+      const ue = Math.pow(u, 1.18);
+      const tx = Math.max(-topRX, Math.min(topRX, ex));
+      const tz = Math.max(-topRZ, Math.min(topRZ, ez));
+      out.push(new THREE.Vector3(
+        ex + (tx - ex) * ue,
+        tier.y + h * Math.pow(u, profile) + lift * Math.pow(1 - u, 1.6) + 0.10,
+        ez + (tz - ez) * ue,
+      ));
+    }
+    return out;
+  }
+
   const pos = [];
+  const uv = [];
   const idx = [];
   const fasciaPos = [];
   const fasciaIdx = [];
@@ -94,6 +126,7 @@ function makeRoofGeo(tier, opts = {}) {
       const z = ez + (tz - ez) * ue;
       const y = tier.y + h * Math.pow(u, profile) + lift * Math.pow(1 - u, 1.6);
       pos.push(x, y, z);
+      uv.push(s / pitch, ue);
       if (j === 0) {
         // 檐口封边带:同一圈往下拉;角端加厚,读作"挑"出的檐板而不是薄纸
         const fH = ROOF.fasciaH + lift * 0.55;
@@ -112,24 +145,38 @@ function makeRoofGeo(tier, opts = {}) {
     const a0 = i * 2, b0 = ((i + 1) % N) * 2;
     fasciaIdx.push(a0, b0, a0 + 1, b0, b0 + 1, a0 + 1);
   }
-  const mk = (p, ix) => {
+  const mk = (p, ix, uvs) => {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+    if (uvs) g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     g.setIndex(ix);
     g.computeVertexNormals();
     return g;
   };
-  return { surface: mk(pos, idx), fascia: mk(fasciaPos, fasciaIdx) };
+  return { surface: mk(pos, idx, uv), fascia: mk(fasciaPos, fasciaIdx), hipLines: cornerS.map(hipLine) };
 }
 
 function buildRoofs(group, mats) {
   const roofs = new THREE.Group();
   roofs.name = 'roofs';
   const tmp = new THREE.Group();
+  const hipByTier = [];
   for (const tier of TIERS) {
-    const { surface, fascia } = makeRoofGeo(tier);
+    const { surface, fascia, hipLines } = makeRoofGeo(tier);
+    hipByTier.push(hipLines);
     tmp.add(new THREE.Mesh(surface, mats.tile));
     tmp.add(new THREE.Mesh(fascia, mats.tileDeep));
+    // 垂脊:四角各一条隆起——瓦面不再是一张光板,脊线把屋面切成四面坡
+    for (const pts of hipLines) {
+      tmp.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 14, 0.15, 5, false), mats.ridge));
+    }
+    // 围脊:把四条垂脊的顶端连成一圈,压在平座边缘
+    const tops = hipLines.map((p) => p[p.length - 1]);
+    for (let k = 0; k < 4; k++) {
+      const a = tops[k], b = tops[(k + 1) % 4];
+      const c = new THREE.CatmullRomCurve3([a.clone().setY(a.y + 0.05), b.clone().setY(b.y + 0.05)]);
+      tmp.add(new THREE.Mesh(new THREE.TubeGeometry(c, 4, 0.15, 5, false), mats.ridge));
+    }
     // 顶部平座:托住上一重楼身(或金顶)
     const cap = new THREE.Mesh(
       new THREE.BoxGeometry(tier.topRX * 2 + 0.5, 0.42, tier.topRZ * 2 + 0.5),
@@ -138,11 +185,13 @@ function buildRoofs(group, mats) {
     cap.position.y = tier.y + tier.h - 0.21;
     tmp.add(cap);
   }
-  // 檐角点金:每个翘角末梢一枚小金珠(四檐角 × 下两层,金预算 <1%)
-  for (const tier of [TIERS[0], TIERS[1]]) {
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+  // 檐角点金:金珠必须落在真正的翘角末梢上——取垂脊的檐端点(带翘起与外撇),
+  // 旧写法用 (ax+0.85, az+0.6) 这种手推坐标,屋面外撇后珠子就浮在半空(曾出的 bug)
+  for (const ti of [0, 1]) {
+    for (const pts of hipByTier[ti]) {
+      const p = pts[0];
       const bead = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), mats.gold);
-      bead.position.set(sx * (tier.ax + 0.85), tier.y + tier.cornerLift + 0.12, sz * (tier.az + 0.6));
+      bead.position.set(p.x + Math.sign(p.x) * 0.07, p.y + 0.05, p.z + Math.sign(p.z) * 0.07);
       tmp.add(bead);
     }
   }
@@ -235,27 +284,77 @@ function buildTerrace(group, mats, terrainY) {
     seamX.position.set(0, 0.02, TERRACE.L1.d / 2 + 4.4);
     tmp.add(seamX);
   }
-  // 前导石径:从桥头沿水岸铺到月台(固定步距的连续石板,不是几块散板)
+  // 前导石径:一条略高出草面的石带(有厚度:上表面 + 两侧壁)
+  // 无厚度的薄带会被草皮起伏咬出锯齿边(试过,近景很假)
+  const pathMat = new THREE.MeshStandardMaterial({
+    map: grainTexture('#8f8776', 22), roughness: 0.95, side: THREE.DoubleSide,
+  });
   {
     const pts = [[-22, 22.6], [-16, 20.6], [-10, 19.4], [-4, 18.4], [0, 17.2]];
-    const stepLen = 2.0;
+    // 先把折线重采样成密中心线
+    const center = [];
     for (let i = 0; i < pts.length - 1; i++) {
       const [x0, z0] = pts[i], [x1, z1] = pts[i + 1];
-      const dx = x1 - x0, dz = z1 - z0;
-      const len = Math.hypot(dx, dz);
-      for (let d = 0; d < len; d += stepLen) {
-        const t = d / len;
-        const px = x0 + dx * t, pz = z0 + dz * t;
-        const slab = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.3, 1.9), mats.stoneDeep);
-        slab.position.set(px, (terrainY(px, pz) || 0) - 0.06, pz);
-        slab.rotation.y = Math.atan2(dx, dz) + (i % 2 ? 0.05 : -0.04);
-        tmp.add(slab);
+      const len = Math.hypot(x1 - x0, z1 - z0);
+      const n = Math.max(2, Math.round(len / 0.9));
+      for (let k = 0; k < n; k++) {
+        const tt = k / n;
+        center.push([x0 + (x1 - x0) * tt, z0 + (z1 - z0) * tt]);
       }
+    }
+    center.push(pts[pts.length - 1]);
+    // 逐顶点取地形高 → 石带顺着坡走,不再有悬空踏步
+    const hw = 1.3, thick = 0.42;
+    const pos = [], uvA = [];
+    // 累积弧长 → uv.u(石纹每 1.6 m 一循环)
+    const cum = [0];
+    for (let i = 1; i < center.length; i++) {
+      cum.push(cum[i - 1] + Math.hypot(center[i][0] - center[i - 1][0], center[i][1] - center[i - 1][1]));
+    }
+    for (let i = 0; i < center.length; i++) {
+      const [x, z] = center[i];
+      const [qx, qz] = center[Math.max(i - 1, 0)];
+      const [rx, rz] = center[Math.min(i + 1, center.length - 1)];
+      let dx = rx - qx, dz = rz - qz;
+      const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L;
+      const y = (terrainY(x, z) || 0) + 0.09;
+      const lx = x - dz * hw, lz = z + dx * hw;   // 左缘
+      const rx2 = x + dz * hw, rz2 = z - dx * hw; // 右缘
+      const uu = cum[i] / 1.6;
+      pos.push(lx, y, lz, rx2, y, rz2, lx, y - thick, lz, rx2, y - thick, rz2);
+      uvA.push(uu, 0, uu, 1, uu, -thick / 1.6, uu, 1 - thick / 1.6);
+    }
+    const ri = [];
+    for (let i = 0; i < center.length - 1; i++) {
+      const a = i * 4, b = a + 4;               // 本/下一站的四个顶点
+      ri.push(a, a + 1, b, a + 1, b + 1, b);              // 上表面
+      ri.push(a, b, a + 2, a + 2, b, b + 2);              // 左缘壁
+      ri.push(a + 1, a + 3, b + 1, a + 3, b + 3, b + 1);  // 右缘壁
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uvA, 2));
+    g.setIndex(ri);
+    g.computeVertexNormals();
+    tmp.add(new THREE.Mesh(g, pathMat));
+    // 板缝:每两道横线,把带子读成一块块石板(而不是一条水泥坡)
+    for (let i = 0; i < center.length - 1; i += 2) {
+      const [x, z] = center[i];
+      const [rx, rz] = center[Math.min(i + 1, center.length - 1)];
+      // 齐平的细缝线(凸起来会读成小台阶)
+      const joint = new THREE.Mesh(new THREE.BoxGeometry(hw * 2, 0.014, 0.11), mats.stone);
+      joint.position.set(x, (terrainY(x, z) || 0) + 0.097, z);
+      joint.rotation.y = Math.atan2(rx - x, rz - z);
+      tmp.add(joint);
     }
   }
   emit(tmp);
   flushBin(t);
-  t.children.forEach((m) => { m.userData.partId = 'terrace'; });
+  t.children.forEach((m) => {
+    m.userData.partId = 'terrace';
+    // 石径是带厚度的 DoubleSide 薄板:让它投影会自己糊自己,出细条纹
+    if (m.material === pathMat) m.castShadow = false;
+  });
   group.add(t);
   return topY;
 }
@@ -326,7 +425,8 @@ function buildHalls(group, mats, podium) {
       const col = new THREE.Mesh(new THREE.CylinderGeometry(colR, colR * 1.08, colH, 10), mats.red);
       col.position.set(x, y + colH / 2, z);
       tmp.add(col);
-      const base = new THREE.Mesh(new THREE.CylinderGeometry(colR * 1.5, colR * 1.7, 0.22, 10), mats.chestnut);
+      // 柱础是石作,不是木作
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(colR * 1.5, colR * 1.7, 0.22, 10), mats.stone);
       base.position.set(x, y + 0.11, z);
       tmp.add(base);
     }
