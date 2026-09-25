@@ -3,6 +3,9 @@
 /Diagonal-content-backup/
 /content/
 
+# 品牌资产导出物（hero 字标的高清 PNG / 矢量 SVG、PDF 与量测脚本），本地留存不入库
+/exports/
+
 # 3D 子项目的本地参考资料与技能工作目录（按约不入库，验收后删除）
 /salt-plant-3d/images/
 /salt-plant-3d/.img2threejs/
@@ -14,7 +17,10 @@
 /public/shared/
 
 # WorkBuddy agent internal data (not part of the project)
+# 工具从 .workbuddy 改名为 .workbuddy-ai，两个目录都要忽略
+# （旧目录里是 8/9~9/15 的历史记忆，永不删）
 /.workbuddy/
+/.workbuddy-ai/
 
 # explicitly track the cleaned markdown content in src/
 !/src/content/
