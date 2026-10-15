@@ -18,14 +18,25 @@
 - `src/lib/translations.ts` —— 双语文案
 - `package.json` / `scripts/*` / `.github/workflows/*` —— 构建与部署管线
 
-各子项目目录内部（`salt-plant-3d/`、`gatehouse-3d/`、`vacuum-salt/`）互不相干，可随意并行。
+各子项目目录内部（`salt-plant-3d/`、`gatehouse-3d/`、`apparel-rack/`）互不相干，可随意并行。
+（`vacuum-salt/` 方向已于 2026-08 终止：首页 Lab 入口、导航项与 dev rewrite 均已拆除，**仓库里的源码留待作者确认后删除**，不再往里面加东西。）
 
 ## 三、子站同步纪律（防双副本漂移）
 
 - **只编辑根目录源**（如 `salt-plant-3d/`）；`public/<subsite>/` 一律视为生成物。
-- 同步已自动化：`npm run dev` 与 `npm run build`（prebuild 钩子，CI 同样生效）都会把 root 复制进 public；手动同步用 `npm run sync:salt-plant`。
-- `public/salt-plant-3d/` 已转为**不入库生成物**（.gitignore 已登记，2026-08-28）：提交只需根目录源，public 副本不再入库。
-- 同步排除表（见 `scripts/copy-salt-plant.js`）：`images/`、`.img2threejs/`、`tools/` 不进部署物。
+- 同步已自动化：`npm run dev` 与 `npm run build`（prebuild 钩子，CI 同样生效）都会把 root 复制进 public；手动同步用 `npm run sync:sites`。
+- `public/<subsite>/` 已转为**不入库生成物**（.gitignore 已登记）：提交只需根目录源，public 副本不再入库。
+- **同步排除表在 `src/lib/subsites.json`（不是脚本里硬编码）**：每个站点一条 `excludes`，只过滤顶层名。新增排除项改这里。
+  ⚠️ 内部笔记（`OPTIMIZATION.md` / `TASKS.md` / `REBUILD.md`）必须列进盐项目的 excludes——此前它们被一起复制进部署物，
+  公网可直接读到 `…/salt-plant-3d/TASKS.md`。
+
+## 三之二、子站外壳单源（shared/viewer/）
+
+- `shared/viewer/chrome.css`：所有静态子站共用的**设计 token + 顶栏 + 侧栏 + 详情抽屉 + 响应式**。
+  三个子站的 `index.html` 都在自己的 `css/style.css` **之前**引入它，因此子站自有样式可以安全覆盖通用层。
+- `shared/viewer/loader.css`：载入揭幕（斜切纸面翻页），与主站 PageTransition 同源。
+- 改外壳一律改 `shared/`，不要在各子站的 `css/style.css` 里各改一份——那正是此前 `.nav-item` / `--ease-out` 走散的原因。
+- 左上 `DIAGONAL` 字标必须是 `<a class="brand">` 且指向官网首页：全站「左上角 logo 返回首页」的约定对子站同样成立。
 
 ## 四、资料与照片政策
 

@@ -27,21 +27,16 @@ export const translations = {
     dockAtlas: "图集",
     dockLab: "实验",
 
-    // Vacuum Salt（子项目入口）
-    vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
-    vacuumSaltTitle: "真空制盐",
-    vacuumSaltIntro:
-      "以四川自贡井矿盐卤为题材的真空制盐全流程 3D 解构：从深井汲卤、多效蒸发结晶，到离心脱水、干燥筛分与包装仓储。点击进入可交互产线，逐环节查看工艺原理与关键参数。",
-    vacuumSaltEnter: "进入 3D 产线 →",
-    vacuumSaltNav: "真空制盐",
-
     // THE LAB（与 Documents / Atlas 并列的实验/展示板块）
     labLabel: "03 · INTERACTIVE / 实验场 · DEMO",
     labTitle: "THE LAB",
     labIntro:
-      "实验场汇集对角线计划的交互式作品与可视化实验：真空制盐全流程 3D 解构、盐粒子模拟等。每项均可独立进入，作为可把玩的研究对象。",
+      "实验场汇集对角线计划的交互式作品与可视化实验：天车与门楼的 3D 解构、虚拟衣架、盐粒子模拟等。每项均可独立进入，作为可把玩的研究对象。",
     labEnter: "进入 →",
-    labVacuumDesc: "四川自贡井矿盐卤真空制盐全流程 3D 解构，可交互查看五大工艺环节。",
+    apparelRackLabel: "SUBPROJECT · 虚拟衣架",
+    apparelRackTitle: "虚拟衣架",
+    apparelRackDesc:
+      "一条轨道上混排八件衣物，布料按 Verlet 松弛求解：拖拽滑动、悬停转身，点击进入可掀看布面的垂坠与印花。",
     labSaltTitle: "盐粒子模拟",
     labSaltDesc: "上万盐晶粒子的实时模拟，鼠标或触控即可搅动晶体云。",
     labSaltPlantLabel: "SUBPROJECT · 天车 3D",
@@ -106,22 +101,16 @@ export const translations = {
     dockAtlas: "ATLAS",
     dockLab: "LAB",
 
-    // Vacuum Salt（子项目入口）
-    vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
-    vacuumSaltTitle: "VACUUM SALT",
-    vacuumSaltIntro:
-      "An interactive 3D deconstruction of the vacuum salt-making process from Zigong's well brine — from deep-well mining and multi-effect evaporation & crystallization, to centrifugal dewatering, drying & screening, and packaging. Enter the pipeline to explore each stage's principles and key parameters.",
-    vacuumSaltEnter: "ENTER THE PIPELINE →",
-    vacuumSaltNav: "Vacuum Salt",
-
     // THE LAB（与 Documents / Atlas 并列的实验/展示板块）
     labLabel: "03 · INTERACTIVE / LAB · DEMO",
     labTitle: "THE LAB",
     labIntro:
-      "The Lab gathers Diagonal's interactive works and visualization experiments — the 3D deconstruction of vacuum salt-making, the salt-particle simulation, and more. Each opens independently as a playable object of study.",
+      "The Lab gathers Diagonal's interactive works and visualization experiments — the derrick and gatehouse in 3D deconstruction, the virtual garment rack, the salt-particle simulation, and more. Each opens independently as a playable object of study.",
     labEnter: "ENTER →",
-    labVacuumDesc:
-      "An interactive 3D breakdown of Zigong's vacuum salt-making pipeline across five process stages.",
+    apparelRackLabel: "SUBPROJECT · APPAREL RACK",
+    apparelRackTitle: "Virtual Garment Rack",
+    apparelRackDesc:
+      "Eight garments mixed along a single rail, cloth relaxed by Verlet integration — drag to slide, hover to turn, click to stir the fabric.",
     labSaltTitle: "Salt Particle Simulation",
     labSaltDesc:
       "A real-time simulation of thousands of salt crystals — stir the crystal cloud with mouse or touch.",

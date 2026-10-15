@@ -14,6 +14,7 @@
 # 子站部署副本 = 生成物（scripts/sync-sites.js 由 dev/prebuild 自动同步，只提交根目录源）
 /public/salt-plant-3d/
 /public/gatehouse-3d/
+/public/apparel-rack/
 /public/shared/
 
 # WorkBuddy agent internal data (not part of the project)

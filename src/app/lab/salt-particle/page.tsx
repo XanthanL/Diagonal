@@ -37,12 +37,32 @@ export default function SaltParticlePage() {
           </p>
         </div>
 
-        <div className="mt-10 aspect-[4/5] md:aspect-[2/1] w-full">
-          <SaltSimulation />
+        <div className="mt-10 grid gap-8 md:grid-cols-[1fr_13rem] md:items-start">
+          <div className="aspect-[4/5] md:aspect-[2/1] w-full">
+            <SaltSimulation />
+          </div>
+
+          {/* 右缘元信息列：与首页 LAB 索引行「左作品右 meta」同款语言，
+              粒子数按设备能力降级，故记为上限 */}
+          <dl className="archive-text space-y-2 text-[10px] leading-relaxed opacity-65 md:pt-1">
+            <div className="flex justify-between gap-4 border-t border-black/10 pt-2">
+              <dt>ENGINE</dt>
+              <dd>CANVAS 2D · RAF</dd>
+            </div>
+            <div className="flex justify-between gap-4 border-t border-black/10 pt-2">
+              <dt>PARTICLES</dt>
+              <dd>≤ 12,000</dd>
+            </div>
+            <div className="flex justify-between gap-4 border-t border-black/10 pt-2">
+              <dt>INPUT</dt>
+              <dd>HOLD · DRAG</dd>
+            </div>
+          </dl>
         </div>
 
+        {/* 只有按住才推开晶体，光是移动不起作用——别写成 MOVE，实测不符 */}
         <p className="mt-6 archive-text text-[10px] opacity-50 tracking-widest">
-          MOVE / TOUCH TO STIR THE CRYSTAL CLOUD
+          HOLD AND DRAG TO STIR THE CRYSTAL CLOUD
         </p>
       </div>
     </main>

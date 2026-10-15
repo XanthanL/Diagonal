@@ -19,6 +19,7 @@ It is **not** a data pipeline or a headless CMS: the archive itself is plain HTM
 | `/artists` | Artist files for project participants |
 | `/projects/[project]` | Long-form project overviews |
 | `/lab/salt-particle` | Real-time salt-crystal particle simulation |
+| `/salt-plant-3d/`, `/gatehouse-3d/`, `/apparel-rack/` | Standalone static subsites shipped in `public/` (see below) |
 | `/colophon` | Colophon: the making of the site, with the developer's own work index |
 | `/admin` | Browser-only content console (see below) |
 
@@ -55,7 +56,9 @@ src/content/archive committed document bodies (.html, one per language) + _store
 src/lib/            data loading, i18n, path helpers, sanitiser, admin plumbing
 salt-plant-3d/      standalone 3D subsite: the timber derrick (well-head tower)
 gatehouse-3d/       standalone 3D subsite: a fictional gatehouse in voxel form
-vacuum-salt/        standalone 3D subsite: the vacuum salt-making line
+apparel-rack/       standalone subsite: the virtual garment rack (Verlet cloth)
+shared/viewer/      shared chrome for every subsite: chrome.css (topbar/sidebar/info drawer)
+                    and loader.css (curtain reveal) — edit here, all subsites follow
 scripts/            image variant generation, subsite sync, deploy helpers
 .impeccable.md      the design context this repo's UI is held to
 COORDINATION.md     multi-session build rules: shared files, subsite sync discipline
@@ -80,7 +83,7 @@ npm run dev            # http://localhost:3000
 | `npm run dev` | Syncs the 3D subsites into `public/`, then starts the dev server |
 | `npm run build` | Generates responsive image variants and syncs subsites (`prebuild`), then statically exports to `out/` |
 | `npm run images` | Regenerates `.w480/.w960/.w1600` WebP variants used by article `srcset` |
-| `npm run sync:salt-plant` | Re-copies the 3D subsites by hand |
+| `npm run sync:sites` | Re-copies every subsite registered in `src/lib/subsites.json` (also automatic on `dev` / `build`) |
 
 Note that fonts are fetched from Google Fonts at build time; offline or proxied networks fall back to system fonts, which is cosmetic, not an error.
 

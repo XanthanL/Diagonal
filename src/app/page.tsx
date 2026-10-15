@@ -189,30 +189,32 @@ export default function Home() {
     status?: string;
   }[] = [
     {
-      href: "/vacuum-salt/",
-      code: t(lang, "vacuumSaltLabel"),
-      title: t(lang, "vacuumSaltTitle"),
-      desc: t(lang, "labVacuumDesc"),
-    },
-    {
-      href: "/lab/salt-particle",
-      code: "INTERACTIVE",
-      title: t(lang, "labSaltTitle"),
-      desc: t(lang, "labSaltDesc"),
-    },
-    {
-      href: "/salt-plant-3d/index.html",
+      // 目录形式而非 index.html：与 index.html 里的 og:url 保持同一个 canonical，
+      // 分享出去不会同一页面两个地址
+      href: "/salt-plant-3d/",
       code: t(lang, "labSaltPlantLabel"),
       title: t(lang, "labSaltPlantTitle"),
       desc: t(lang, "labSaltPlantDesc"),
       status: t(lang, "labWip"),
     },
     {
-      href: "/gatehouse-3d/index.html",
+      href: "/gatehouse-3d/",
       code: t(lang, "gatehouseLabel"),
       title: t(lang, "gatehouseTitle"),
       desc: t(lang, "gatehouseDesc"),
       status: t(lang, "labWip"),
+    },
+    {
+      href: "/apparel-rack/",
+      code: t(lang, "apparelRackLabel"),
+      title: t(lang, "apparelRackTitle"),
+      desc: t(lang, "apparelRackDesc"),
+    },
+    {
+      href: "/lab/salt-particle",
+      code: "INTERACTIVE",
+      title: t(lang, "labSaltTitle"),
+      desc: t(lang, "labSaltDesc"),
     },
   ];
 

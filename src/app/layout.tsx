@@ -40,8 +40,10 @@ export const metadata: Metadata = {
     images: [
       {
         url: ogImage,
-        width: 1200,
-        height: 630,
+        // 实测 pixel size of /images/diagonal-logo.jpg；此前按惯例写成 1200×630，
+        // 与实际文件不符，部分抓取端会据此判定图片无效而丢弃缩略图
+        width: 640,
+        height: 640,
         alt: siteTitle,
       },
     ],

@@ -22,7 +22,7 @@ export const PROCESS = [
         '四面收分：由低到高渐窄，并束根数递减（4→3→2）',
         '天辊 → 地辊 → 大车：滑轮组提卤',
         '碓架：踩板蓄能，碓头重力冲击凿井',
-        '盐工寮棚：井场旁唯一的建筑',
+        '灶房熬卤 · 盐仓储盐 · 竹笕输卤：卤水的去处',
       ],
       en: [
         'Bundle columns: lashed fir trunks with offset splices — not one solid log',
@@ -30,15 +30,15 @@ export const PROCESS = [
         'Four-sided taper: narrower upward, fewer trunks (4→3→2)',
         'Sky roller → ground roller → cart: a lifting pulley train',
         'Percussion rig: treadle stores energy, hammer falls to drill',
-        'Brine-shed: the only building in the well-yard',
+        'Boiling-house, godown, conduit: where the brine goes',
       ],
     },
-    equipment: ['束柱（多杉并束、竹篾成箍）', '大车（提卤绞盘）', '地辊（转向定滑轮）', '碓架（冲击顿钻）', '风篾（防风拉索）', '汲卤筒（提卤桶）', '铁箍（关键节点锁紧）', '盐工寮棚'],
-    equipmentEn: ['Bundle column (lashed fir trunks)', 'Cart (draw-wheel)', 'Ground roller (deflector)', 'Duijia (percussion rig)', 'Wind stays (guy lines)', 'Bailer (draw bucket)', 'Iron hoops (joint lock)', 'Brine-shed'],
-    params: ['塔高约 13 m（四棱锥台形制）', '束柱 4→3→2 根递减', '篾箍 ≈0.5 m/道，铁箍每 4 道', '大车 Ø ≈3.4 m（绳绕轮缘）', '风篾 8 根伞状放射'],
-    paramsEn: ['Tower ~13 m (four-sided taper)', 'Bundle 4→3→2 trunks', 'Bamboo hoop ~0.5 m, iron every 4th', 'Cart Ø ~3.4 m (rope on rim)', '8 radiating wind stays'],
-    output: '提汲卤水（制盐原料）；维系井场工匠的日常',
-    outputEn: 'Drawn brine (salt-making feed); the daily life of well-yard craftsmen',
+    equipment: ['束柱（多杉并束、竹篾成箍）', '大车（提卤绞盘）', '地辊（转向定滑轮）', '碓架（冲击顿钻）', '风篾（防风拉索）', '汲卤筒（提卤桶）', '铁箍（关键节点锁紧）', '盐工寮棚', '灶房（一灶五锅）', '盐仓（夯土墙）', '竹笕（输卤竹管）'],
+    equipmentEn: ['Bundle column (lashed fir trunks)', 'Cart (draw-wheel)', 'Ground roller (deflector)', 'Duijia (percussion rig)', 'Wind stays (guy lines)', 'Bailer (draw bucket)', 'Iron hoops (joint lock)', 'Brine-shed', 'Boiling-house (5 pans)', 'Salt godown (rammed earth)', 'Bamboo brine conduit'],
+    params: ['塔高约 13 m（四棱锥台形制）', '束柱 4→3→2 根递减', '篾箍 ≈0.5 m/道，铁箍每 4 道', '大车 Ø ≈3.4 m（绳绕轮缘）', '风篾 8 根伞状放射', '灶房一灶五锅 · 烟囱 6.4 m'],
+    paramsEn: ['Tower ~13 m (four-sided taper)', 'Bundle 4→3→2 trunks', 'Bamboo hoop ~0.5 m, iron every 4th', 'Cart Ø ~3.4 m (rope on rim)', '8 radiating wind stays', 'Boiling-house: 5 pans, 6.4 m stack'],
+    output: '提汲卤水（制盐原料）→ 竹笕送灶房熬成盐 → 入仓待运',
+    outputEn: 'Brine drawn → piped to the boiling-house → boiled to salt → stored in the godown',
   },
 
   // 1 —— 束柱
@@ -173,32 +173,35 @@ export const PROCESS = [
   {
     id: 'duijia', index: 5, name: '碓架', subtitle: '冲击顿钻 · 凿井',
     nameEn: 'Percussion Rig', subtitleEn: 'Impact Drilling',
-    color: 0x6E5A42, position: [6.4, 0, 1.8],
-    cam: [9.8, 3.0, 7.2], target: [4.9, 1.0, 0],
+    color: 0x6E5A42, position: [0, 0, -19.5],
+    // 碓架已迁到距天车 19.5 m 的另一口井（方位见 main.js 的 DUIJIA 常量）。
+    // 机位偏正侧面 30°：既保住「碓梢摆动平面」的可读性（压缩 13%），
+    // 又把主光夹角从 90° 拉到 51°（受光度 0.62）—— 站正侧面的话整台机器会半边死黑。
+    cam: [-1.29, 3.40, -6.56], target: [0, 1.90, -19.5],
     principle:
-      '碓架是冲击式顿钻的蓄能—落锤机构：花辊轴上架一根碓梢，前端硬接碓杆与碓头，后端设踏板。盐工站上踏板、以体重把碓梢后端压下，前端碓头随之抬起蓄能；松脚，重力令碓头跌落，在砧石上砸出一下冲击。如此反复，正是凿穿岩层、加深盐井的原理 —— 「自贡井盐深钻汲制技艺」列国家级非遗。',
+      '碓架是冲击式顿钻的蓄能—落锤机构：花辊轴上架一根碓梢，前端硬接碓杆与碓头，后端设踏板。盐工站上踏板、以体重把碓梢后端压下，前端碓头随之抬起蓄能；松脚，重力令碓头跌落，在碓窝里砸出一下冲击。如此反复，正是凿穿岩层、加深盐井的原理 —— 「自贡井盐深钻汲制技艺」列国家级非遗。它并不架在天车之下：顿钻凿井与天车提卤是井场的两道工序、两口井，所以此处让它单独立在约 20 m 外的另一口井上。',
     principleEn:
-      'The percussion rig is a store-and-drop mechanism: a lever (the duishao) rides on a roller fulcrum, carrying the hammer shaft at its front end and a treadle at its back. Standing on the treadle, the worker presses the back end down and the hammer at the front rises, storing energy; releasing it lets gravity drop the hammer onto the anvil — one blow. Repeated without end, this is how rock is pierced and the well deepened: Zigong deep-drilling brine technology, a national intangible heritage.',
+      'The percussion rig is a store-and-drop mechanism: a lever (the duishao) rides on a roller fulcrum, carrying the hammer shaft at its front end and a treadle at its back. Standing on the treadle, the worker presses the back end down and the hammer at the front rises, storing energy; releasing it lets gravity drop the hammer into the stone socket — one blow. Repeated without end, this is how rock is pierced and the well deepened: Zigong deep-drilling brine technology, a national intangible heritage. It does not stand under the derrick: percussion drilling and brine drawing were two operations at two separate wells, so here it stands alone on its own well about 20 m away.',
     reaction: {
       zh: [
-        '踏板蓄能，碓梢杠杆放大',
+        '踏板蓄能，碓梢杠杆放大（1:2）',
         '碓头铁箍加固，熟铁靴耐冲击',
-        '松脚落锤，砧石承击',
+        '松脚落锤，碓窝承击',
         '冲击频率决定凿速',
         '花辊轴为铰，全程无钉',
         '竹篾捆扎机架',
       ],
       en: [
-        'Treadle stores energy, lever amplifies',
+        'Treadle stores energy, lever amplifies (1:2)',
         'Iron-hooped head with a forged-iron shoe',
-        'Release drops the hammer onto the anvil',
+        'Release drops the hammer into the socket',
         'Stroke rate sets drilling speed',
         'Roller-fulcrum joint, nail-free',
         'Bamboo-lashed frame',
       ],
     },
-    params: ['冲击式顿钻', '碓梢杠杆 ≈3.4 m', '碓头 + 熟铁靴', '踏板 ≈0.3–0.8 m 行程', '砧石承击'],
-    paramsEn: ['Percussion drilling', 'Lever ≈3.4 m', 'Hammer + forged shoe', 'Treadle travel ≈0.3–0.8 m', 'Stone anvil'],
+    params: ['冲击式顿钻', '碓梢杠杆 ≈7.4 m（碓头臂 : 踏板臂 = 1:2）', '碓头 + 熟铁靴', '碓头行程 ≈0.55 m / 踏板行程 ≈0.97 m', '碓窝石箍方口承击'],
+    paramsEn: ['Percussion drilling', 'Lever ≈7.4 m (arms 1:2)', 'Hammer + forged shoe', 'Hammer stroke ≈0.55 m / treadle ≈0.97 m', 'Stone socket mouth'],
   },
 
   // 6 —— 汲卤筒
@@ -240,9 +243,9 @@ export const PROCESS = [
     color: 0x9A8455, position: [7.6, 0, 4.8],
     cam: [11.5, 3.8, -11.5], target: [5.23, 1.4, -5.23],
     principle:
-      '井场旁设一座草顶竹笆工棚：单坡草顶前高后低，三面以竹笆围护、朝井的一面敞开，棚下放卤缸、矮凳与盘起的篾绳。它是整座井场唯一的建筑，也是冰冷的木构井架旁那一点人烟 —— 天车得以常年运转的生活基底。',
+      '井场旁设一座草顶竹笆工棚：单坡草顶前高后低，三面以竹笆围护、朝井的一面敞开，棚下放卤缸、矮凳与盘起的篾绳。它是井场聚落里最靠井的那一座 —— 熬卤的灶房与存盐的仓房在场地另一头（见「灶房 · 盐仓」），而它是冰冷的木构井架旁那一点人烟，天车得以常年运转的生活基底。',
     principleEn:
-      'Beside the yard stands a thatch-and-bamboo shed: a single-pitch roof higher at the front, bamboo panels on three sides and the side facing the well left open, with brine jars, a low stool and coiled cord beneath. It is the only building in the whole well-yard — the one touch of habitation beside the cold timber frame, and the everyday base that let the derrick run year-round.',
+      'Beside the yard stands a thatch-and-bamboo shed: a single-pitch roof higher at the front, bamboo panels on three sides and the side facing the well left open, with brine jars, a low stool and coiled cord beneath. It is the building nearest the well; the boiling-house and the salt godown stand across the yard (see “Boiling-house & Godown”). It remains the one touch of habitation beside the cold timber frame, and the everyday base that let the derrick run year-round.',
     reaction: {
       zh: [
         '草顶单坡，前高后低',
@@ -250,7 +253,7 @@ export const PROCESS = [
         '棚下陶卤缸储卤',
         '与天车同工艺：竹篾捆扎',
         '竹笆经纬互压编结',
-        '与天车同工艺：竹篾捆扎',
+        '棚下卤缸 · 矮凳 · 篾绳：井场的生活角',
       ],
       en: [
         'Single-pitch thatch, higher front',
@@ -258,11 +261,65 @@ export const PROCESS = [
         'Earthen brine jars stored inside',
         'Same craft as derrick: bamboo lashing',
         'Bamboo woven warp-over-weft',
-        'Same craft as derrick: bamboo lashing',
+        'Jars, stool and coiled cord: the living corner of the yard',
       ],
     },
-    params: ['单坡草顶', '三面竹笆围护', '陶卤缸储卤', '小束柱角柱', '井场唯一建筑'],
-    paramsEn: ['Single-pitch thatch', 'Bamboo on three sides', 'Earthen brine jars', 'Small bundle posts', 'Sole building in the yard'],
+    params: ['单坡草顶', '三面竹笆围护', '陶卤缸储卤', '小束柱角柱', '井场聚落最靠井的一座'],
+    paramsEn: ['Single-pitch thatch', 'Bamboo on three sides', 'Earthen brine jars', 'Small bundle posts', 'Nearest building to the well'],
+  },
+
+  // 8 —— 灶房 · 盐仓（2026-09-15 新增）
+  {
+    id: 'yard', index: 8, name: '灶房 · 盐仓', subtitle: '熬卤成盐 · 井场聚落',
+    nameEn: 'Boiling-house & Godown', subtitleEn: 'The Salt-works Cluster',
+    color: 0xB0A99E, position: [14.4, 0, -1.8],
+    // 机位从井口一侧斜看灶房的敞开面：一排盐锅、烟囱、以及进屋的竹笕要同框。
+    // 正对敞开面会看不进棚里（屋面挡住锅），偏 40° 才能同时读到「锅在棚下」与
+    // 「笕从井那边来」这一对关系。
+    cam: [23.6, 4.6, 5.4], target: [14.4, 1.5, -1.7],
+    principle:
+      // 注意：JS 不像 Python 那样把相邻字符串字面量隐式拼接，多行必须显式 +
+      '卤水提上井口之后不能就那么放着 —— 它要熬成盐。竹笕把卤水从井口引到灶房：一根根竹管接起来，'
+      + '架在 A 字形木马上，一头接着井边的石墩、一头把卤水滴进官盆。灶房里砌一列砖灶台，一排五口盐锅，'
+      + '锅下烧火，卤水在锅里收干成盐。灶房的屋面用瓦不用草 —— 灶火就在下面，草顶等于烧自己；'
+      + '两端砌砖山墙、长边全敞开，是为了散热与出烟；烟囱砌在山墙外侧，高出屋脊。'
+      + '台基用石砌而不用砖：卤水外溢，砖脚会被盐蚀烂，石脚是必须的。'
+      + '盐出锅后送进盐仓 —— 夯土墙的仓房，墙脚垫石防潮，板门上锁。天车、灶房、盐仓、竹笕，'
+      + '这才是一条完整的生产线：提卤 → 输卤 → 熬盐 → 储盐。',
+    principleEn:
+      'Brine drawn from the well cannot simply sit there — it must be boiled down to salt. A bamboo conduit '
+      + 'carries it from the well-head to the boiling-house: bamboo tubes joined end to end on A-frame trestles, '
+      + 'running from a stone pier by the well to a receiving vat at the house. Inside stands a brick furnace '
+      + 'with a row of five shallow iron pans; fire beneath, brine above, and the water boils away into salt. '
+      + 'The roof is tiled, never thatched — the fire is right below it. Brick gable walls close the two ends, '
+      + 'the long sides stay open for heat and smoke, and the chimney is built outside the gable, rising past '
+      + 'the ridge. The plinth is stone, not brick: spilt brine eats brickwork away. Salt then goes into the '
+      + 'godown — a rammed-earth store on a stone footing, with a plank door that locks. Derrick, boiling-house, '
+      + 'godown and conduit together form one production line: draw, pipe, boil, store.',
+    reaction: {
+      zh: [
+        '竹笕：竹管接续、A 字木马架起，全程自流',
+        '一灶五锅：锅位数就是产量',
+        '灶房长边敞开：散热、出烟、看得见锅',
+        '屋面用瓦 —— 灶火在下，草顶即烧自己',
+        '烟囱砌在山墙外侧，高出屋脊',
+        '盐仓：夯土版筑墙 + 石脚防潮 + 板门上锁',
+      ],
+      en: [
+        'Bamboo conduit on A-frames, gravity-fed end to end',
+        'Five pans to a furnace: pan count is output',
+        'Long sides left open: heat out, smoke out, pans visible',
+        'Tiled roof — fire below makes thatch suicide',
+        'Chimney outside the gable, rising past the ridge',
+        'Godown: rammed earth, stone footing, locking plank door',
+      ],
+    },
+    params: ['灶房 6.4 m × 4.4 m，檐高 3.1 m / 脊高 4.3 m', '砖砌烟囱 6.4 m（全场次高）',
+      '一灶五锅 · 锅径 ≈0.8 m', '竹笕 ≈9 m · 架高 2.05 m', '盐仓 3.95 m × 3.3 m（夯土墙 0.36 m）',
+      '青砖 1.2 m/格 · 小青瓦 0.9 m/格（贴图物理尺度）'],
+    paramsEn: ['Boiling-house 6.4 × 4.4 m, eave 3.1 / ridge 4.3 m', 'Brick stack 6.4 m (second tallest)',
+      'Five pans to a furnace, pan Ø ≈0.8 m', 'Conduit ≈9 m, carried at 2.05 m',
+      'Godown 3.95 × 3.3 m (rammed wall 0.36 m)', 'Brick 1.2 m/tile · tile 0.9 m/tile (physical scale)'],
   },
 ];
 

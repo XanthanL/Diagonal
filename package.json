@@ -11,7 +11,7 @@
     "build:with-vacuum": "npm run build && node scripts/merge-vacuum.js",
     "merge:vacuum": "node scripts/merge-vacuum.js",
     "sync:sites": "node scripts/sync-sites.js",
-    "preview": "npm run build:with-vacuum && npx serve out",
+    "preview": "npm run build && npx serve out",
     "start": "next start",
     "lint": "next lint"
   },

@@ -30,6 +30,8 @@ try {
   };
   await new Promise((r) => (ws.onopen = r));
   await send('Page.enable');
+  await send('Network.enable');
+  await send('Network.setCacheDisabled', { cacheDisabled: true });
   await send('Runtime.enable');
   await send('Log.enable');
   await new Promise((r) => setTimeout(r, 300));

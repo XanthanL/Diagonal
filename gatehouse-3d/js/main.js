@@ -5,9 +5,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { runSelftest, summarizeSelftest } from './selftest.js';
 import { PARTS, I18N } from './data.js';
-import { WORLD, PORTAL, DECK_Y } from './spec.js';
+import { WORLD, PORTAL, DECK_Y, C } from './spec.js';
 import { buildEnvironment } from './build/environment.js';
 import { buildGatehouse, buildPortal } from './build/gatehouse.js';
+import { buildGarden } from './build/garden.js';
 import { buildFireflies, buildPortalStream } from './build/particles.js';
 
 // 自检钩子(?selftest):捕获运行时错误,便于无头浏览器断言验收
@@ -243,24 +244,34 @@ function init() {
   const sun = new THREE.DirectionalLight(WORLD.sun.color, WORLD.sun.intensity * 1.15);
   sun.position.set(...WORLD.sun.pos);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.camera.left = -52; sun.shadow.camera.right = 52;
-  sun.shadow.camera.top = 56; sun.shadow.camera.bottom = -40;
-  sun.shadow.camera.near = 8; sun.shadow.camera.far = 200;
+  // ⚠ 园墙伸到 |x| = 52、月洞门墙在 z = -19 —— 原 ±52/56/-40 会把最外端的墙切出视锥。
+  //   按同一比例放大(mapSize 同步提)才能保住 texel 密度:124/2560 ≈ 0.048 m ≈ 原 104/2048。
+  sun.shadow.mapSize.set(2560, 2560);
+  sun.shadow.camera.left = -62; sun.shadow.camera.right = 62;
+  sun.shadow.camera.top = 62; sun.shadow.camera.bottom = -52;
+  sun.shadow.camera.near = 8; sun.shadow.camera.far = 220;
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.03;
-  const amb = new THREE.AmbientLight(0xfff3e2, 0.34);
+  // 冷蓝补光:晴天阴影的补光来自天空,不是太阳。暖白会把阴影染成"暖灰抹布"
+  const amb = new THREE.AmbientLight(WORLD.amb.color, WORLD.amb.intensity);
   scene.add(hemi, sun, sun.target, amb);
 
   // 场景装配
-  const env = buildEnvironment();
+  const env = buildEnvironment({ renderer });
   scene.add(env);
   const gate = buildGatehouse(env.userData.terrainHeight);
   scene.add(gate);
+  // 园林:粉墙黛瓦 + 漏窗 + 月洞门 + 竹。空间约定见 spec.GARDEN(+z 园外 / -z 园内)
+  const garden = buildGarden({
+    terrainY: env.userData.terrainHeight,
+    envMap: env.userData.envMap,      // 池水复用河面那张天穹贴图,不重复烘
+  });
+  scene.add(garden);
   const portal = buildPortal();
   scene.add(portal);
   const portalCtr = DECK_Y + (PORTAL.straight + PORTAL.halfW) * 0.5;
-  const portalLight = new THREE.PointLight(0x7fe0c8, 90, 26, 2);
+  // 园林的门内只透天光:原来 90 的点光会把整个拱洞打成"发光的洞"
+  const portalLight = new THREE.PointLight(C.portal, 16, 18, 2);
   portalLight.position.set(0, portalCtr, 1.8);
   portalLight.userData.partId = 'portal';
   scene.add(portalLight);

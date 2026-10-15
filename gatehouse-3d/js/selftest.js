@@ -38,12 +38,20 @@ export function runSelftest({ scene, camera, renderer, tickers }) {
   });
   add('#5 灵火数量', fireCount === ENV.fireflies.count, fireCount + '/' + ENV.fireflies.count);
 
-  // 6. 水面 shader 已编译(有 uniform 时间)
-  let waterOk = false;
-  scene.traverse((o) => {
-    if (o.name === 'water' && o.material.uniforms && o.material.uniforms.time) waterOk = true;
-  });
-  add('#6 水面 shader', waterOk);
+  // 6. 水面材质契约:标准 PBR + 天穹环境贴图 + 地形岸线遮罩 + 接影
+  //    (2026-09-14 由裸 ShaderMaterial 改成 MeshStandardMaterial —— 换来了阴影、雾、
+  //     tone mapping 与菲涅耳反射。所以断言的是这份契约,而不是"有没有 ShaderMaterial"。)
+  let water = null;
+  scene.traverse((o) => { if (o.name === 'water') water = o; });
+  const wm = water && water.material;
+  const waterOk = !!(wm && wm.isMeshStandardMaterial && wm.envMap &&
+    wm.alphaMap && wm.normalMap && water.receiveShadow && water.userData.tick);
+  add('#6 水面材质', waterOk, waterOk ? 'PBR+envMap+alphaMap+接影' :
+    JSON.stringify({
+      mesh: !!water, std: !!(wm && wm.isMeshStandardMaterial),
+      env: !!(wm && wm.envMap), alpha: !!(wm && wm.alphaMap),
+      nrm: !!(wm && wm.normalMap), recv: !!(water && water.receiveShadow),
+    }));
 
   // 7. 动画 ticker 已挂载(水/雾/灵火/流光)
   add('#7 动画回路', tickers && tickers.length >= 1, 'tickers=' + (tickers ? tickers.length : 0));

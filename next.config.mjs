@@ -1,29 +1,15 @@
 /** @type {import('next').NextConfig} */
 const isProd = process.env.NODE_ENV === "production";
 
-const common = {
+// 自定义域名 www.diagonal-art.com 根目录部署，无 basePath / assetPrefix。
+// 生产为 output:'export' 的静态导出；静态子站（详见 src/lib/subsites.json）
+// 由 scripts/sync-sites.js 同步进 public/，随导出一起产出，无需任何代理。
+// （此前存在的 /vacuum-salt 开发代理已随该方向终止一并移除。）
+const nextConfig = {
   images: { unoptimized: true },
-  // 使用自定义域名 www.diagonal-art.com 根目录部署，无需 basePath
   basePath: "",
   assetPrefix: "",
+  ...(isProd ? { output: "export" } : {}),
 };
-
-// 生产静态导出：output: 'export'，不使用代理。
-// 本地开发（next dev）：把 /vacuum-salt/* 反向代理到独立运行的真空制盐 dev 服务
-// （默认 http://localhost:3001，需带 basePath=/vacuum-salt 启动），
-// 这样在 diagonal 开发服务器里点开子页不会 404。
-const nextConfig = isProd
-  ? { ...common, output: "export" }
-  : {
-      ...common,
-      async rewrites() {
-        return [
-          {
-            source: "/vacuum-salt/:path*",
-            destination: "http://localhost:3001/vacuum-salt/:path*",
-          },
-        ];
-      },
-    };
 
 export default nextConfig;

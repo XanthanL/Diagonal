@@ -1,7 +1,7 @@
 // 门楼本体:三层石台基 / 拱门白墩 / 柱枋格扇 / 参数化翘角屋顶 / 无字匾 / 灯笼 / 金顶
 import * as THREE from 'three';
 import { C, TERRACE, DECK_Y, GATE, PLAQUE_Y, PLAQUE_Z, TIERS, CROWN, LANTERN, PORTAL, ROOF } from '../spec.js';
-import { emit, flushBin, glowTexture, grainTexture, roofTileTexture } from './util.js';
+import { emit, flushBin, glowTexture, grainTexture, paperTexture, wallTexture, roofTileTexture, roofRidgeNormal } from './util.js';
 
 const R = mulberry(42);
 function mulberry(seed) {
@@ -17,30 +17,51 @@ function mulberry(seed) {
 // ---------- 材质(整个门楼共用的有限几种) ----------
 function makeMats() {
   // 石色直接对齐 spec.C(此前这里写死了另一组灰,是隐藏的不一致)
-  const stone = new THREE.MeshStandardMaterial({ map: grainTexture('#b2ab98', 18), roughness: 0.93 });
-  const stoneDeep = new THREE.MeshStandardMaterial({ map: grainTexture('#918a77', 22), roughness: 0.95 });
-  // 白灰墙:颗粒加粗一档、色相偏暖 —— 否则整面白墙读作一张纸
-  const plaster = new THREE.MeshStandardMaterial({ map: grainTexture('#efe6d1', 15), roughness: 0.92 });
-  // 瓦面走程序瓦垄贴图:颜色全部由贴图给出,color 必须是白(否则相乘偏色)
+  // ⚠ 石色就是 spec.C.stone(冷青石)。原来这里写死 '#b2ab98'(暖卡其)——
+  //   注释写着"已对齐 spec.C",其实没有;结果台基发黄、门前铺地发灰,
+  //   同一画面里两套石色。青石是"灰里带一点青",不是米黄大理石。
+  const hx = (n) => '#' + n.toString(16).padStart(6, '0');
+  const stone = new THREE.MeshStandardMaterial({
+    map: grainTexture(hx(C.stone), 16, { blotch: 6, seed: 101 }), roughness: 0.93,
+  });
+  const stoneDeep = new THREE.MeshStandardMaterial({
+    map: grainTexture(hx(C.stoneDeep), 20, { blotch: 6, seed: 202 }), roughness: 0.95,
+  });
+  // 白灰墙:多尺度(渍斑 + 斑驳 + 颗粒)。只加 per-pixel 噪声是没用的 ——
+  // 大面积上会被平均回一块平色板,那正是"像纸"的成因
+  // ⚠ streak 是**竖向雨痕**的幅度。0.11 在白墙上已经读成"没刷过的水泥"了 ——
+  //   粉墙要的是"旧白",不是"脏"。0.05 + 把底色提回暖白。
+  const plaster = new THREE.MeshStandardMaterial({ map: wallTexture('#f7f5ef', { amp: 6, streak: 0.03, seed: 303 }), roughness: 0.92 });
+  // 瓦面走程序瓦垄贴图:颜色全部由贴图给出,color 必须是白(否则相乘偏色)。
+  // 法线图由同一套剖面求导得到 —— 只给颜色的话,太阳一斜,瓦垄就什么都不剩。
   const tile = new THREE.MeshStandardMaterial({
     map: roofTileTexture(C.tile, C.ridge, C.tileDeep), color: 0xffffff,
+    normalMap: roofRidgeNormal(64, 1.0), normalScale: new THREE.Vector2(0.9, 0.5),
     roughness: 0.66, side: THREE.DoubleSide,
   });
   const tileDeep = new THREE.MeshStandardMaterial({ color: C.tileDeep, roughness: 0.8, side: THREE.DoubleSide });
   const ridgeM = new THREE.MeshStandardMaterial({ color: C.ridge, roughness: 0.7 });
-  const gold = new THREE.MeshStandardMaterial({ color: C.gold, roughness: 0.35, metalness: 0.65 });
-  const red = new THREE.MeshStandardMaterial({ color: C.red, roughness: 0.68 });
+  // ⚠ metalness 0.65 + 灰褐底色 + 没有环境贴图 = 读作"脏金属"。园林里这点细作是
+  //   砖雕/石活,不是铜活 → 金属度压到 0.18、粗糙度提上去,读作磨过的青石。
+  const gold = new THREE.MeshStandardMaterial({ color: C.gold, roughness: 0.58, metalness: 0.18 });
+  // ⚠ 园林没有朱红:柱枋一律栗壳(偏紫的深褐)。材质名与配色键同步从 red 改为 wood
+  const wood = new THREE.MeshStandardMaterial({ color: C.wood, roughness: 0.86 });
   const chestnut = new THREE.MeshStandardMaterial({ color: C.chestnut, roughness: 0.85 });
   const latticeD = new THREE.MeshStandardMaterial({
-    color: C.lattice, roughness: 0.95, emissive: C.windowLit, emissiveIntensity: 0.42,
+    color: C.lattice, roughness: 0.95, emissive: C.windowLit, emissiveIntensity: 0.15,
   });
+  // 格扇窗芯:一整块平色 emissive 读作色卡。换成窗纸贴图(横向帘纹 + 大尺度透光不均),
+  // 才读得出"一层纸、纸后有灯火"。注意走 emissiveMap —— 只有 emissive 会被 emissiveMap 乘,
+  // 单给 map 是改不动自发光那部分的。
   const warmGlow = new THREE.MeshStandardMaterial({
-    color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 1.45, roughness: 0.6,
+    color: 0x4a3418, emissive: C.windowLit, emissiveIntensity: 0.24,
+    emissiveMap: paperTexture('#ffffff', { lit: 0.26, lines: 30, seed: 77 }),
+    roughness: 0.62,
   });
   const jadeGlow = new THREE.MeshStandardMaterial({
     color: C.portal, emissive: C.portal, emissiveIntensity: 1.6, roughness: 0.4,
   });
-  return { stone, stoneDeep, plaster, tile, tileDeep, ridge: ridgeM, gold, red, chestnut, latticeD, warmGlow, jadeGlow };
+  return { stone, stoneDeep, plaster, tile, tileDeep, ridge: ridgeM, gold, wood, chestnut, latticeD, warmGlow, jadeGlow };
 }
 
 // ---------- 参数化翘角屋顶(本作的灵魂) ----------
@@ -231,12 +252,13 @@ function buildTerrace(group, mats, terrainY) {
     // 用直线段逐边布柱:跳过正面(x轴、z=+hd)的中段开缺
     for (const sz of [-1, 1]) {
       for (let x = -hw + 0.3; x <= hw - 0.3; x += TERRACE.RAIL.postGap) {
-        if (sz === 1 && li === 2 && Math.abs(x) < gapX) continue;
+        // 南北两侧都要让出踏道口 —— 只开南侧会把北踏道封在栏杆里
+        if (li === 2 && Math.abs(x) < gapX) continue;
         const p = new THREE.Mesh(post, mats.stone);
         p.position.set(x, rY + TERRACE.RAIL.h / 2, sz * hd);
         tmp.add(p);
       }
-      railRunX(tmp, -hw + 0.3, hw - 0.3, sz * hd, rY, mats.stone, (sz === 1 && li === 2) ? gapX : null);
+      railRunX(tmp, -hw + 0.3, hw - 0.3, sz * hd, rY, mats.stone, li === 2 ? gapX : null);
     }
     for (const sx of [-1, 1]) {
       for (let z = -hd + 0.3; z <= hd - 0.3; z += TERRACE.RAIL.postGap) {
@@ -255,26 +277,33 @@ function buildTerrace(group, mats, terrainY) {
       { y0: TERRACE.L1.h + TERRACE.L2.h, y1: topY, z0: TERRACE.L3.d / 2 + 0.2 },
     ];
     const n = 5, tread = 0.46;
-    for (const lv of lvls) {
-      const rise = (lv.y1 - lv.y0) / n;
-      for (let k = 0; k < n; k++) {
-        const st = new THREE.Mesh(new THREE.BoxGeometry(TERRACE.STEP.w, rise, tread), mats.stone);
-        st.position.set(0, lv.y0 + rise * (k + 0.5), lv.z0 + tread * (n - 1 - k) + tread / 2);
-        tmp.add(st);
-      }
-      // 垂带:两侧各一条斜条石,把台阶收边
-      const runLen = tread * n;
-      for (const sx of [-1, 1]) {
-        const st = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, runLen + 0.8), mats.stoneDeep);
-        st.position.set(sx * (TERRACE.STEP.w / 2 + 0.2), (lv.y0 + lv.y1) / 2 + 0.3, lv.z0 + runLen / 2);
-        st.rotation.x = -Math.atan2(lv.y1 - lv.y0, runLen);
-        tmp.add(st);
+    // ⚠ 北侧必须有对称的下行踏道。这座楼是**过街门楼**式的通道建筑:
+    //   南面上台 → 穿拱洞 → 北面下去才是园子。只做南侧时,穿过门洞迎面是
+    //   2.35 m 高的台基外沿 —— "穿门入园"这条游线根本走不通(园子到不了)。
+    for (const sz of [1, -1]) {
+      for (const lv of lvls) {
+        const rise = (lv.y1 - lv.y0) / n;
+        for (let k = 0; k < n; k++) {
+          const st = new THREE.Mesh(new THREE.BoxGeometry(TERRACE.STEP.w, rise, tread), mats.stone);
+          st.position.set(0, lv.y0 + rise * (k + 0.5),
+            sz * (lv.z0 + tread * (n - 1 - k) + tread / 2));
+          tmp.add(st);
+        }
+        // 垂带:两侧各一条斜条石,把台阶收边
+        const runLen = tread * n;
+        for (const sx of [-1, 1]) {
+          const st = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.24, runLen + 0.8), mats.stoneDeep);
+          st.position.set(sx * (TERRACE.STEP.w / 2 + 0.2), (lv.y0 + lv.y1) / 2 + 0.3,
+            sz * (lv.z0 + runLen / 2));
+          st.rotation.x = -sz * Math.atan2(lv.y1 - lv.y0, runLen);
+          tmp.add(st);
+        }
       }
     }
-    // 月台:底跑之前一块铺石场坪(半埋入地,读作铺装而不是浮板)
-    const apron = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.5, 4.4), mats.stone);
-    apron.position.set(0, -0.23, TERRACE.L1.d / 2 + 4.4);
-    tmp.add(apron);
+    // ❌ 原来的"月台"(apron):10.5 × 4.4 的一块半埋石板,落在 z 13.2~17.6。
+    //   园林的**门前场坪**铺地正好覆盖 z 12.6~20.5 —— 两块板顶面只差 25 mm,
+    //   在 40 m 外就是一片斑驳的 z-fight(一眼看出是两张叠着的纸)。
+    //   场坪既已铺到位,月台就是重复构件,删。
     for (const dz of [-1.6, 0, 1.6]) {
       const seam = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.06, 0.09), mats.stoneDeep);
       seam.position.set(0, 0.02, TERRACE.L1.d / 2 + 4.4 + dz);
@@ -422,7 +451,7 @@ function buildHalls(group, mats, podium) {
     const { w, d, colH, colR, colsX, colsZ } = hall;
     // 柱
     for (const x of colsX) for (const z of colsZ) {
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(colR, colR * 1.08, colH, 10), mats.red);
+      const col = new THREE.Mesh(new THREE.CylinderGeometry(colR, colR * 1.08, colH, 10), mats.wood);
       col.position.set(x, y + colH / 2, z);
       tmp.add(col);
       // 柱础是石作,不是木作
@@ -432,12 +461,12 @@ function buildHalls(group, mats, podium) {
     }
     // 额枋(柱头圈梁)
     for (const z of colsZ) {
-      const beam = new THREE.Mesh(new THREE.BoxGeometry(w + colR, 0.34, 0.3), mats.red);
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(w + colR, 0.34, 0.3), mats.wood);
       beam.position.set(0, y + colH - 0.05, z);
       tmp.add(beam);
     }
     for (const x of [-(w / 2), w / 2]) {
-      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.34, d + colR), mats.red);
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.34, d + colR), mats.wood);
       beam.position.set(x, y + colH - 0.05, 0);
       tmp.add(beam);
     }
@@ -478,7 +507,9 @@ function buildHalls(group, mats, podium) {
   tmp.add(pf);
   const pboard = new THREE.Mesh(
     new THREE.BoxGeometry(pw, ph, 0.12),
-    new THREE.MeshStandardMaterial({ color: 0x7a3422, emissive: 0x30140a, emissiveIntensity: 1.0, roughness: 0.45 })
+    // ⚠ 原为 0x7a3422 + emissive 0x30140a×1.0 —— 那是"灵光门楼"的朱红匾。
+    //   园林的匾是**深栗木**底,只在暗处留一点点温度,不能有任何一块红。
+    new THREE.MeshStandardMaterial({ color: 0x453023, emissive: 0x140c06, emissiveIntensity: 0.55, roughness: 0.62 })
   );
   pboard.position.set(0, plaqueY, pz + 0.02);
   tmp.add(pboard);
@@ -494,7 +525,7 @@ function buildHalls(group, mats, podium) {
   tmp.add(sealRing);
   const seal = new THREE.Mesh(
     new THREE.CircleGeometry(0.36, 24),
-    new THREE.MeshStandardMaterial({ color: C.portal, emissive: C.portal, emissiveIntensity: 1.3, roughness: 0.4 })
+    new THREE.MeshStandardMaterial({ color: C.portal, emissive: C.portal, emissiveIntensity: 0.55, roughness: 0.42 })
   );
   seal.position.set(0, plaqueY, pz + 0.11);
   tmp.add(seal);
@@ -520,13 +551,13 @@ function buildLanterns(group, mats, glowTex) {
   spots.push([GATE.arch.w / 2 + 1.4, DECK_Y + GATE.podium.h - 0.85, GATE.podium.d / 2 + 0.2]);
   // 灯芯共用一份自发光材质:循环内 new 会让 6 盏灯各占一次 draw call
   const coreMat = new THREE.MeshStandardMaterial({
-    color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 2.2,
+    color: C.windowLit, emissive: C.windowLit, emissiveIntensity: 0.55,
   });
   for (const [x, y, z] of spots) {
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, LANTERN.drop, 4), mats.chestnut);
     cord.position.set(x, y + LANTERN.drop / 2, z);
     tmp.add(cord);
-    const body = new THREE.Mesh(new THREE.SphereGeometry(LANTERN.r, 12, 12), mats.red);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(LANTERN.r, 12, 12), mats.wood);
     body.scale.y = LANTERN.h / (LANTERN.r * 2);
     body.position.set(x, y, z);
     tmp.add(body);
@@ -566,23 +597,21 @@ export function buildPortal() {
   shape.closePath();
   const geo = new THREE.ShapeGeometry(shape, 30);
   const spanY = straight + halfW;
-  // 拱洞深处压一层暗幕:光膜贴着一片黑,漩涡才读作"深处有光"
-  const backing = new THREE.Mesh(
-    new THREE.ShapeGeometry(shape, 24),
-    new THREE.MeshBasicMaterial({ color: 0x0d1a1c })
-  );
-  backing.scale.setScalar(1.04);
-  backing.position.set(0, baseY, PORTAL.z - 1.5);
-  backing.userData.partId = 'portal';
-  g.add(backing);
+  // ⚠ 原实现在这里贴了一张**不透明黑幕**,说"光膜贴着黑,漩涡才读作深处有光"。
+  //   那是幻题材的做法。园林的门必须是**通透的** —— 透过门洞要能看见园子那头的月洞门,
+  //   这才叫框景(苏州园林的第一手法,比任何构件都更能说明"这是园林")。
+  //   删掉黑幕之后拱洞回归真实的洞:侧壁是 podium 拉伸出来的券腹,受光明暗自然。
   const mat = new THREE.ShaderMaterial({
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     uniforms: {
       time: { value: 0 },
-      jadeDeep: { value: new THREE.Color(0x0d5c54) },
-      jadeMid: { value: new THREE.Color(0x3fbfa4) },
+      // 月白。园林的"门内透光"是天光,不是灵光 —— 只留一层极淡的雾气,不制造漩涡
+      // ⚠ 雾膜的"颜色"最后只体现在 alpha 上:0x8c9c98 是块中灰绿,乘 0.30 的 alpha
+      //   在拱洞里落成一块**脏抹布**。园林的雾是"天光前的一层纱" → 颜色提到近白。
+      jadeDeep: { value: new THREE.Color(0xcfd4cd) },
+      jadeMid: { value: new THREE.Color(0xf4f2ec) },
       goldC: { value: new THREE.Color(C.portalGold) },
       halfSpan: { value: new THREE.Vector2(halfW, spanY) },
     },
@@ -607,12 +636,16 @@ export function buildPortal() {
         float fil2 = pow(0.5 + 0.5 * sin(sp2), 10.0);
         float core = pow(max(0.0, 1.0 - r * 3.6), 3.0);
         vec3 col = mix(jadeDeep, jadeMid, 0.18 + 0.30 * core);
-        col += jadeMid * fil  * 0.80;
-        col += jadeMid * fil2 * 0.35;
-        col += goldC   * core * 0.45;
-        col += goldC   * fil * fil * 0.22;
+        col += jadeMid * fil  * 0.26;
+        col += jadeMid * fil2 * 0.12;
+        col += goldC   * core * 0.30;
+        col += goldC   * fil * fil * 0.08;
         float edge = smoothstep(1.04, 0.90, r);
-        gl_FragColor = vec4(col, edge * (0.92 + 0.06 * fil));
+        // ⚠ 0.92 的膜厚是"门后有一扇发光的屏";园林只要"门里有薄薄一层晨雾"
+        // 0.30 的膜在拱洞里是一团可见的雾饼;0.12 才读作"里外有别"。
+        // 另外给底部一个衰减:雾不落到门槛上,否则关掉黑幕后仍能看见一条"发光的裙边"。
+        float bot = smoothstep(0.02, 0.34, vLocal.y / halfSpan.y);
+        gl_FragColor = vec4(col, edge * bot * (0.12 + 0.03 * fil));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,

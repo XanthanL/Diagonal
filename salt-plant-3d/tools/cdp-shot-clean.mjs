@@ -29,6 +29,11 @@ try {
   };
   await new Promise((r) => (ws.onopen = r));
   await send('Page.enable');
+  // 必须在导航之前禁缓存：js/main.js 走 HTTP 缓存会让工具对上一版代码取证
+  // （ES module URL 不带版本号，加 ?cb= 只破 HTML 自身的缓存）。
+  await send('Network.enable');
+  await send('Network.setCacheDisabled', { cacheDisabled: true });
+  await send('Page.navigate', { url });
   await send('Emulation.setScrollbarsHidden', { hidden: true }).catch(() => {});
   await new Promise((r) => setTimeout(r, waitMs));
   const shot = await send('Page.captureScreenshot', { format: 'png' });

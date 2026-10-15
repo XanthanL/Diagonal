@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>虚拟衣架 / Virtual Garment Rack · DIAGONAL</title>
+<meta name="description" content="对角线计划 THE LAB：可交互的虚拟挂衣架，布料 Verlet 松弛求解，鼠标扫过可拨动布面。" />
+<meta property="og:title" content="虚拟衣架 · Virtual Garment Rack | DIAGONAL" />
+<meta property="og:description" content="对角线计划实验场：一条轨道上混排八件衣物，布料 Verlet 松弛求解，拖拽滑动、悬停转身、点击细看。" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.diagonal-art.com/apparel-rack/" />
+<meta property="og:site_name" content="DIAGONAL" />
+<meta property="og:image" content="https://www.diagonal-art.com/images/diagonal-logo.jpg" />
+<meta property="og:image:secure_url" content="https://www.diagonal-art.com/images/diagonal-logo.jpg" />
+<meta property="og:image:width" content="640" />
+<meta property="og:image:height" content="640" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://www.diagonal-art.com/images/diagonal-logo.jpg" />
+<link rel="icon" href="/images/diagonal-logo.jpg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,700&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
+<!-- 共享外壳：设计 token / 顶栏与其他静态子站同一副骨架，单源见 shared/viewer/chrome.css -->
+<link rel="stylesheet" href="/shared/viewer/chrome.css" />
+<style>
+  /* 主 token（--paper / --ink / --red / --line …）全部来自共享外壳
+       shared/viewer/chrome.css，这里不再重复定义，避免两套数值各说各话 */
+  html,body{background:var(--paper);color:var(--ink);
+    font-family:"Newsreader",Georgia,serif;overflow:hidden;}
+  canvas{display:block;touch-action:none;cursor:grab;}
+  canvas.grabbing{cursor:grabbing;}
+  /* 顶栏骨架沿用共享外壳 chrome.css 的 #topbar，此处只补 LOGO 行右端的 meta 标签 */
+  #topbar .bar-row .meta{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--muted);font-weight:500;
+  }
+  /* 商品名浮动标 */
+  #namelabel{position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(12px);
+    z-index:18;opacity:0;transition:opacity .4s ease, transform .5s cubic-bezier(.16,1,.3,1);
+    text-align:center;pointer-events:none;}
+  #namelabel .idxs{font-size:10px;letter-spacing:.34em;opacity:.4;font-weight:500;}
+  #namelabel .nm{font-size:34px;font-weight:700;letter-spacing:.01em;line-height:1.15;}
+  #namelabel .sub{font-size:11px;letter-spacing:.3em;text-transform:uppercase;opacity:.5;margin-top:5px;}
+  #namelabel.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* 操作提示 */
+  #hint{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:17;
+    font-size:10px;letter-spacing:.3em;text-transform:uppercase;opacity:.35;pointer-events:none;
+    transition:opacity .4s;}
+  #hint.hide{opacity:0;}
+  /* 底部跑马灯 */
+  #ticker{position:fixed;left:0;right:0;bottom:0;height:58px;background:var(--ink);
+    color:var(--paper);overflow:hidden;z-index:19;display:flex;align-items:center;}
+  #ticker .track{display:flex;white-space:nowrap;will-change:transform;
+    animation:scroll 42s linear infinite;}
+  #ticker span{padding:0 34px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:16px;font-weight:500;}
+  #ticker span i{color:var(--red);font-style:normal;font-size:9px;}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  /* 聚焦模式 */
+  #focusUI{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:0;
+    transition:opacity .45s ease;}
+  #focusUI.on{pointer-events:auto;opacity:1;}
+  #focusUI::before{content:"";position:absolute;inset:0;background:rgba(12,12,14,.60);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    -webkit-mask-image:radial-gradient(ellipse 42% 62% at 50% 45%, transparent 52%, black 100%);
+    mask-image:radial-gradient(ellipse 42% 62% at 50% 45%, transparent 52%, black 100%);}
+  .fv-btn{position:absolute;width:52px;height:52px;border:1px solid rgba(255,255,255,.34);
+    background:rgba(250,250,248,.06);color:#fff;border-radius:50%;cursor:pointer;
+    backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;
+    font-size:18px;line-height:1;transition:background .25s, border-color .25s, transform .25s;}
+  .fv-btn:hover{background:rgba(179,58,42,.72);border-color:rgba(179,58,42,.9);transform:scale(1.06);}
+  #prevBtn{left:calc(50% - 300px);top:50%;transform:translateY(-50%);}
+  #nextBtn{right:calc(50% - 300px);top:50%;transform:translateY(-50%);}
+  #prevBtn:hover,#nextBtn:hover{transform:translateY(-50%) scale(1.06);}
+  #closeBtn{top:26px;right:28px;}
+  #focusCap{position:absolute;left:50%;bottom:96px;transform:translateX(-50%);
+    text-align:center;color:var(--paper);}
+  #focusCap .idxs{font-size:10px;letter-spacing:.34em;opacity:.5;}
+  #focusCap .nm{font-size:40px;font-weight:700;line-height:1.1;}
+  #focusCap .sub{font-size:11px;letter-spacing:.3em;text-transform:uppercase;opacity:.55;margin-top:6px;}
+  #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:40;background:var(--paper);font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+    opacity:.6;}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"./vendor/three.module.js",
+  "three/":"./vendor/"
+}}
+</script>
+<script>
+/* 加载兜底：本地模块 12s 未就绪（file:// 直开会 CORS 失败）时给出明确提示，不再静默白屏 */
+window.addEventListener("error",e=>{
+  const l=document.getElementById("loading");
+  if(l&&l.style.display!=="none"){ l.textContent="Error: "+String(e.message||"unknown").slice(0,140); l.style.color="#B33A2A"; l.style.opacity=1; }
+});
+setTimeout(()=>{
+  const l=document.getElementById("loading");
+  if(l&&l.style.display!=="none"){
+    l.innerHTML="OFFLINE FALLBACK FAILED &nbsp;·&nbsp; 请通过本地 HTTP 服务打开（不能双击 file:// 直开）";
+    l.style.color="#B33A2A"; l.style.opacity=1;
+  }
+},12000);
+</script>
+</head>
+<body>
+  <div id="stage"></div>
+  <!-- 顶栏：与其他 LAB 子站同一副骨架 —— 左上字标是返回首页的统一入口 -->
+  <header id="topbar">
+    <div class="bar-inner">
+      <div class="bar-row">
+        <a id="brand-home" class="brand" href="https://www.diagonal-art.com/" title="返回 DIAGONAL 官网首页">
+          <span class="brand-word">DIAGONAL</span>
+          <span class="brand-sub">/ 虚拟衣架</span>
+        </a>
+        <div class="meta">Virtual Garment Rack</div>
+      </div>
+    </div>
+  </header>
+  <div id="namelabel"><div class="idxs"></div><div class="nm"></div><div class="sub"></div></div>
+  <div id="hint">Drag to slide &nbsp;·&nbsp; Hover to reveal &nbsp;·&nbsp; Click to inspect</div>
+  <div id="focusUI">
+    <button id="prevBtn" class="fv-btn">&#8592;</button>
+    <button id="nextBtn" class="fv-btn">&#8594;</button>
+    <button id="closeBtn" class="fv-btn">&#10005;</button>
+    <div id="focusCap"><div class="idxs"></div><div class="nm"></div><div class="sub"></div></div>
+  </div>
+  <div id="ticker"><div class="track" id="tickerTrack"></div></div>
+  <div id="loading">Loading garments…</div>
+
+<script type="module">
+import * as THREE from "three";
+import { gsap } from "./vendor/gsap-index.js";
+
+/* ══════════════════════════════════════════════════════════════
+   1. 商品数据：4 种版型 × 12 件（参考 Molimao「ON THE RAIL」的
+      混排节奏：短T / 长袖 / 兜帽卫衣 / 冲锋衣交替，低饱和色系）
+══════════════════════════════════════════════════════════════*/
+const ITEMS=[
+  { cut:"tee",     base:"#F4F2ED", motif:"twoline",  name:"ARCHIVE TEE",       sub:"Two-Line Mark · 220gsm" },
+  { cut:"hoodie",  base:"#4A5D4E", motif:"seal",     name:"SEAL HOODIE",       sub:"Roundel Badge · 400gsm" },
+  { cut:"longtee", base:"#1A1A1A", motif:"stack",    name:"STACK LONGSLEEVE",  sub:"Vertical Type · 260gsm" },
+  { cut:"shell",   base:"#2E3A4E", motif:"stripes",  name:"STRIPE SHELL",      sub:"Ripstop · Waterproof Zip" },
+  { cut:"tee",     base:"#E3C8C0", motif:"wordmark", name:"DUST TEE",          sub:"Reverse Dyed · 220gsm" },
+  { cut:"longtee", base:"#C9C4BA", motif:"strike",   name:"STRIKE LONGSLEEVE", sub:"Single Line · 260gsm" },
+  { cut:"hoodie",  base:"#E8DCC8", motif:"twoline",  name:"CREAM HOODIE",      sub:"Brushed Fleece · 400gsm" },
+  { cut:"shell",   base:"#B33A2A", motif:"wordmark", name:"DIAGONAL SHELL",    sub:"Ripstop · Waterproof Zip" },
+];
+
+/* ══════════════════════════════════════════════════════════════
+   2. 织物法线贴图（程序化编织 -> Sobel -> RGB normal）
+══════════════════════════════════════════════════════════════*/
+function makeFabricNormal(size=256, period=7, strength=1.6){
+  const h=new Float32Array(size*size);
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      const u=x/size*Math.PI*2*period, v=y/size*Math.PI*2*period;
+      const warp=Math.sin(u)*0.5, weft=Math.sin(v)*0.5;
+      const twill=Math.sin(u+v)*0.35;
+      h[y*size+x]=( (Math.sin(u)>0?warp:weft) + twill )*0.5+0.5;
+    }
+  }
+  const cv=document.createElement("canvas"); cv.width=cv.height=size;
+  const ctx=cv.getContext("2d");
+  const img=ctx.createImageData(size,size);
+  const at=(x,y)=>h[((y+size)%size)*size+((x+size)%size)];
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      const dx=(at(x+1,y)-at(x-1,y))*strength;
+      const dy=(at(x,y+1)-at(x,y-1))*strength;
+      const len=Math.hypot(dx,dy,1);
+      const i=(y*size+x)*4;
+      img.data[i  ]=((-dx/len)*0.5+0.5)*255;
+      img.data[i+1]=((-dy/len)*0.5+0.5)*255;
+      img.data[i+2]=(( 1 /len)*0.5+0.5)*255;
+      img.data[i+3]=255;
+    }
+  }
+  ctx.putImageData(img,0,0);
+  const t=new THREE.CanvasTexture(cv);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.repeat.set(12,12);
+  return t;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   3. 印花贴图：按商品底色自适应墨色 + 版型专属细节
+      （v=1 采样 canvas 顶部 = 领口，印花一律放胸口 H*0.24~0.60）
+══════════════════════════════════════════════════════════════*/
+function lumOf(hex){
+  const n=parseInt(hex.slice(1),16);
+  return (0.2126*((n>>16)&255)+0.7152*((n>>8)&255)+0.0722*(n&255))/255;
+}
+function makePrintTexture(item){
+  const W=512,H=1024;
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const x=cv.getContext("2d");
+  const dark=lumOf(item.base)<0.45;
+  const ink=item.ink||(dark?"#F4F2ED":"#1A1A1A");
+  const accent=dark?"#D4553F":"#B33A2A";
+
+  x.fillStyle=item.base; x.fillRect(0,0,W,H);
+  // 布纹颗粒（深浅底自适应）
+  for(let i=0;i<9000;i++){
+    x.fillStyle=dark?"rgba(250,250,248,"+(Math.random()*0.035)+")"
+                    :"rgba(26,26,26,"+(Math.random()*0.03)+")";
+    x.fillRect(Math.random()*W,Math.random()*H,1.6,1.6);
+  }
+  // 斜线母题底纹
+  x.save(); x.strokeStyle=dark?"rgba(250,250,248,0.05)":"rgba(26,26,26,0.06)"; x.lineWidth=2;
+  for(let i=-H;i<W;i+=26){ x.beginPath(); x.moveTo(i,0); x.lineTo(i+H,H); x.stroke(); }
+  x.restore();
+
+  if(item.motif==="twoline"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 138px Newsreader, serif";
+    x.fillText("DIA",W/2,H*0.36); x.fillText("GONAL",W/2,H*0.52);
+  } else if(item.motif==="strike"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 118px Newsreader, serif";
+    x.fillText("DIAGONAL",W/2,H*0.50);
+    x.strokeStyle=accent; x.lineWidth=9;
+    x.beginPath(); x.moveTo(W*0.10,H*0.50-34); x.lineTo(W*0.90,H*0.50-34); x.stroke();
+  } else if(item.motif==="offset"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 128px Newsreader, serif";
+    x.fillText("DIAG",W/2-34,H*0.50); x.fillText("ONAL",W/2+66,H*0.60);
+  } else if(item.motif==="stack"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 96px Newsreader, serif";
+    ["D","I","A","G","O","N","A","L"].forEach((c,i)=>x.fillText(c,W/2,H*0.24+i*82));
+  } else if(item.motif==="pocket"){
+    x.fillStyle=ink; x.textAlign="left"; x.font="700 58px Newsreader, serif";
+    x.fillText("DIA",72,392); x.fillText("GONAL",72,450);
+    x.strokeStyle=ink; x.lineWidth=3.5; x.strokeRect(62,334,196,152);
+  } else if(item.motif==="tile"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 84px Newsreader, serif";
+    for(let gy=170; gy<H; gy+=196) for(let gx=70; gx<W; gx+=216){
+      x.save(); x.translate(gx,gy); x.rotate(-0.18); x.fillText("DIA",0,0); x.restore();
+    }
+  } else if(item.motif==="wordmark"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 128px Newsreader, serif";
+    x.fillText("DIAGONAL",W/2,H*0.44);
+    x.fillStyle=accent; x.font="500 26px Newsreader, serif";
+    x.fillText("— EST. ZIGONG —",W/2,H*0.50);
+  } else if(item.motif==="stripes"){
+    // 冲锋衣：胸前斜纹带
+    x.save();
+    x.translate(W/2,H*0.44); x.rotate(-0.30);
+    for(let i=-3;i<=3;i++){
+      x.fillStyle=i===0?accent:ink;
+      x.fillRect(-W*0.7, i*30-9, W*1.4, 15);
+    }
+    x.restore();
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 74px Newsreader, serif";
+    x.fillText("DIAGONAL",W/2,H*0.58);
+  }
+  // 下摆统一小字
+  x.fillStyle=dark?"rgba(250,250,248,.5)":"rgba(26,26,26,.42)";
+  x.font="500 21px Newsreader, serif"; x.textAlign="center";
+  x.fillText("DIAGONAL ARCHIVE",W/2,H*0.90);
+
+  // ── 版型专属细节 ──
+  if(item.cut==="hoodie"){
+    // 袋鼠兜：下半身居中口袋描线
+    x.strokeStyle=dark?"rgba(250,250,248,.35)":"rgba(26,26,26,.32)";
+    x.lineWidth=4;
+    x.strokeRect(W*0.5-116,H*0.66,232,128);
+    // 下摆罗纹
+    x.strokeStyle=dark?"rgba(250,250,248,.22)":"rgba(26,26,26,.20)";
+    x.lineWidth=3;
+    for(let gx=8;gx<W;gx+=13){
+      x.beginPath(); x.moveTo(gx,H*0.865); x.lineTo(gx,H*0.915); x.stroke();
+    }
+    // 抽绳孔
+    x.fillStyle=dark?"rgba(250,250,248,.5)":"rgba(26,26,26,.45)";
+    x.beginPath(); x.arc(W*0.5-52,H*0.145,7,0,Math.PI*2); x.fill();
+    x.beginPath(); x.arc(W*0.5+52,H*0.145,7,0,Math.PI*2); x.fill();
+  }
+  if(item.cut==="shell"){
+    // 前襟拉链
+    x.strokeStyle=dark?"rgba(250,250,248,.55)":"rgba(26,26,26,.5)";
+    x.lineWidth=6;
+    x.beginPath(); x.moveTo(W/2,H*0.16); x.lineTo(W/2,H*0.96); x.stroke();
+    x.lineWidth=2;
+    for(let gy=H*0.17;gy<H*0.96;gy+=14){
+      x.beginPath(); x.moveTo(W/2-7,gy); x.lineTo(W/2+7,gy); x.stroke();
+    }
+    x.fillStyle=ink; x.fillRect(W/2-9,H*0.44,18,34);     // 拉头
+    // 立领示意线
+    x.strokeStyle=dark?"rgba(250,250,248,.4)":"rgba(26,26,26,.4)";
+    x.lineWidth=5;
+    x.beginPath(); x.moveTo(W*0.24,H*0.135); x.quadraticCurveTo(W/2,H*0.10,W*0.76,H*0.135); x.stroke();
+  }
+  const t=new THREE.CanvasTexture(cv);
+  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8;
+  return t;
+}
+
+function makeBackTexture(item){
+  const W=512,H=1024;
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const x=cv.getContext("2d");
+  const dark=lumOf(item.base)<0.45;
+  x.fillStyle=item.base; x.fillRect(0,0,W,H);
+  for(let i=0;i<9000;i++){
+    x.fillStyle=dark?"rgba(250,250,248,"+(Math.random()*0.035)+")"
+                    :"rgba(26,26,26,"+(Math.random()*0.03)+")";
+    x.fillRect(Math.random()*W,Math.random()*H,1.6,1.6);
+  }
+  // 颈后领标
+  x.fillStyle=dark?"rgba(250,250,248,.6)":"rgba(26,26,26,.55)"; x.textAlign="center";
+  x.font="500 22px Newsreader, serif";
+  x.fillText("D I A G O N A L",W/2,112);
+  x.font="400 15px Newsreader, serif";
+  x.fillText("100% COTTON · MADE IN ZIGONG",W/2,142);
+  const t=new THREE.CanvasTexture(cv);
+  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8;
+  return t;
+}
+
+// 素色小贴图（兜帽 / 立领用）：底色 + 颗粒
+function makeSolidTexture(base){
+  const S=128;
+  const cv=document.createElement("canvas"); cv.width=cv.height=S;
+  const x=cv.getContext("2d");
+  x.fillStyle=base; x.fillRect(0,0,S,S);
+  const dark=lumOf(base)<0.45;
+  for(let i=0;i<600;i++){
+    x.fillStyle=dark?"rgba(250,250,248,"+(Math.random()*0.05)+")"
+                    :"rgba(26,26,26,"+(Math.random()*0.04)+")";
+    x.fillRect(Math.random()*S,Math.random()*S,1.4,1.4);
+  }
+  const t=new THREE.CanvasTexture(cv);
+  t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. 版型定义 + 服装拓扑
+      前片 + 后片双层面料，边缘缝合；兜帽为第三块布片（pin 领后）
+══════════════════════════════════════════════════════════════*/
+const CUTS={
+  tee:    {SY:2.50, sleeveY:1.18, sleeveMax:1.32, sleeveMin:0.62, body:0.60, thick:0.30, collarR:0.30,
+           rough:0.94, env:0.22, stiff:1.00, windK:1.00, heavy:1.00},
+  longtee:{SY:2.62, sleeveY:2.02, sleeveMax:1.02, sleeveMin:0.70, body:0.60, thick:0.30, collarR:0.30,
+           rough:0.94, env:0.22, stiff:1.00, windK:0.90, heavy:1.05},
+  hoodie: {SY:2.72, sleeveY:2.10, sleeveMax:1.16, sleeveMin:0.80, body:0.66, thick:0.36, collarR:0.36,
+           rough:1.00, env:0.15, stiff:1.05, windK:0.70, heavy:1.15, hood:true},
+  shell:  {SY:2.80, sleeveY:2.18, sleeveMax:1.14, sleeveMin:0.82, body:0.64, thick:0.32, collarR:0.22,
+           rough:0.60, env:0.50, stiff:1.12, windK:0.55, heavy:1.10, collar:true},
+};
+
+function buildGarment(cut){
+  const SX=1.25;
+  const SY=cut.SY;
+  const SLOPE=0.62;
+  const THICK=cut.thick;
+  const step=0.135;
+  const cols=Math.round(2*SX/step)+1;
+  const rows=Math.round(SY/step)+1;
+  const pid=(c,r)=>r*cols+c;
+
+  function inside(x,y){
+    if(y<0||y>SY) return false;
+    const ax=Math.abs(x);
+    const body=ax<=cut.body;
+    let sleeve=false;
+    if(y<=cut.sleeveY){
+      const t=y/cut.sleeveY;
+      const maxx=cut.sleeveMax-(cut.sleeveMax-cut.sleeveMin)*t;
+      if(ax>=cut.body*0.98 && ax<=maxx) sleeve=true;
+    }
+    if(!(body||sleeve)) return false;
+    if(x*x+y*y<cut.collarR*cut.collarR && y<cut.collarR+0.06) return false;   // 领口挖空
+    return true;
+  }
+
+  // --- 逐层登记活跃格点 ---
+  const active=new Int32Array(cols*rows).fill(-1);
+  const at=(c,r)=>(c<0||c>=cols||r<0||r>=rows)?-1:active[pid(c,r)];
+  let n=0;
+  const gx=[],gy=[];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const X=-SX+c*step, Y=r*step;
+    if(!inside(X,Y)) continue;
+    active[pid(c,r)]=n; gx.push(X); gy.push(Y); n++;
+  }
+
+  // --- 到边缘的距离场（决定截面剖面：边缘成缝 → 中央鼓起成体） ---
+  const dist=new Int16Array(n).fill(-1);
+  {
+    const queue=[];
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const i=at(c,r); if(i<0) continue;
+      if(at(c-1,r)<0||at(c+1,r)<0||at(c,r-1)<0||at(c,r+1)<0){ dist[i]=0; queue.push(i); }
+    }
+    for(let h=0;h<queue.length;h++){
+      const i=queue[h];
+      const cc=Math.round((gx[i]+SX)/step), rr=Math.round(gy[i]/step);
+      for(const j of [at(cc+1,rr),at(cc-1,rr),at(cc,rr+1),at(cc,rr-1)]){
+        if(j<0||dist[j]>=0) continue;
+        dist[j]=dist[i]+1; queue.push(j);
+      }
+    }
+  }
+  const profile=(d)=>Math.min(1,Math.max(0,d)/3);
+
+  // --- 闭合壳体：前后两层在轮廓边界共享同一组粒子（真缝合），内部保持双层厚度 ---
+  const px=[],py=[],pz=[],pinned=[],uv=[];
+  const mapA=new Int32Array(n), mapB=new Int32Array(n);
+  for(let layer=0;layer<2;layer++){
+    for(let i=0;i<n;i++){
+      if(layer===1 && dist[i]===0){ mapB[i]=mapA[i]; continue; }   // 边界：直接复用前层粒子 → 闭合无缝
+      const idx=px.length;
+      px.push(gx[i]);
+      const blend=Math.max(0,1-gy[i]/1.2);
+      py.push(-(gy[i]+SLOPE*Math.abs(gx[i])*blend));
+      const half=THICK*0.5*profile(dist[i]);          // 边缘薄、中央鼓 = 垂挂体积
+      pz.push(layer===0? half : -half);
+      pinned.push(gy[i]<0.26 && Math.abs(gx[i])<=0.68);
+      const c=Math.round((gx[i]+SX)/step), r=Math.round(gy[i]/step);
+      uv.push(layer===0? c/(cols-1) : 1-c/(cols-1), 1-r/(rows-1));
+      if(layer===0) mapA[i]=idx; else mapB[i]=idx;
+    }
+  }
+
+  // --- 弹簧 ---
+  const springs=[];
+  const addS=(a,b,stiff,restOverride)=>{
+    if(a==null||b==null||a<0||b<0) return;
+    const dx=px[a]-px[b], dy=py[a]-py[b], dz=pz[a]-pz[b];
+    const rest=restOverride!=null?restOverride:Math.hypot(dx,dy,dz);
+    springs.push({a,b,rest,stiff});
+  };
+  const perLayer=(mp)=>(c,r)=>{ const i=at(c,r); return i<0?-1:mp[i]; };
+
+  for(const mp of [mapA,mapB]){
+    const P=perLayer(mp);
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const i=P(c,r); if(i<0) continue;
+      addS(i,P(c+1,r),1.0*cut.stiff);
+      addS(i,P(c,r+1),1.0*cut.stiff);
+      addS(i,P(c+1,r+1),1.0*cut.stiff);    // 剪切拉满：防袖口/下摆锯齿
+      addS(i,P(c+1,r-1),1.0*cut.stiff);
+      addS(i,P(c+2,r),0.92*cut.stiff);
+      addS(i,P(c,r+2),0.92*cut.stiff);
+    }
+  }
+
+  // --- 层间联结：法向撑厚 + 斜向抗剪（让前后真正成为一个布筒，而不是两片各飘各的布） ---
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    const i=at(c,r); if(i<0||dist[i]===0) continue;   // 边界粒子已两层共用，无需联结
+    addS(mapA[i],mapB[i],0.55);                       // 法向：撑住厚度
+    for(const off of [[1,0],[0,1]]){
+      const j=at(c+off[0],r+off[1]);
+      if(j<0||dist[j]===0) continue;
+      addS(mapA[i],mapB[j],0.20);                     // 斜向：抗前后错切
+      addS(mapA[j],mapB[i],0.20);
+    }
+  }
+
+  // --- 三角面（前片 + 后片） ---
+  const frontIdx=[], backIdx=[];
+  for(let r=0;r<rows-1;r++) for(let c=0;c<cols-1;c++){
+    const a=at(c,r), b=at(c+1,r), d=at(c,r+1), e=at(c+1,r+1);
+    if(a>=0&&b>=0&&d>=0&&e>=0){
+      if(a===e||b===d) continue;   // 闭合壳斜边：对角点已合并为同一粒子 → 零面积退化面，跳过
+      frontIdx.push(mapA[a],mapA[b],mapA[d], mapA[b],mapA[e],mapA[d]);
+      backIdx.push(mapB[a],mapB[b],mapB[d], mapB[b],mapB[e],mapB[d]);
+    }
+  }
+
+  // --- 兜帽：第三块布片，pin 顶行在领口内（正面透过领口可见），垂在背后 ---
+  let hoodN=0;
+  const hoodIdx=[];
+  if(cut.hood){
+    const HCOLS=9, HROWS=6, HW=0.64, HH=0.72;
+    const hoodBase=px.length;   // px 每粒子 1 项，粒子数=px.length（原 /3 是 bug：兜帽索引一直错位）
+    const hz=-(THICK*0.5+0.10);
+    for(let r=0;r<HROWS;r++){
+      for(let c=0;c<HCOLS;c++){
+        px.push(-HW/2+c*(HW/(HCOLS-1)));
+        py.push(0.24-r*(HH/(HROWS-1)));
+        pz.push(hz-Math.sin(c/(HCOLS-1)*Math.PI)*0.06);   // 顶行微向后弯，像翻在领后
+        pinned.push(r===0);
+        uv.push(c/(HCOLS-1), 1-r/(HROWS-1));
+        hoodN++;
+      }
+    }
+    const HP=(c,r)=>hoodBase+r*HCOLS+c;
+    const HPg=(c,r)=>(c<0||c>=HCOLS||r<0||r>=HROWS)?-1:HP(c,r);   // 兜帽弹簧必须走此卫：无边界检查会越界/错位引用主网格 → NaN
+    for(let r=0;r<HROWS;r++) for(let c=0;c<HCOLS;c++){
+      addS(HPg(c,r),HPg(c+1,r),0.9);
+      addS(HPg(c,r),HPg(c,r+1),0.9);
+      addS(HPg(c,r),HPg(c+1,r+1),0.75);
+      addS(HPg(c,r),HPg(c+1,r-1),0.75);
+      addS(HPg(c,r),HPg(c+2,r),0.45);       // 兜帽要软，弯曲弱一点才有堆叠感
+      addS(HPg(c,r),HPg(c,r+2),0.45);
+    }
+    for(let r=0;r<HROWS-1;r++) for(let c=0;c<HCOLS-1;c++){
+      hoodIdx.push(HP(c,r),HP(c+1,r),HP(c,r+1), HP(c+1,r),HP(c+1,r+1),HP(c,r+1));
+    }
+  }
+
+  return { px,py,pz,pinned,uv,springs,frontIdx,backIdx,hoodIdx,
+           count:px.length };   // 兜帽粒子已 push 进 px，无需再加 hoodN（多算会越界读 undefined → NaN）
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. 衣架 + 滑轮小车 + Garment 类
+══════════════════════════════════════════════════════════════*/
+const WOOD=new THREE.MeshStandardMaterial({color:0x8B5A33,roughness:0.62,metalness:0.04});
+const STEEL=new THREE.MeshStandardMaterial({color:0xC9CBCC,roughness:0.26,metalness:0.95});
+const DARKSTEEL=new THREE.MeshStandardMaterial({color:0x3A3A3D,roughness:0.42,metalness:0.8});
+
+class Garment{
+  constructor(scene,item,index,fabricNormal){
+    this.item=item; this.index=index;
+    this.cut=CUTS[item.cut];
+    this.group=new THREE.Group();
+    scene.add(this.group);
+
+    const d=buildGarment(this.cut);
+    this.px=d.px.slice(); this.py=d.py.slice(); this.pz=d.pz.slice();
+    this.ppx=d.px.slice(); this.ppy=d.py.slice(); this.ppz=d.pz.slice();
+    this.pinned=d.pinned.slice(); this.springs=d.springs; this.count=d.count;
+
+    const geo=new THREE.BufferGeometry();
+    this.posAttr=new THREE.Float32BufferAttribute(new Float32Array(this.count*3),3);
+    geo.setAttribute("position",this.posAttr);
+    geo.setAttribute("uv",new THREE.Float32BufferAttribute(new Float32Array(d.uv),2));
+    const indices=d.frontIdx.concat(d.backIdx,d.hoodIdx);
+    geo.setIndex(indices);
+    geo.addGroup(0,d.frontIdx.length,0);
+    geo.addGroup(d.frontIdx.length,d.backIdx.length,1);
+    if(d.hoodIdx.length) geo.addGroup(d.frontIdx.length+d.backIdx.length,d.hoodIdx.length,2);
+
+    // 布料显色兜底：贴图自发光，任意朝向显色稳定；直接光只管褶皱
+    const fm=makePrintTexture(item), bm=makeBackTexture(item);
+    const fabric={side:THREE.DoubleSide,roughness:this.cut.rough,metalness:0.0,
+                  normalMap:fabricNormal,envMapIntensity:this.cut.env,
+                  emissive:0xffffff,emissiveIntensity:0.50};
+    this.frontMat=new THREE.MeshStandardMaterial({
+      ...fabric, map:fm, emissiveMap:fm, normalScale:new THREE.Vector2(0.5,0.5)});
+    this.backMat=new THREE.MeshStandardMaterial({
+      ...fabric, map:bm, emissiveMap:bm, normalScale:new THREE.Vector2(0.5,0.5)});
+    this.mats=[this.frontMat,this.backMat];
+    const materials=[this.frontMat,this.backMat];
+    if(d.hoodIdx.length){
+      const solid=makeSolidTexture(item.base);
+      this.hoodMat=new THREE.MeshStandardMaterial({
+        side:THREE.DoubleSide,roughness:Math.min(1,this.cut.rough+0.04),metalness:0.0,
+        normalMap:fabricNormal,envMapIntensity:this.cut.env*0.7,
+        emissive:0xffffff,emissiveIntensity:0.5,
+        map:solid,emissiveMap:solid,
+        normalScale:new THREE.Vector2(0.5,0.5)});
+      this.mats.push(this.hoodMat);
+      materials.push(this.hoodMat);
+    }
+    this.mesh=new THREE.Mesh(geo,materials);
+    this.mesh.position.z=-0.02;
+    this.mesh.castShadow=true; this.mesh.receiveShadow=false;
+    this.group.add(this.mesh);
+
+    this.buildHanger();
+    this.buildRunner();
+    if(this.cut.collar) this.buildCollar();
+
+    this.baseScale=0.60;
+    this.group.scale.setScalar(this.baseScale);
+    this.baseRot=-0.62+(index%2?0.10:0);
+    this.group.rotation.y=this.baseRot;
+    this.iter=4;
+
+    this.syncGeometry();
+  }
+
+  buildHanger(){
+    const localTo=(mesh,from,to,radius,mat)=>{
+      const dir=new THREE.Vector3().subVectors(to,from);
+      const len=dir.length();
+      const m=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,len,12),mat);
+      m.position.copy(from).add(to).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+      m.castShadow=true;
+      this.group.add(m); return m;
+    };
+    const APEX=new THREE.Vector3(0,0.02,0);
+    for(const s of [-1,1]){
+      localTo(null,APEX,new THREE.Vector3(s*0.66,-0.41,0),0.030,WOOD);
+    }
+    localTo(null,new THREE.Vector3(-0.66,-0.41,0),new THREE.Vector3(0.66,-0.41,0),0.026,WOOD);
+    const apexBall=new THREE.Mesh(new THREE.SphereGeometry(0.042,14,10),WOOD);
+    apexBall.position.copy(APEX); this.group.add(apexBall);
+    localTo(null,APEX,new THREE.Vector3(0,0.66,0),0.024,STEEL);
+    const eye=new THREE.Mesh(new THREE.TorusGeometry(0.055,0.021,10,18),STEEL);
+    eye.position.set(0,0.66,0); eye.rotation.y=Math.PI/2; this.group.add(eye);
+  }
+
+  buildRunner(){
+    const WY=1.20;
+    this.runnerY=WY;
+    this.wheels=[];
+    const yoke=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.055,0.13),DARKSTEEL);
+    yoke.position.set(0,WY,0); yoke.castShadow=true; this.group.add(yoke);
+    for(const s of [-1,1]){
+      const w=new THREE.Mesh(new THREE.CylinderGeometry(0.085,0.085,0.062,20),STEEL);
+      w.rotation.x=Math.PI/2;
+      w.position.set(s*0.155,WY,0);
+      w.material=new THREE.MeshStandardMaterial({color:0xB9BBBC,roughness:0.3,metalness:0.9});
+      w.castShadow=true;
+      this.group.add(w); this.wheels.push(w);
+      const ax=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.10,8),DARKSTEEL);
+      ax.rotation.x=Math.PI/2; ax.position.copy(w.position); this.group.add(ax);
+    }
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,0.62,10),STEEL);
+    stem.position.set(0,0.87,0); stem.castShadow=true; this.group.add(stem);
+  }
+
+  // 冲锋衣立领：贴在领口上的硬质扁环
+  buildCollar(){
+    const baseCol=new THREE.Color(this.item.base).multiplyScalar(0.82);
+    const collarMat=new THREE.MeshStandardMaterial({
+      color:baseCol,roughness:0.55,metalness:0.02,
+      emissive:baseCol,emissiveIntensity:0.35});
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(0.23,0.058,12,26),collarMat);
+    ring.rotation.x=Math.PI/2;
+    ring.scale.set(1,1,0.55);
+    ring.position.set(0,0.045,0);
+    ring.castShadow=true;
+    this.group.add(ring);
+  }
+
+  spinWheels(dx){ const a=-dx/0.085; for(const w of this.wheels) w.rotation.y=a; }
+
+  /* 布料拨动：鼠标扫过布面时，对命中点附近粒子施加冲量（Verlet 上一帧位置偏移法） */
+  poke(lx,ly,lz,fx,fy){
+    const R=0.55, K=0.10;                    // 影响半径（局部单位）与冲量强度
+    for(let i=0;i<this.count;i++){
+      if(this.pinned[i]) continue;
+      const dx=this.px[i]-lx, dy=this.py[i]-ly, dz=this.pz[i]-lz;
+      const d2=dx*dx+dy*dy+dz*dz;
+      if(d2>R*R) continue;
+      const fall=(1-Math.sqrt(d2)/R);        // 线性衰减
+      this.ppx[i]-=fx*K*fall;
+      this.ppy[i]-=fy*K*fall;
+      this.ppz[i]-=0.012*fall;               // 轻微向外顶，产生"拨衣"体积感
+    }
+  }
+
+  step(dt,wind,t,iter){
+    const g=9.8,damp=0.972,dt2=dt*dt;
+    const wk=this.cut.windK, heavy=this.cut.heavy;
+    for(let i=0;i<this.count;i++){
+      if(this.pinned[i]) continue;
+      let vx=(this.px[i]-this.ppx[i])*damp;
+      let vy=(this.py[i]-this.ppy[i])*damp;
+      let vz=(this.pz[i]-this.ppz[i])*damp;
+      const vmax=0.045;
+      vx=Math.max(-vmax,Math.min(vmax,vx));
+      vy=Math.max(-vmax,Math.min(vmax,vy));
+      vz=Math.max(-vmax,Math.min(vmax,vz));
+      this.ppx[i]=this.px[i]; this.ppy[i]=this.py[i]; this.ppz[i]=this.pz[i];
+      const w=wind*wk*(0.6+0.4*Math.sin(t*1.6+i*0.27));
+      this.px[i]+=vx;
+      this.py[i]+=vy-g*dt2*4.2*heavy;
+      this.pz[i]+=vz+w*dt2*3.2;
+    }
+    for(let it=0;it<iter;it++){
+      for(let k=0;k<this.springs.length;k++){
+        const s=this.springs[k],a=s.a,b=s.b;
+        let dx=this.px[b]-this.px[a],dy=this.py[b]-this.py[a],dz=this.pz[b]-this.pz[a];
+        const d=Math.hypot(dx,dy,dz)||1e-5;
+        const f=(d-s.rest)/d*0.5*s.stiff;
+        dx*=f; dy*=f; dz*=f;
+        if(!this.pinned[a]){ this.px[a]+=dx; this.py[a]+=dy; this.pz[a]+=dz; }
+        if(!this.pinned[b]){ this.px[b]-=dx; this.py[b]-=dy; this.pz[b]-=dz; }
+      }
+    }
+  }
+
+  syncGeometry(){
+    const arr=this.posAttr.array;
+    for(let i=0;i<this.count;i++){
+      arr[i*3]=this.px[i]; arr[i*3+1]=this.py[i]; arr[i*3+2]=this.pz[i];
+    }
+    this.posAttr.needsUpdate=true;
+    const geo=this.mesh.geometry;
+    geo.computeVertexNormals();
+    // 闭合壳在轮廓斜边处存在零面积退化三角形，computeVertexNormals 会除零产生 NaN 法线
+    // （表现为布面着色乱成一团）——此处兜底清洗
+    const nor=geo.attributes.normal.array;
+    let dirty=false;
+    for(let i=0;i<nor.length;i+=3){
+      if(!Number.isFinite(nor[i])||!Number.isFinite(nor[i+1])||!Number.isFinite(nor[i+2])){
+        nor[i]=0; nor[i+1]=0; nor[i+2]=1; dirty=true;
+      }
+    }
+    if(dirty) geo.attributes.normal.needsUpdate=true;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. 场景 / 灯光 / 工业管架滑轨
+══════════════════════════════════════════════════════════════*/
+const stage=document.getElementById("stage");
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xFAFAF8);
+
+const camera=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.1,120);
+camera.position.set(0,0.42,9.4);
+camera.lookAt(0,0.05,0);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.autoUpdate=false;   // 节流：由 animate 周期性置 needsUpdate
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+// 环境光照贴图（金属反射质感的关键）
+try{
+  const { RoomEnvironment }=await import("./vendor/RoomEnvironment.js");
+  const pmrem=new THREE.PMREMGenerator(renderer);
+  scene.environment=pmrem.fromScene(new RoomEnvironment(renderer),0.05).texture;
+  for(const m of [WOOD,STEEL,DARKSTEEL]) { m.envMapIntensity=1.15; m.needsUpdate=true; }
+  window.__envReady=true;
+}catch(e){ console.warn("env map unavailable",e); }
+
+scene.add(new THREE.HemisphereLight(0xffffff,0xe8e4dc,0.28));
+const key=new THREE.DirectionalLight(0xffffff,0.38);
+key.position.set(3.4,6.5,7.5); key.castShadow=true;
+key.shadow.mapSize.set(1024,1024);
+key.shadow.camera.left=-7; key.shadow.camera.right=7;
+key.shadow.camera.top=6; key.shadow.camera.bottom=-4;
+key.shadow.camera.near=0.5; key.shadow.camera.far=24;
+key.shadow.bias=-0.0018;
+scene.add(key);
+const rim=new THREE.DirectionalLight(0xB33A2A,0.3); rim.position.set(-6,2.5,-4.5); scene.add(rim);
+const fillFront=new THREE.DirectionalLight(0xffffff,0.32);
+fillFront.position.set(0,1.2,6.5); scene.add(fillFront);
+const fill=new THREE.DirectionalLight(0xffffff,0.10); fill.position.set(0,-3,6); scene.add(fill);
+
+const RAIL_Y=2.10, RAIL_R=0.075, WHEEL_R=0.085;
+const RAIL_KEEPER_LOCAL_WY=1.20;
+
+// 主管
+const pipeGeo=new THREE.CylinderGeometry(RAIL_R,RAIL_R,9.4,28);
+const rail=new THREE.Mesh(pipeGeo,STEEL);
+rail.rotation.z=Math.PI/2; rail.position.set(0,RAIL_Y,0);
+rail.castShadow=true; rail.receiveShadow=true; scene.add(rail);
+// 端部法兰盘
+for(const sx of [-4.7,4.7]){
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.105,0.105,0.07,20),DARKSTEEL);
+  cap.rotation.z=Math.PI/2; cap.position.set(sx,RAIL_Y,0); cap.castShadow=true; scene.add(cap);
+}
+// 弯头 + 立柱 + 底座
+const GROUND_Y=-1.82;
+for(const sx of [-4.7,4.7]){
+  const elbow=new THREE.Mesh(new THREE.TorusGeometry(0.30,RAIL_R,14,20,Math.PI/2),STEEL);
+  elbow.position.set(sx+Math.sign(sx)*-0.30,RAIL_Y-0.30,0);
+  elbow.rotation.z=Math.sign(sx)<0?0:Math.PI/2;
+  elbow.castShadow=true; scene.add(elbow);
+  const h=RAIL_Y-0.30-GROUND_Y;
+  const post=new THREE.Mesh(new THREE.CylinderGeometry(RAIL_R,RAIL_R,h,18),STEEL);
+  post.position.set(sx+Math.sign(sx)*-0.30,GROUND_Y+h/2,0);
+  post.castShadow=true; scene.add(post);
+  for(const sz of [-0.62,0.62]){
+    const footN=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,1.32,14),DARKSTEEL);
+    footN.rotation.x=Math.PI/2;
+    footN.position.set(sx+Math.sign(sx)*-0.30,GROUND_Y+0.055,sz*0.5);
+    footN.castShadow=true; scene.add(footN);
+  }
+  const cross=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,1.30,12),DARKSTEEL);
+  cross.rotation.z=Math.PI/2;
+  cross.position.set(sx+Math.sign(sx)*-0.30,GROUND_Y+0.055,0);
+  cross.castShadow=true; scene.add(cross);
+}
+// 地面
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(60,40),
+  new THREE.MeshStandardMaterial({color:0xE9E7E2,roughness:1}));
+ground.rotation.x=-Math.PI/2; ground.position.y=GROUND_Y; ground.receiveShadow=true; scene.add(ground);
+// 背板
+const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(60,26),
+  new THREE.MeshStandardMaterial({color:0xECEAE5,roughness:1}));
+backdrop.position.set(0,GROUND_Y+13,-7.5); backdrop.receiveShadow=true; scene.add(backdrop);
+
+/* ══════════════════════════════════════════════════════════════
+   7. 悬挂 12 件衣服
+══════════════════════════════════════════════════════════════*/
+const fabricNormal=makeFabricNormal();
+const N=ITEMS.length;
+const garments=[];
+const SPACING=1.02;
+for(let i=0;i<N;i++){
+  const g=new Garment(scene,ITEMS[i],i,fabricNormal);
+  const homeX=(i-(N-1)/2)*SPACING;
+  const homeZ=(i%2?0.13:-0.05);
+  const restY=RAIL_Y+RAIL_R+WHEEL_R-RAIL_KEEPER_LOCAL_WY*g.baseScale;
+  g.group.position.set(homeX,restY,homeZ);
+  g.homeX=homeX; g.homeZ=homeZ; g.homeY=restY;
+  g.off=0; g.targetOff=0; g.prevX=homeX;
+  garments.push(g);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   8. 交互：拖动滑轨 / Hover / 点击聚焦
+══════════════════════════════════════════════════════════════*/
+const ray=new THREE.Raycaster();
+const mouse=new THREE.Vector2();
+let hovered=-1, focused=-1;
+const pokePrev={x:0,y:0};   // 布料拨动用：上一帧鼠标位置
+let dragging=false, dragPrevX=0, dragMoved=0, rackVel=0, rackShift=0;
+const RAIL_LIMIT=3.4;
+const GAP=0.42;
+
+const nameLabel=document.getElementById("namelabel");
+const hint=document.getElementById("hint");
+const focusUI=document.getElementById("focusUI");
+const loadingEl=document.getElementById("loading");
+
+const canvasEl=renderer.domElement;
+canvasEl.addEventListener("pointerdown",(e)=>{
+  if(focused>=0) return;
+  dragging=true; dragMoved=0; dragPrevX=e.clientX; canvasEl.classList.add("grabbing");
+});
+addEventListener("pointerup",()=>{
+  dragging=false; canvasEl.classList.remove("grabbing");
+});
+addEventListener("pointermove",(e)=>{
+  mouse.x=(e.clientX/innerWidth)*2-1;
+  mouse.y=-(e.clientY/innerHeight)*2+1;
+  if(dragging){
+    const dx=(e.clientX-dragPrevX);
+    dragPrevX=e.clientX; dragMoved+=Math.abs(dx);
+    rackVel+=dx*0.011;
+  }
+  if(focused>=0){ pokePrev.x=e.clientX; pokePrev.y=e.clientY; return; }
+  ray.setFromCamera(mouse,camera);
+  const hits=ray.intersectObjects(garments.map(g=>g.mesh),false);
+  // --- 布料拨动：扫过布面的鼠标位移转成局部冲量 ---
+  if(hits.length&&!dragging){
+    const ddx=e.clientX-pokePrev.x, ddy=e.clientY-pokePrev.y;
+    const sp=Math.hypot(ddx,ddy);
+    if(sp>2&&sp<120){
+      const g=garments.find(x=>x.mesh===hits[0].object);
+      if(g&&g.group.visible!==false){
+        const lp=g.group.worldToLocal(hits[0].point.clone());
+        // 屏幕位移方向 → 相机右/上向量合成世界力 → 逆旋转到衣服局部系
+        const f=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0)
+          .multiplyScalar(ddx*0.02)
+          .add(new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1).multiplyScalar(-ddy*0.02));
+        f.applyQuaternion(g.group.getWorldQuaternion(new THREE.Quaternion()).invert());
+        f.normalize();
+        g.poke(lp.x,lp.y,lp.z,f.x,f.y);
+      }
+    }
+  }
+  pokePrev.x=e.clientX; pokePrev.y=e.clientY;
+  let idx=-1;
+  if(hits.length){ for(let i=0;i<N;i++) if(garments[i].mesh===hits[0].object){ idx=i; break; } }
+  if(idx!==hovered) setHover(idx);
+});
+canvasEl.addEventListener("click",()=>{
+  if(focused<0 && hovered>=0 && dragMoved<6) openFocus(hovered);
+});
+
+function setMatsOpacity(g,op,animate){
+  gsap.killTweensOf(g.mats);
+  for(const m of g.mats){
+    if(op>=1){ m.opacity=1; m.transparent=false; }
+    else{
+      if(animate) gsap.to(m,{opacity:op,duration:0.4});
+      else m.opacity=op;
+      m.transparent=true;
+    }
+  }
+}
+
+function setHover(idx){
+  hovered=idx;
+  garments.forEach((g,i)=>{
+    if(focused>=0) return;
+    let rot=g.baseRot, sc=g.baseScale, op=1, to=0;
+    if(idx>=0){
+      if(i===idx){ rot=0; sc=g.baseScale*1.16; }
+      else if(Math.abs(i-idx)===1){ to=(i<idx?-1:1)*0.46; }   // 邻件只被推开，不跟着转正
+      else op=0.88;
+    }
+    g.targetOff=to;
+    g.iter=(i===idx)?7:4;
+    gsap.to(g.group.rotation,{y:rot,duration:0.62,ease:"power2.out"});
+    gsap.to(g.group.scale,{x:sc,y:sc,z:sc,duration:0.62,ease:"power2.out"});
+    setMatsOpacity(g,op,true);
+  });
+  const pad=(k)=>String(k+1).padStart(2,"0");
+  if(idx>=0){
+    nameLabel.querySelector(".idxs").textContent="NO. "+pad(idx);
+    nameLabel.querySelector(".nm").textContent=ITEMS[idx].name;
+    nameLabel.querySelector(".sub").textContent=ITEMS[idx].sub;
+    nameLabel.classList.add("show"); hint.classList.add("hide");
+  } else { nameLabel.classList.remove("show"); hint.classList.remove("hide"); }
+}
+
+function openFocus(i){
+  focused=i; hovered=-1;
+  nameLabel.classList.remove("show");   // 关键：隐藏 hover 浮标，否则与聚焦字幕重叠
+  garments.forEach((o,j)=>{
+    if(j===i) return;
+    gsap.to(o.group.position,{z:-5,duration:0.6,ease:"power2.out"});
+    setMatsOpacity(o,0.10,true);
+  });
+  const g=garments[i];
+  g.iter=7;
+  gsap.to(g.group.rotation,{y:0,duration:0.7,ease:"power3.out"});
+  gsap.to(g.group.scale,{x:1.62*g.baseScale,y:1.62*g.baseScale,z:1.62*g.baseScale,duration:0.7,ease:"power3.out"});
+  gsap.to(g.group.position,{x:0,y:g.homeY+0.12,z:1.15,duration:0.7,ease:"power3.out"});
+  setMatsOpacity(g,1,true);
+  focusUI.classList.add("on");
+  document.getElementById("focusCap").querySelector(".idxs").textContent="NO. "+String(i+1).padStart(2,"0");
+  document.getElementById("focusCap").querySelector(".nm").textContent=g.item.name;
+  document.getElementById("focusCap").querySelector(".sub").textContent=g.item.sub;
+}
+
+function closeFocus(){
+  if(focused<0) return;
+  garments.forEach((o,j)=>{
+    o.iter=4;
+    gsap.to(o.group.position,{x:o.homeX+o.off,y:o.homeY,z:o.homeZ,duration:0.6,ease:"power2.out"});
+    gsap.to(o.group.rotation,{y:o.baseRot,duration:0.6,ease:"power2.out"});
+    gsap.to(o.group.scale,{x:o.baseScale,y:o.baseScale,z:o.baseScale,duration:0.6,ease:"power2.out"});
+    setMatsOpacity(o,1,true);
+  });
+  focusUI.classList.remove("on");
+  focused=-1;
+}
+
+function stepFocus(dir){
+  if(focused<0) return;
+  const ni=(focused+dir+N)%N;
+  const prev=garments[focused], next=garments[ni];
+  focused=ni;
+  gsap.fromTo(prev.group.rotation,{y:0},{y:dir*0.65,duration:0.34,ease:"power2.in",
+    onComplete:()=>{
+      gsap.to(prev.group.position,{x:prev.homeX+prev.off,y:prev.homeY,z:prev.homeZ,duration:0.42});
+      gsap.to(prev.group.scale,{x:prev.baseScale,y:prev.baseScale,z:prev.baseScale,duration:0.42});
+      setMatsOpacity(prev,0.10,true);
+      gsap.to(prev.group.rotation,{y:prev.baseRot,duration:0.42});
+    }});
+  next.iter=7;
+  gsap.fromTo(next.group.rotation,{y:-dir*0.65},{y:0,duration:0.56,ease:"power3.out"});
+  gsap.to(next.group.position,{x:0,y:next.homeY+0.12,z:1.15,duration:0.56,ease:"power3.out"});
+  gsap.to(next.group.scale,{x:1.62*next.baseScale,y:1.62*next.baseScale,z:1.62*next.baseScale,duration:0.56,ease:"power3.out"});
+  setMatsOpacity(next,1,true);
+  document.getElementById("focusCap").querySelector(".idxs").textContent="NO. "+String(ni+1).padStart(2,"0");
+  document.getElementById("focusCap").querySelector(".nm").textContent=next.item.name;
+  document.getElementById("focusCap").querySelector(".sub").textContent=next.item.sub;
+}
+
+document.getElementById("closeBtn").addEventListener("click",closeFocus);
+document.getElementById("prevBtn").addEventListener("click",()=>stepFocus(-1));
+document.getElementById("nextBtn").addEventListener("click",()=>stepFocus(1));
+addEventListener("keydown",(e)=>{
+  if(e.key==="Escape") closeFocus();
+  if(focused>=0){ if(e.key==="ArrowLeft") stepFocus(-1); if(e.key==="ArrowRight") stepFocus(1); }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   9. 跑马灯
+══════════════════════════════════════════════════════════════*/
+const tickerItems=["DIAGONAL ARCHIVE","<i>◆</i>","自贡天车 · 工业遗产","<i>◆</i>",
+  "HEAVYWEIGHT TEE 220GSM","<i>◆</i>","LONG SLEEVE 260GSM","<i>◆</i>",
+  "BRUSHED FLEECE HOODIE 400GSM","<i>◆</i>","RIPSTOP SHELL · WATERPROOF","<i>◆</i>",
+  "DRAG TO SLIDE THE RACK","<i>◆</i>","CLICK TO INSPECT","<i>◆</i>"];
+const unit=tickerItems.map(s=>`<span>${s}</span>`).join("");
+document.getElementById("tickerTrack").innerHTML=unit+unit;
+
+/* ══════════════════════════════════════════════════════════════
+   10. 主循环：滑轨滑动 + 衣物间推挤 + 布料求解
+══════════════════════════════════════════════════════════════*/
+const clock=new THREE.Clock();
+const perf={frames:0,solver:0,fps:0,_t0:performance.now()};
+const FIXED=1/60;                 // 固定物理步长：Verlet 对 dt 敏感，浮动 dt 会积累能量导致抽搐
+let accum=0;
+let frameNo=0;
+function animate(){
+  requestAnimationFrame(animate);
+  const rdt=Math.min(clock.getDelta(),0.05);
+  const t=clock.elapsedTime;
+
+  // ---- 滑轨：惯性滑动（渲染层，逐帧即可） ----
+  rackShift+=rackVel; rackVel*=0.90;
+  if(Math.abs(rackVel)<0.0008) rackVel=0;
+  rackShift=Math.max(-RAIL_LIMIT,Math.min(RAIL_LIMIT,rackShift));
+
+  // ---- 衣物间的最小间距（推挤手感） ----
+  const ops=garments.map(g=>g.off+=(g.targetOff-g.off)*0.14);
+  for(let pass=0;pass<2;pass++){
+    for(let i=1;i<N;i++){
+      const a=garments[i-1], b=garments[i];
+      const xa=a.homeX+a.off+rackShift, xb=b.homeX+b.off+rackShift;
+      const need=(xb-xa)-(SPACING-GAP*0.5);
+      if(need<0){ const push=-need*0.5*(pass?0.5:1); b.off+=push; a.off-=push; }
+    }
+  }
+
+  // ---- 物理：固定步长子步进 ----
+  const t0=performance.now();
+  accum+=rdt;
+  let steps=0;
+  while(accum>=FIXED && steps<2){
+    accum-=FIXED; steps++;
+    const wind=0.30+0.15*Math.sin(t*0.55);
+    for(let i=0;i<N;i++){
+      const g=garments[i];
+      if(focused===i){
+        g.step(FIXED,wind+0.5,t,g.iter); continue;
+      }
+      let x=g.homeX+g.off+rackShift;
+      x=Math.max(-4.4,Math.min(4.4,x));
+      const dx=x-g.prevX; g.prevX=x;
+      g.group.position.x=x;
+      g.spinWheels(dx);
+      const w=(i===hovered)?wind+0.5:wind;
+      g.step(FIXED,w,t,g.iter);
+    }
+  }
+  if(steps===2) accum=0;
+  frameNo++;
+  // 远端衣物的顶点/法线上传隔帧进行（这部分 CPU 开销很可观），主角与聚焦件保持逐帧
+  for(let i=0;i<N;i++){
+    const g=garments[i];
+    if(i===hovered||focused===i||((frameNo+i)&1)===0) g.syncGeometry();
+  }
+  // 阴影贴图每 3 帧更新一次（布料慢速运动，肉眼不可辨），聚焦时恢复逐帧
+  if(frameNo%3===0||focused>=0) renderer.shadowMap.needsUpdate=true;
+  perf.solver+=performance.now()-t0;
+  perf.frames++;
+  if(perf.frames===120){
+    const el=(performance.now()-perf._t0)/1000;
+    perf.fps=perf.frames/el; perf.solverAvg=perf.solver/perf.frames;
+    perf.frames=0; perf.solver=0; perf._t0=performance.now();
+  }
+  renderer.render(scene,camera);
+}
+animate();
+
+addEventListener("resize",()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// 像素级探针
+function sampleCanvas(x0=0,y0=0,x1=1,y1=1){
+  renderer.render(scene,camera);
+  const gl=renderer.getContext();
+  const W=gl.drawingBufferWidth,H=gl.drawingBufferHeight;
+  const buf=new Uint8Array(W*H*4);
+  gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,buf);
+  const px0=Math.floor(x0*W),px1=Math.ceil(x1*W);
+  const py0=Math.floor((1-y1)*H),py1=Math.ceil((1-y0)*H);
+  let n=0,hot=0,sum=0,maxL=0,redN=0,redR=0,redG=0,redB=0;
+  for(let y=py0;y<py1;y++) for(let x=px0;x<px1;x++){
+    const i=(y*W+x)*4;
+    const r=buf[i],g=buf[i+1],b=buf[i+2];
+    const L=0.2126*r+0.7152*g+0.0722*b;
+    n++; sum+=L; if(L>maxL) maxL=L;
+    if(r>=250&&g>=250&&b>=250) hot++;
+    if(r-g>38&&r-b>38&&r>90){ redN++; redR+=r; redG+=g; redB+=b; }
+  }
+  return {
+    n,hotPct:+(hot/n*100).toFixed(2),
+    avgLum:+(sum/n).toFixed(1),maxLum:+maxL.toFixed(0),
+    redPixels:redN,
+    redMeanRGB:redN?[Math.round(redR/redN),Math.round(redG/redN),Math.round(redB/redN)]:null,
+  };
+}
+
+loadingEl.style.display="none";
+window.__diag={garments,openFocus,closeFocus,setHover,scene,camera,ITEMS,perf,sampleCanvas};
+</script>
+</body>
+</html>

@@ -7,7 +7,7 @@ const waitMs = Number(process.argv[4] || 9000);
 const PORT = 9222;
 
 try {
-  const res = await fetch(`http://127.0.0.1:${PORT}/json/new?${encodeURIComponent(url)}`, { method: 'PUT' });
+  const res = await fetch(`http://127.0.0.1:${PORT}/json/new?${encodeURIComponent('about:blank')}`, { method: 'PUT' });
   const tab = await res.json();
   const ws = new WebSocket(tab.webSocketDebuggerUrl);
   let id = 0;
@@ -29,6 +29,11 @@ try {
   };
   await new Promise((r) => (ws.onopen = r));
   await send('Page.enable');
+  // 必须在导航之前禁缓存：否则 js/main.js 会从 HTTP 缓存里取出来，
+  // 截到的是上一版代码（ES module 的 URL 不带版本号，加 ?cb= 只破 HTML 的缓存）。
+  await send('Network.enable');
+  await send('Network.setCacheDisabled', { cacheDisabled: true });
+  await send('Page.navigate', { url });
   await new Promise((r) => setTimeout(r, waitMs));
   const shot = await send('Page.captureScreenshot', { format: 'png' });
   if (!shot || !shot.data) {
