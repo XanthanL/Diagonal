@@ -24,11 +24,11 @@ export const metadata: Metadata = {
   title: siteTitle,
   description: siteDescription,
   alternates: {
+    // 只给 canonical。原先这里还写了 languages: { "zh-CN": "/", en: "/" } ——
+    // 本站在站貌上是双语，但语言选择走客户端 Context + localStorage，
+    // **并没有** per-language URL，两条 hreflang 指向同一个地址属于自指无效标记
+    // （搜索引擎会直接忽略，且可能与真实语种信号冲突）。缺独立语言 URL 就别声明。
     canonical: "/",
-    languages: {
-      "zh-CN": "/",
-      en: "/",
-    },
   },
   openGraph: {
     title: siteTitle,

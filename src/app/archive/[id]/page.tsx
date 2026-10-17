@@ -3,7 +3,8 @@ import path from "path";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { archiveData } from "@/lib/data";
-import { getAssetPath, getAbsoluteUrl } from "@/lib/path";
+import { getAssetPath } from "@/lib/path";
+import { ogImageUrl, pageMetadata } from "@/lib/metadata";
 import { ArchiveDetailClient } from "@/components/ArchiveDetailClient";
 
 export const dynamic = "force-static";
@@ -14,48 +15,22 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     return { title: "Document | DIAGONAL" };
   }
 
-  const ogImage = getAbsoluteUrl("/images/diagonal-logo.jpg");
+  const title = `${item.title} | DIAGONAL`;
+  const description = `${item.title} - ${item.artist} / ${item.location.city}`;
 
   return {
-    title: `${item.title} | DIAGONAL`,
-    description: `${item.title} - ${item.artist} / ${item.location.city}`,
-    openGraph: {
-      title: `${item.title} | DIAGONAL`,
-      description: `${item.title} - ${item.artist} / ${item.location.city}`,
-      url: getAbsoluteUrl(`/archive/${item.id}`),
-      siteName: "DIAGONAL",
-      locale: "zh_CN",
+    ...pageMetadata({
+      path: `/archive/${item.id}`,
+      title,
+      description,
       type: "article",
-      images: ogImage
-        ? [
-            {
-              url: ogImage,
-              width: 1200,
-              height: 630,
-              alt: item.title,
-            },
-          ]
-        : undefined,
+    }),
+    other: {
+      "itemprop:name": title,
+      "itemprop:description": description,
+      "itemprop:image": ogImageUrl(),
+      "og:image:secure_url": ogImageUrl(),
     },
-    twitter: ogImage
-      ? {
-          card: "summary_large_image",
-          title: `${item.title} | DIAGONAL`,
-          description: `${item.title} - ${item.artist} / ${item.location.city}`,
-          images: [ogImage],
-        }
-      : undefined,
-    other: ogImage
-      ? {
-          "itemprop:name": `${item.title} | DIAGONAL`,
-          "itemprop:description": `${item.title} - ${item.artist} / ${item.location.city}`,
-          "itemprop:image": ogImage,
-          "og:image:secure_url": ogImage,
-        }
-      : {
-          "itemprop:name": `${item.title} | DIAGONAL`,
-          "itemprop:description": `${item.title} - ${item.artist} / ${item.location.city}`,
-        },
   };
 }
 

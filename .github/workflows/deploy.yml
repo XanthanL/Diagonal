@@ -31,15 +31,13 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build Next.js (diagonal)
+        # prebuild 钩子会先跑 scripts/optimize-images.js（生成图片 WebP 变体）
+        # 和 scripts/sync-sites.js（同步静态子站进 public/）
         run: npm run build
-      - name: Build & merge vacuum-salt subproject
-        # 构建真空制盐子项目（basePath=/vacuum-salt）并合并进 out/vacuum-salt，
-        # 使线上 /vacuum-salt/ 不再 404
-        run: node scripts/merge-vacuum.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out # Next.js 静态输出目录（含合并后的 vacuum-salt/）
+          path: ./out # Next.js 静态输出目录
 
   deploy:
     environment:

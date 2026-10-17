@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { artistsData, getArtistBySlug } from "@/lib/artists";
 import { getArtistProfile } from "@/lib/artistProfile";
-import { getAbsoluteUrl } from "@/lib/path";
+import { ogImageUrl, pageMetadata } from "@/lib/metadata";
 import { ArtistDetailClient } from "@/components/ArtistDetailClient";
 
 export const dynamic = "force-static";
@@ -22,7 +22,6 @@ export async function generateMetadata({
   }
 
   const title = `${artist.name} ${artist.nameEn} | DIAGONAL`;
-  const url = getAbsoluteUrl(`/artists/${artist.slug}`);
   // 登记了作品集档案的艺术家，用自述做描述；其余退回角色
   const profile = getArtistProfile(artist.slug);
   const description = profile
@@ -30,15 +29,17 @@ export async function generateMetadata({
     : `${artist.name}（${artist.nameEn}）— ${artist.roleEn}`;
 
   return {
-    title,
-    description,
-    openGraph: {
+    ...pageMetadata({
+      path: `/artists/${artist.slug}`,
       title,
-      url,
-      siteName: "DIAGONAL",
-      locale: "zh_CN",
+      description,
       type: "profile",
-      images: [{ url: getAbsoluteUrl("/images/diagonal-logo.jpg"), width: 640, height: 640, alt: title }],
+    }),
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl()],
     },
   };
 }

@@ -4,10 +4,24 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useI18n } from "@/lib/i18n";
-import { getLocalizedUrl } from "@/lib/path";
+import { getLocalizedUrl, getLocalSrcSet, srcSetFallback } from "@/lib/path";
 import { ArchiveCard } from "@/components/ArchiveCard";
 import { Artist, getArtistArchiveItems } from "@/lib/artists";
 import { ArtistProfile, ArtistWork, getArtistProfile } from "@/lib/artistProfile";
+
+/**
+ * 给站内 /images/ 图组装响应式 <img> 属性。
+ *
+ * artists/ 目录里 16 张图宽 2000px（单张最大 695KB），裸 <img> 直发原图会让
+ * 一个艺术家详情页轻松吃掉几 MB。构建期为它们生成了 .w480/.w960/.w1600 变体，
+ * 这里按同一命名规则拼 srcSet；变体缺失时 srcSetFallback 清空 srcset 回退原图。
+ */
+function responsiveImg(src: string, sizes: string) {
+  const srcSet = getLocalSrcSet(src);
+  return srcSet
+    ? { src, srcSet, sizes, onError: srcSetFallback }
+    : { src };
+}
 
 interface ArtistDetailClientProps {
   artist: Artist;
@@ -108,7 +122,7 @@ function ArtistProfileView({
           <div className="space-y-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={profile.portrait}
+              {...responsiveImg(profile.portrait, "(max-width: 768px) 100vw, 30vw")}
               alt={zh ? artist.name : artist.nameEn}
               loading="eager"
               className="w-full h-auto border border-black/10 bg-black/5"
@@ -156,7 +170,7 @@ function ArtistProfileView({
               <div className="relative overflow-hidden bg-black/5 border border-black/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={w.thumb}
+                  {...responsiveImg(w.thumb, "(max-width: 768px) 50vw, 25vw")}
                   alt={zh ? w.title : w.titleEn}
                   loading="lazy"
                   className="w-full h-56 object-cover"
@@ -201,7 +215,7 @@ function ArtistProfileView({
             <div className="flex flex-col gap-3 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={active.images[imgIdx]}
+                {...responsiveImg(active.images[imgIdx], "(max-width: 768px) 100vw, 70vw")}
                 alt={`${zh ? active.title : active.titleEn} — ${imgIdx + 1}`}
                 className="w-full max-h-[70vh] object-contain bg-black/5 border border-black/10"
               />
@@ -257,7 +271,7 @@ function ArtistProfileView({
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={src}
+                      {...responsiveImg(src, "96px")}
                       alt=""
                       loading="lazy"
                       className="w-full h-16 object-cover"

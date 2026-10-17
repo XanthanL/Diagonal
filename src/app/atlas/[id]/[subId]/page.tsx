@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { atlasData } from "@/lib/data";
 import { notFound } from "next/navigation";
-import { getAbsoluteUrl } from "@/lib/path";
+import { pageMetadata, ogImageUrl } from "@/lib/metadata";
 import { AtlasSubCollectionClient } from "@/components/AtlasSubCollectionClient";
 
 export async function generateStaticParams() {
@@ -22,33 +22,21 @@ export async function generateMetadata({ params }: { params: { id: string; subId
     return { title: "Atlas | DIAGONAL" };
   }
 
-  const ogImage = getAbsoluteUrl("/images/diagonal-logo.jpg");
-  const title = `${subCollection.title} | ${item.title}`;
+  const title = `${subCollection.title} | ${item.title} | DIAGONAL`;
   const description = item.excerpt;
 
   return {
-    title: `${title} | DIAGONAL`,
-    description,
-    openGraph: {
-      title: `${title} | DIAGONAL`,
+    ...pageMetadata({
+      path: `/atlas/${item.id}/${subCollection.id}`,
+      title,
       description,
-      url: getAbsoluteUrl(`/atlas/${item.id}/${subCollection.id}`),
-      siteName: "DIAGONAL",
-      locale: "zh_CN",
       type: "article",
-      images: [{ url: ogImage, width: 1200, height: 630, alt: subCollection.title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} | DIAGONAL`,
-      description,
-      images: [ogImage],
-    },
+    }),
     other: {
-      "itemprop:name": `${title} | DIAGONAL`,
+      "itemprop:name": title,
       "itemprop:description": description,
-      "itemprop:image": ogImage,
-      "og:image:secure_url": ogImage,
+      "itemprop:image": ogImageUrl(),
+      "og:image:secure_url": ogImageUrl(),
     },
   };
 }

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { archiveData } from "@/lib/data";
-import { getAbsoluteUrl } from "@/lib/path";
+import { ogImageUrl, pageMetadata } from "@/lib/metadata";
 import { ProjectOverviewClient } from "@/components/ProjectOverviewClient";
 import {
   PROJECT_SLUGS,
@@ -30,26 +30,14 @@ export async function generateMetadata({
 
   const title = `${titles.zh} / ${titles.en} | DIAGONAL`;
   const description = PROJECT_STATEMENTS[slug]?.zh || titles.zh;
-  const url = getAbsoluteUrl(`/projects/${slug}`);
 
   return {
-    title,
-    description,
-    openGraph: {
+    ...pageMetadata({
+      path: `/projects/${slug}`,
       title,
       description,
-      url,
-      siteName: "DIAGONAL",
-      locale: "zh_CN",
       type: "article",
-      images: [{ url: getAbsoluteUrl("/images/diagonal-logo.jpg"), width: 640, height: 640, alt: title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [getAbsoluteUrl("/images/diagonal-logo.jpg")],
-    },
+    }),
     other: {
       "itemprop:name": title,
       "itemprop:description": description,
