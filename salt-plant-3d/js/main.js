@@ -1490,12 +1490,16 @@ function ropeUnitGeo(r, nominalLen) {
   uv.needsUpdate = true;
   return geo;
 }
-// 两根点之间的绳：几何按实际长度生成（长度进了 UV，所以不能用缓存几何）
+// 两根点之间的绳：几何按实际长度生成（长度进了 UV，所以不能用缓存几何）。
+// 【2026-10-17 修复】几何是高度 1 的单位圆柱，这里原先忘了 scale.y = len ——
+// 每根静绳都只画出中点处 1 m 长的一小截：8 根风篾全部变成悬在半空的短棒，
+// 提卤绳两段同样断成两截浮在塔里。对比 roundStrut() 就有这行，属于笔误级事故。
 function ropeMesh(p1, p2, r) {
   const dx = p2.x - p1.x, dy = p2.y - p1.y, dz = p2.z - p1.z;
   const len = Math.hypot(dx, dy, dz);
   const m = new THREE.Mesh(ropeUnitGeo(r, len), ropeS());
   m.position.set((p1.x + p2.x) / 2, (p1.y + p2.y) / 2, (p1.z + p2.z) / 2);
+  m.scale.y = len;
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz).normalize());
   m.castShadow = true;
   return m;
