@@ -30,10 +30,24 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install
+      - name: Lint
+        # 质量门禁：放在 Build 之前，让 ESLint 错误快速失败，省掉一轮无谓的构建。
+        # 原先 CI 里唯一的检查是编译（tsc），等于没有任何静态检查兜底。
+        run: npm run lint
       - name: Build Next.js (diagonal)
         # prebuild 钩子会先跑 scripts/optimize-images.js（生成图片 WebP 变体）
-        # 和 scripts/sync-sites.js（同步静态子站进 public/）
+        # 和 scripts/sync-sites.js（同步静态子站进 public/）。
+        # 两者都是「有则更好」的增强项：即使它们内部出错也不会让这一步失败。
         run: npm run build
+      - name: Verify export
+        # 2026-10-17 的教训：部署曾静默失败过一次（构建挂掉 → deploy 被 skipped），
+        # 线上因此停留在旧版本而没人察觉。这里在日志里留下「产物确实完好」的证据，
+        # 便于事后一眼区分「没部署」和「部署了但页面有问题」。
+        run: |
+          test -f out/index.html || { echo "::error::out/index.html 缺失，导出失败"; exit 1; }
+          echo "产物体积: $(du -sh out | cut -f1)"
+          echo "HTML 页数: $(find out -name '*.html' | wc -l)"
+          ls out | head -20
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

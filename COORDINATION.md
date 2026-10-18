@@ -49,3 +49,16 @@
 - three vendored 版本锁定 **r160**，以 `salt-plant-3d/js/vendor/three.module.js` 为唯一基准；西秦 T3 脚手架复制同一文件，不得自行升级版本。
 - 提交信息规范：`type(scope): 描述`，scope ∈ {salt-plant-3d, gatehouse-3d, vacuum-salt, site, coordination}；禁用无意义短信息。历史提交中的 xiqin-hall-3d scope 视为 gatehouse-3d 前身。
 - CDP 截图自评工具的家在 `salt-plant-3d/tools/`（已入库）；`public/*/tools` 不是工具的家，会被同步清掉，不要在那里新建文件。
+
+## 五之二、发布管线（push 之前/之后）
+
+- **push 后必须确认部署**。2026-10-17 有一笔提交（76e7229）在 CI 里构建失败、deploy 被 skipped，
+  线上因此停留在旧版本而无人察觉 —— 表现是「改了但线上没变」，极易误判成浏览器缓存。
+  确认方式：GitHub Actions 页面看该 commit 的 workflow 是否 success。
+- **CI 步骤顺序**：Install → `npm run lint`（质量门禁，快速失败）→ `npm run build`
+  （prebuild 会跑 optimize-images + sync-sites）→ Verify export → Upload/Deploy。
+- **增强项不得阻断发布**：`scripts/optimize-images.js` 默认**永远 exit(0)**（图片优化是增强项，
+  缺了只是慢一点；发布发不出去才是真的损失）。需要把它当硬错误时用 `IMAGES_STRICT=1 npm run images`。
+- `.eslintrc.json` 是唯一的 lint 配置。已明确关闭两条规则，别当成漏配再打开：
+  `react/jsx-no-comment-textnodes`（本站用 ` // ` 作档案编号分隔符，是排版母题）、
+  `@next/next/no-img-element`（静态导出 + unoptimized，走自有 WebP 变体流水线，不用 next/image）。

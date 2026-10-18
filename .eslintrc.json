@@ -1,0 +1,24 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "@next/next/no-html-link-for-pages": "error",
+    // 本站刻意在 JSX 文本里用 ` // ` 作档案编号与代码的视觉分隔符
+    // （examples：{item.id} // {location.code}），是贯穿全站的排版母题。
+    // 这条规则会把文本节点里的 // 当成 JSX 注释前缀误报为 Error。
+    "react/jsx-no-comment-textnodes": "off",
+    // 本站是 output:'export' 静态站 + images.unoptimized，
+    // 走自有的 构建期 WebP 变体流水线（scripts/optimize-images.js）
+    // + getLocalSrcSet/getCloudinarySrcSet 拼 srcset；next/image 的优化链路
+    // 在静态导出下不可用，强行走它反而丢掉已经生效的变体。
+    "@next/next/no-img-element": "off"
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "out/",
+    "public/",
+    "vacuum-salt/",
+    "*-3d/",
+    "scripts/"
+  ]
+}
