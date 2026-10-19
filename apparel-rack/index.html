@@ -361,13 +361,25 @@ function makeSolidTexture(base){
 const CUTS={
   // env = 布料的 envMapIntensity。旧值 0.15~0.50 太弱，环境光几乎不参与，
   // 才逼出了「贴图自发光兜底」这个瘆人补丁；环境提上来后自发光可以退场。
-  tee:    {SY:2.50, sleeveY:1.18, sleeveMax:1.32, sleeveMin:0.62, body:0.60, thick:0.30, collarR:0.30,
+  //
+  // 版型几何（2026-10-19 重写）。旧版型把袖子做成"顶行朝上翘的横翅膀"
+  // （sleeveMax 在 y=0 处、往下收到 sleeveMin），整件呈十字兽皮形 —— 这是
+  // 「像口袋不像衣服」的头号原因。现在袖子是一条从肩点向外下方延伸的锥形胶囊：
+  //   shX/shY   = 肩点（袖窿），袖子从这里长出去
+  //   cuffX/cuffY = 袖口中心；短袖停在胸侧，长袖一路垂到接近下摆
+  //   sleeveR0/R1 = 袖管半径（肩部粗 → 袖口收）
+  // 躯干另有收腰（bodyW），胸背间距靠 thick 撑出真正的筒状体积。
+  tee:    {SY:2.50, shX:0.50, shY:0.20, cuffX:0.93, cuffY:1.00, sleeveR0:0.190, sleeveR1:0.125,
+           body:0.60, thick:0.42, collarR:0.30,
            rough:0.94, env:0.68, stiff:1.00, windK:1.00, heavy:1.00},
-  longtee:{SY:2.62, sleeveY:2.02, sleeveMax:1.02, sleeveMin:0.70, body:0.60, thick:0.30, collarR:0.30,
+  longtee:{SY:2.62, shX:0.50, shY:0.20, cuffX:0.97, cuffY:1.98, sleeveR0:0.185, sleeveR1:0.105,
+           body:0.60, thick:0.42, collarR:0.30,
            rough:0.94, env:0.68, stiff:1.00, windK:0.90, heavy:1.05},
-  hoodie: {SY:2.72, sleeveY:2.10, sleeveMax:1.16, sleeveMin:0.80, body:0.66, thick:0.36, collarR:0.36,
+  hoodie: {SY:2.72, shX:0.54, shY:0.22, cuffX:1.00, cuffY:2.02, sleeveR0:0.215, sleeveR1:0.125,
+           body:0.66, thick:0.50, collarR:0.36,
            rough:1.00, env:0.60, stiff:1.05, windK:0.70, heavy:1.15, hood:true},
-  shell:  {SY:2.80, sleeveY:2.18, sleeveMax:1.14, sleeveMin:0.82, body:0.64, thick:0.32, collarR:0.22,
+  shell:  {SY:2.80, shX:0.54, shY:0.22, cuffX:0.99, cuffY:2.08, sleeveR0:0.205, sleeveR1:0.115,
+           body:0.64, thick:0.44, collarR:0.22,
            rough:0.60, env:0.85, stiff:1.12, windK:0.55, heavy:1.10, collar:true},
 };
 
@@ -383,18 +395,22 @@ function buildGarment(cut){
   const rows=Math.round(SY/step)+1;
   const pid=(c,r)=>r*cols+c;
 
+  // 躯干半宽：肩 → 腰微收 → 下摆放开（不做收腰就是一根直筒，也是"口袋"观感的一部分）
+  const bodyW=(y)=>cut.body*(1-0.10*Math.sin(Math.max(0,Math.min(1,y/SY))*Math.PI));
+  // 袖：肩点 → 袖口的锥形胶囊（在 +x 侧求值，靠 |x| 镜像）
+  const SHX=cut.shX, SHY=cut.shY;
+  const VX=cut.cuffX-SHX, VY=cut.cuffY-SHY, VV=VX*VX+VY*VY;
+  function inSleeve(ax,y){
+    const t=Math.max(0,Math.min(1,((ax-SHX)*VX+(y-SHY)*VY)/VV));
+    const dx=ax-(SHX+VX*t), dy=y-(SHY+VY*t);
+    const rr=cut.sleeveR0+(cut.sleeveR1-cut.sleeveR0)*t;
+    return dx*dx+dy*dy<=rr*rr;
+  }
   function inside(x,y){
     if(y<0||y>SY) return false;
     const ax=Math.abs(x);
-    const body=ax<=cut.body;
-    let sleeve=false;
-    if(y<=cut.sleeveY){
-      const t=y/cut.sleeveY;
-      const maxx=cut.sleeveMax-(cut.sleeveMax-cut.sleeveMin)*t;
-      if(ax>=cut.body*0.98 && ax<=maxx) sleeve=true;
-    }
-    if(!(body||sleeve)) return false;
-    if(x*x+y*y<cut.collarR*cut.collarR && y<cut.collarR+0.06) return false;   // 领口挖空
+    if(ax>bodyW(y)&&!inSleeve(ax,y)) return false;
+    if(x*x+y*y<cut.collarR*cut.collarR&&y<cut.collarR+0.06) return false;   // 领口挖空
     return true;
   }
 
@@ -426,7 +442,24 @@ function buildGarment(cut){
       }
     }
   }
-  const profile=(d)=>Math.min(1,Math.max(0,d)/3);
+  // 截面厚度：边缘并成缝 → 中央鼓成筒。
+  // 旧 profile(d)=min(1,d/3) 只在最外 3 格（≈0.32）收边，中段厚度恒定 ——
+  // 前后两片被撑成一块平贴的鼓包，从任何角度看都是"口袋 / 充气垫"。
+  // 改成 0.50 世界单位的椭圆过渡：胸背之间才真的有筒状体积，也有侧面可承接轮廓光。
+  const TAPER=0.50;
+  const profile=(d)=>{
+    const u=Math.max(0,Math.min(1,d*step/TAPER));
+    return Math.sqrt(u*(2-u));            // 椭圆剖面：边缘收成缝、中央饱满
+  };
+  // 竖向褶皱：整块布沿 x 做正弦起伏（前后片同相 = 整件一起波动，不是各自鼓包）。
+  // 关键：波形直接写进初始坐标，弹簧静长因此等于波形的弦长 —— 褶皱是"静止形态"，
+  // 不会被求解器拉平，也不会因为弹簧想收缩而抽搐。肩部最密（挂在衣架上必然在肩线聚拢）、
+  // 向下渐隐，让下摆自然散开。
+  const PLEAT_K=15.0, PLEAT_A=0.055;
+  const pleat=(x,y)=>{
+    const t=Math.max(0,Math.min(1,y/SY));
+    return PLEAT_A*(1-0.45*t)*Math.sin(x*PLEAT_K+y*1.2);
+  };
 
   // --- 闭合壳体：前后两层在轮廓边界共享同一组粒子（真缝合），内部保持双层厚度 ---
   const px=[],py=[],pz=[],pinned=[],uv=[];
@@ -438,8 +471,9 @@ function buildGarment(cut){
       px.push(gx[i]);
       const blend=Math.max(0,1-gy[i]/1.2);
       py.push(-(gy[i]+SLOPE*Math.abs(gx[i])*blend));
-      const half=THICK*0.5*profile(dist[i]);          // 边缘薄、中央鼓 = 垂挂体积
-      pz.push(layer===0? half : -half);
+      const half=THICK*0.5*profile(dist[i]);          // 边缘并成缝、中央鼓成筒
+      const pl=pleat(gx[i],gy[i]);                    // 竖向褶皱（前后片同相）
+      pz.push(layer===0? half+pl : -half+pl);
       pinned.push(gy[i]<0.26 && Math.abs(gx[i])<=0.68);
       const c=Math.round((gx[i]+SX)/step), r=Math.round(gy[i]/step);
       uv.push(layer===0? c/(cols-1) : 1-c/(cols-1), 1-r/(rows-1));
