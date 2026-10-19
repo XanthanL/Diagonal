@@ -48,6 +48,14 @@ jobs:
           echo "产物体积: $(du -sh out | cut -f1)"
           echo "HTML 页数: $(find out -name '*.html' | wc -l)"
           ls out | head -20
+      # vacuum-salt 是独立 Next app（r3f + three），不能像静态子站那样 copy 源码进 public/，
+      # 必须先以 basePath=/vacuum-salt 构建，再把产物并入主站 out/vacuum-salt。
+      # 放在主站 Build 之后：merge-vacuum.js 是往 out/ 里塞目录，顺序反了会被导出覆盖。
+      # 这一步是纯增强项 —— 它挂掉不该让主站发不出去，所以 continue-on-error。
+      - name: Build & merge vacuum-salt subproject
+        id: vacuum
+        continue-on-error: true
+        run: node scripts/merge-vacuum.js
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

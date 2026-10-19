@@ -1,6 +1,7 @@
 {
-  "$comment": "独立子站单一登记表。新增/改子站只改这里：scripts/sync-sites.js 据此同步进 public，PageTransition 据此判断整页跳转，避免多处手工登记漏改导致 404。sync=true 的 dir 必须与仓库根同名目录存在。（vacuum-salt 方向已终止，其导航项与 dev rewrite 一并移除，仓库里的源码待作者确认后再删。）",
+  "$comment": "独立子站单一登记表。新增/改子站只改这里：scripts/sync-sites.js 据此同步进 public，PageTransition 据此判断整页跳转，避免多处手工登记漏改导致 404。sync=true 的 dir 必须与仓库根同名目录存在；sync=false 的（vacuum-salt 是独立 Next app）由 merge-vacuum.js 单独构建后并入 out，此处仅作导航判断。",
   "sites": [
+    { "dir": "vacuum-salt", "sync": false },
     { "dir": "salt-plant-3d", "sync": true, "excludes": ["images", ".img2threejs", "tools", "OPTIMIZATION.md", "TASKS.md", "REBUILD.md"] },
     { "dir": "gatehouse-3d", "sync": true, "excludes": ["docs", "images", ".img2threejs", "tools"] },
     { "dir": "apparel-rack", "sync": true, "excludes": [] }

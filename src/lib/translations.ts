@@ -31,8 +31,12 @@ export const translations = {
     labLabel: "03 · INTERACTIVE / 实验场 · DEMO",
     labTitle: "THE LAB",
     labIntro:
-      "实验场汇集对角线计划的交互式作品与可视化实验：天车与门楼的 3D 解构、虚拟衣架、盐粒子模拟等。每项均可独立进入，作为可把玩的研究对象。",
+      "实验场汇集对角线计划的交互式作品与可视化实验：真空制盐全流程 3D 解构、天车与门楼的 3D 解构、虚拟衣架、盐粒子模拟等。每项均可独立进入，作为可把玩的研究对象。",
     labEnter: "进入 →",
+    // Vacuum Salt（子项目入口，独立 Next app，由 merge-vacuum.js 并入 /vacuum-salt/）
+    vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
+    vacuumSaltTitle: "真空制盐",
+    vacuumSaltDesc: "四川自贡井矿盐卤真空制盐全流程 3D 解构：井卤开采净化 → 多效蒸发结晶 → 离心脱水 → 干燥筛分 → 包装仓储，可交互查看五大工艺环节。",
     apparelRackLabel: "SUBPROJECT · 虚拟衣架",
     apparelRackTitle: "虚拟衣架",
     apparelRackDesc:
@@ -105,8 +109,13 @@ export const translations = {
     labLabel: "03 · INTERACTIVE / LAB · DEMO",
     labTitle: "THE LAB",
     labIntro:
-      "The Lab gathers Diagonal's interactive works and visualization experiments — the derrick and gatehouse in 3D deconstruction, the virtual garment rack, the salt-particle simulation, and more. Each opens independently as a playable object of study.",
+      "The Lab gathers Diagonal's interactive works and visualization experiments — the vacuum salt-making pipeline in 3D, the derrick and gatehouse in 3D deconstruction, the virtual garment rack, the salt-particle simulation, and more. Each opens independently as a playable object of study.",
     labEnter: "ENTER →",
+    // Vacuum Salt (sub-project entry; separate Next app merged into /vacuum-salt/)
+    vacuumSaltLabel: "SUBPROJECT · VACUUM SALT",
+    vacuumSaltTitle: "Vacuum Salt",
+    vacuumSaltDesc:
+      "A full 3D deconstruction of vacuum salt-making from Zigong well brine: brine extraction & purification → multi-effect evaporation & crystallization → centrifugal dewatering → drying & screening → packaging. Five interactive process stages.",
     apparelRackLabel: "SUBPROJECT · APPAREL RACK",
     apparelRackTitle: "Virtual Garment Rack",
     apparelRackDesc:

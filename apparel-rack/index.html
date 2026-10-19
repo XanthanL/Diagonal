@@ -212,20 +212,41 @@ function makePrintTexture(item){
   for(let i=-H;i<W;i+=26){ x.beginPath(); x.moveTo(i,0); x.lineTo(i+H,H); x.stroke(); }
   x.restore();
 
-  if(item.motif==="twoline"){
-    x.fillStyle=ink; x.textAlign="center"; x.font="700 138px Newsreader, serif";
-    x.fillText("DIA",W/2,H*0.36); x.fillText("GONAL",W/2,H*0.52);
+  if(item.motif==="seal"){
+    // 圆形徽章（Roundel）：外环 + 环上制式小字 + 中心对角线母题。
+    // 此前 ITEMS 里声明了 motif:"seal" 但函数里没有对应分支 → 这件卫衣正面是白板。
+    const R=Math.min(W,H)*0.155, cx=W/2, cy=H*0.40;
+    x.save(); x.translate(cx,cy);
+    x.strokeStyle=ink; x.lineWidth=5;
+    x.beginPath(); x.arc(0,0,R,0,Math.PI*2); x.stroke();
+    x.strokeStyle=ink; x.lineWidth=2;
+    x.beginPath(); x.arc(0,0,R-14,0,Math.PI*2); x.stroke();
+    // 中心对角斜线（呼应品牌母题）
+    x.strokeStyle=accent; x.lineWidth=7;
+    x.beginPath(); x.moveTo(-R*0.52,R*0.30); x.lineTo(R*0.52,-R*0.30); x.stroke();
+    // 环上小字：上弧 "DIAGONAL"，下弧 "ARCHIVE"
+    x.fillStyle=ink; x.textAlign="center"; x.textBaseline="middle";
+    x.font="600 26px 'JetBrains Mono', monospace";
+    const arc=(txt,r,a0,a1)=>{ for(let i=0;i<txt.length;i++){ const a=a0+(a1-a0)*(i/(txt.length-1)); x.save(); x.rotate(a); x.translate(0,-r); x.fillText(txt[i],0,0); x.restore(); } };
+    arc("DIAGONAL",R-38,-Math.PI*0.72,Math.PI*0.72);
+    x.rotate(Math.PI); arc("ARCHIVE",R-38,-Math.PI*0.6,Math.PI*0.6);
+    x.restore(); x.textBaseline="alphabetic";
+  } else if(item.motif==="twoline"){
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 92px Newsreader, serif";
+    x.fillText("DIA",W/2,H*0.40); x.fillText("GONAL",W/2,H*0.52);
+    x.strokeStyle=accent; x.lineWidth=4;
+    x.beginPath(); x.moveTo(W*0.30,H*0.565); x.lineTo(W*0.70,H*0.565); x.stroke();
   } else if(item.motif==="strike"){
-    x.fillStyle=ink; x.textAlign="center"; x.font="700 118px Newsreader, serif";
-    x.fillText("DIAGONAL",W/2,H*0.50);
-    x.strokeStyle=accent; x.lineWidth=9;
-    x.beginPath(); x.moveTo(W*0.10,H*0.50-34); x.lineTo(W*0.90,H*0.50-34); x.stroke();
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 82px Newsreader, serif";
+    x.fillText("DIAGONAL",W/2,H*0.48);
+    x.strokeStyle=accent; x.lineWidth=5;
+    x.beginPath(); x.moveTo(W*0.16,H*0.48-26); x.lineTo(W*0.84,H*0.48-26); x.stroke();
   } else if(item.motif==="offset"){
-    x.fillStyle=ink; x.textAlign="center"; x.font="700 128px Newsreader, serif";
-    x.fillText("DIAG",W/2-34,H*0.50); x.fillText("ONAL",W/2+66,H*0.60);
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 86px Newsreader, serif";
+    x.fillText("DIAG",W/2-30,H*0.46); x.fillText("ONAL",W/2+54,H*0.55);
   } else if(item.motif==="stack"){
-    x.fillStyle=ink; x.textAlign="center"; x.font="700 96px Newsreader, serif";
-    ["D","I","A","G","O","N","A","L"].forEach((c,i)=>x.fillText(c,W/2,H*0.24+i*82));
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 62px Newsreader, serif";
+    ["D","I","A","G","O","N","A","L"].forEach((c,i)=>x.fillText(c,W/2,H*0.26+i*56));
   } else if(item.motif==="pocket"){
     x.fillStyle=ink; x.textAlign="left"; x.font="700 58px Newsreader, serif";
     x.fillText("DIA",72,392); x.fillText("GONAL",72,450);
@@ -236,10 +257,10 @@ function makePrintTexture(item){
       x.save(); x.translate(gx,gy); x.rotate(-0.18); x.fillText("DIA",0,0); x.restore();
     }
   } else if(item.motif==="wordmark"){
-    x.fillStyle=ink; x.textAlign="center"; x.font="700 128px Newsreader, serif";
+    x.fillStyle=ink; x.textAlign="center"; x.font="700 84px Newsreader, serif";
     x.fillText("DIAGONAL",W/2,H*0.44);
-    x.fillStyle=accent; x.font="500 26px Newsreader, serif";
-    x.fillText("— EST. ZIGONG —",W/2,H*0.50);
+    x.fillStyle=accent; x.font="500 17px 'JetBrains Mono', monospace";
+    x.fillText("— EST. ZIGONG —",W/2,H*0.485);
   } else if(item.motif==="stripes"){
     // 冲锋衣：胸前斜纹带
     x.save();
@@ -253,8 +274,8 @@ function makePrintTexture(item){
     x.fillText("DIAGONAL",W/2,H*0.58);
   }
   // 下摆统一小字
-  x.fillStyle=dark?"rgba(250,250,248,.5)":"rgba(26,26,26,.42)";
-  x.font="500 21px Newsreader, serif"; x.textAlign="center";
+  x.fillStyle=dark?"rgba(250,250,248,.38)":"rgba(26,26,26,.32)";
+  x.font="500 16px 'JetBrains Mono', monospace"; x.textAlign="center";
   x.fillText("DIAGONAL ARCHIVE",W/2,H*0.90);
 
   // ── 版型专属细节 ──
@@ -338,14 +359,16 @@ function makeSolidTexture(base){
       前片 + 后片双层面料，边缘缝合；兜帽为第三块布片（pin 领后）
 ══════════════════════════════════════════════════════════════*/
 const CUTS={
+  // env = 布料的 envMapIntensity。旧值 0.15~0.50 太弱，环境光几乎不参与，
+  // 才逼出了「贴图自发光兜底」这个瘆人补丁；环境提上来后自发光可以退场。
   tee:    {SY:2.50, sleeveY:1.18, sleeveMax:1.32, sleeveMin:0.62, body:0.60, thick:0.30, collarR:0.30,
-           rough:0.94, env:0.22, stiff:1.00, windK:1.00, heavy:1.00},
+           rough:0.94, env:0.68, stiff:1.00, windK:1.00, heavy:1.00},
   longtee:{SY:2.62, sleeveY:2.02, sleeveMax:1.02, sleeveMin:0.70, body:0.60, thick:0.30, collarR:0.30,
-           rough:0.94, env:0.22, stiff:1.00, windK:0.90, heavy:1.05},
+           rough:0.94, env:0.68, stiff:1.00, windK:0.90, heavy:1.05},
   hoodie: {SY:2.72, sleeveY:2.10, sleeveMax:1.16, sleeveMin:0.80, body:0.66, thick:0.36, collarR:0.36,
-           rough:1.00, env:0.15, stiff:1.05, windK:0.70, heavy:1.15, hood:true},
+           rough:1.00, env:0.60, stiff:1.05, windK:0.70, heavy:1.15, hood:true},
   shell:  {SY:2.80, sleeveY:2.18, sleeveMax:1.14, sleeveMin:0.82, body:0.64, thick:0.32, collarR:0.22,
-           rough:0.60, env:0.50, stiff:1.12, windK:0.55, heavy:1.10, collar:true},
+           rough:0.60, env:0.85, stiff:1.12, windK:0.55, heavy:1.10, collar:true},
 };
 
 function buildGarment(cut){
@@ -353,7 +376,9 @@ function buildGarment(cut){
   const SY=cut.SY;
   const SLOPE=0.62;
   const THICK=cut.thick;
-  const step=0.135;
+  // step 0.135 → 0.105：20×20 的网格在屏幕上读出方格棱角（瘆人感的几何来源之一）。
+  // 粒子与弹簧约 ×1.6，Verlet 4 iter 每帧 ~3 万次弹簧求解，仍远低于预算。
+  const step=0.105;
   const cols=Math.round(2*SX/step)+1;
   const rows=Math.round(SY/step)+1;
   const pid=(c,r)=>r*cols+c;
@@ -533,31 +558,36 @@ class Garment{
     geo.addGroup(d.frontIdx.length,d.backIdx.length,1);
     if(d.hoodIdx.length) geo.addGroup(d.frontIdx.length+d.backIdx.length,d.hoodIdx.length,2);
 
-    // 布料显色兜底：贴图自发光，任意朝向显色稳定；直接光只管褶皱
+    // 旧版「贴图自发光兜底」（emissiveMap=map, intensity 0.5）已撤：
+    // 每个像素无条件加 50% 自发光 → 全场景无暗部、无体积，读成惨白塑料片 ——
+    // 这正是「瘆人」的主源。现在靠 environment（全方向 IBL）+ 加强 key 光提供
+    // 各朝向的显色与褶皱明暗；保留 0.10 只是防深色布料在暗侧死黑。
     const fm=makePrintTexture(item), bm=makeBackTexture(item);
     const fabric={side:THREE.DoubleSide,roughness:this.cut.rough,metalness:0.0,
                   normalMap:fabricNormal,envMapIntensity:this.cut.env,
-                  emissive:0xffffff,emissiveIntensity:0.50};
+                  emissive:0xffffff,emissiveIntensity:0.10};
     this.frontMat=new THREE.MeshStandardMaterial({
-      ...fabric, map:fm, emissiveMap:fm, normalScale:new THREE.Vector2(0.5,0.5)});
+      ...fabric, map:fm, normalScale:new THREE.Vector2(0.5,0.5)});
     this.backMat=new THREE.MeshStandardMaterial({
-      ...fabric, map:bm, emissiveMap:bm, normalScale:new THREE.Vector2(0.5,0.5)});
+      ...fabric, map:bm, normalScale:new THREE.Vector2(0.5,0.5)});
     this.mats=[this.frontMat,this.backMat];
     const materials=[this.frontMat,this.backMat];
     if(d.hoodIdx.length){
       const solid=makeSolidTexture(item.base);
       this.hoodMat=new THREE.MeshStandardMaterial({
         side:THREE.DoubleSide,roughness:Math.min(1,this.cut.rough+0.04),metalness:0.0,
-        normalMap:fabricNormal,envMapIntensity:this.cut.env*0.7,
-        emissive:0xffffff,emissiveIntensity:0.5,
-        map:solid,emissiveMap:solid,
+        normalMap:fabricNormal,envMapIntensity:this.cut.env*0.8,
+        emissive:0xffffff,emissiveIntensity:0.10,
+        map:solid,
         normalScale:new THREE.Vector2(0.5,0.5)});
       this.mats.push(this.hoodMat);
       materials.push(this.hoodMat);
     }
     this.mesh=new THREE.Mesh(geo,materials);
     this.mesh.position.z=-0.02;
-    this.mesh.castShadow=true; this.mesh.receiveShadow=false;
+    this.mesh.castShadow=true;
+    // 互相接影：相邻衣服的影子落在彼此身上，是布料体积感最便宜的来源
+    this.mesh.receiveShadow=true;
     this.group.add(this.mesh);
 
     this.buildHanger();
@@ -620,7 +650,8 @@ class Garment{
     const baseCol=new THREE.Color(this.item.base).multiplyScalar(0.82);
     const collarMat=new THREE.MeshStandardMaterial({
       color:baseCol,roughness:0.55,metalness:0.02,
-      emissive:baseCol,emissiveIntensity:0.35});
+      // 与布料同一策略：env 主导显色，只留 0.08 防死黑
+      emissive:baseCol,emissiveIntensity:0.08});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(0.23,0.058,12,26),collarMat);
     ring.rotation.x=Math.PI/2;
     ring.scale.set(1,1,0.55);
@@ -727,19 +758,23 @@ try{
   window.__envReady=true;
 }catch(e){ console.warn("env map unavailable",e); }
 
-scene.add(new THREE.HemisphereLight(0xffffff,0xe8e4dc,0.28));
-const key=new THREE.DirectionalLight(0xffffff,0.38);
+// 光照（2026-10-18 重建）。旧版：key 0.38 + 布料自发光 0.5 + 红色 rim 0.3 ——
+// 该亮的褶皱不亮、不该有的均匀白光常驻、衣服边缘还被染成血红，三者叠加就是「瘆人」。
+// 现在：环境 IBL 主管各朝向显色（见 CUTS.env），key 管褶皱与投影，rim 只做暖白轮廓分离。
+scene.add(new THREE.HemisphereLight(0xffffff,0xe8e4dc,0.52));
+const key=new THREE.DirectionalLight(0xfff8ef,0.95);
 key.position.set(3.4,6.5,7.5); key.castShadow=true;
-key.shadow.mapSize.set(1024,1024);
+key.shadow.mapSize.set(2048,2048);
 key.shadow.camera.left=-7; key.shadow.camera.right=7;
 key.shadow.camera.top=6; key.shadow.camera.bottom=-4;
 key.shadow.camera.near=0.5; key.shadow.camera.far=24;
 key.shadow.bias=-0.0018;
 scene.add(key);
-const rim=new THREE.DirectionalLight(0xB33A2A,0.3); rim.position.set(-6,2.5,-4.5); scene.add(rim);
-const fillFront=new THREE.DirectionalLight(0xffffff,0.32);
+// 轮廓光改暖白极弱：只负责把衣服从背景里剥出来，不再染色
+const rim=new THREE.DirectionalLight(0xFFF4E8,0.16); rim.position.set(-6,2.5,-4.5); scene.add(rim);
+const fillFront=new THREE.DirectionalLight(0xffffff,0.46);
 fillFront.position.set(0,1.2,6.5); scene.add(fillFront);
-const fill=new THREE.DirectionalLight(0xffffff,0.10); fill.position.set(0,-3,6); scene.add(fill);
+const fill=new THREE.DirectionalLight(0xffffff,0.16); fill.position.set(0,-3,6); scene.add(fill);
 
 const RAIL_Y=2.10, RAIL_R=0.075, WHEEL_R=0.085;
 const RAIL_KEEPER_LOCAL_WY=1.20;
@@ -786,7 +821,7 @@ const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(60,26),
 backdrop.position.set(0,GROUND_Y+13,-7.5); backdrop.receiveShadow=true; scene.add(backdrop);
 
 /* ══════════════════════════════════════════════════════════════
-   7. 悬挂 12 件衣服
+   7. 悬挂 8 件衣服（4 个版型各两件，数量由 ITEMS 决定）
 ══════════════════════════════════════════════════════════════*/
 const fabricNormal=makeFabricNormal();
 const N=ITEMS.length;
@@ -1013,24 +1048,32 @@ function animate(){
     const wind=0.30+0.15*Math.sin(t*0.55);
     for(let i=0;i<N;i++){
       const g=garments[i];
-      if(focused===i){
-        g.step(FIXED,wind+0.5,t,g.iter); continue;
+      // 聚焦态：其余 7 件已淡到 0.1 透明度并被推到 z=-5，再全速解算是白烧 CPU
+      if(focused>=0&&i!==focused){ g.dirty=false; continue; }
+      const hero=(i===hovered||focused===i);
+      // 位置与轮子必须逐帧：滑轨惯性是渲染层动作，降频会让滑动看起来卡顿
+      if(focused!==i){
+        let x=g.homeX+g.off+rackShift;
+        x=Math.max(-4.4,Math.min(4.4,x));
+        const dx=x-g.prevX; g.prevX=x;
+        g.group.position.x=x;
+        g.spinWheels(dx);
       }
-      let x=g.homeX+g.off+rackShift;
-      x=Math.max(-4.4,Math.min(4.4,x));
-      const dx=x-g.prevX; g.prevX=x;
-      g.group.position.x=x;
-      g.spinWheels(dx);
+      // 布料求解 LOD：8 件全速实测 18.9ms/帧，光物理就吃光 60fps 的 16.7ms 预算。
+      // 背景件改隔帧 + 迭代 4→3（≈-62% CPU）：它们静止时只是"慢半拍"沉降，肉眼不可辨；
+      // 主角（悬停 / 聚焦）仍逐帧 7 次迭代，形变跟随鼠标的精度不受影响。
+      if(!hero&&((frameNo+i)&1)===1){ g.dirty=false; continue; }
       const w=(i===hovered)?wind+0.5:wind;
-      g.step(FIXED,w,t,g.iter);
+      g.step(FIXED,w,t,hero?g.iter:3);
+      g.dirty=true;
     }
   }
   if(steps===2) accum=0;
   frameNo++;
-  // 远端衣物的顶点/法线上传隔帧进行（这部分 CPU 开销很可观），主角与聚焦件保持逐帧
+  // 几何同步跟着求解走：没解过的衣服不必重算法线 + 上传顶点
   for(let i=0;i<N;i++){
     const g=garments[i];
-    if(i===hovered||focused===i||((frameNo+i)&1)===0) g.syncGeometry();
+    if(g.dirty) g.syncGeometry();
   }
   // 阴影贴图每 3 帧更新一次（布料慢速运动，肉眼不可辨），聚焦时恢复逐帧
   if(frameNo%3===0||focused>=0) renderer.shadowMap.needsUpdate=true;
@@ -1077,7 +1120,7 @@ function sampleCanvas(x0=0,y0=0,x1=1,y1=1){
 }
 
 loadingEl.style.display="none";
-window.__diag={garments,openFocus,closeFocus,setHover,scene,camera,ITEMS,perf,sampleCanvas};
+window.__diag={garments,openFocus,closeFocus,setHover,scene,camera,ITEMS,perf,sampleCanvas,renderer};
 </script>
 </body>
 </html>

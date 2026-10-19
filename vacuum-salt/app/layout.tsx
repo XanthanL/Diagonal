@@ -5,6 +5,8 @@ export const metadata: Metadata = {
   title: "真空制盐工艺 3D 解构 · 自贡井卤 | DIAGONAL",
   description:
     "对角线计划子项目：以四川自贡井矿盐卤为原料的真空制盐完整工艺流程 3D 解构展示——井卤开采与净化 → 多效蒸发结晶 → 离心脱水 → 干燥筛分 → 包装仓储。科学严谨，风格统一于 DIAGONAL。",
+  // 缺 canonical 时，basePath 子站会被当成主站的重复内容收录。
+  alternates: { canonical: "https://www.diagonal-art.com/vacuum-salt/" },
   openGraph: {
     title: "真空制盐工艺 3D 解构 · 自贡井卤 | DIAGONAL",
     description:
@@ -15,9 +17,11 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
+        // 尺寸必须是实测值：diagonal-logo.jpg 实际是 640×640，
+        // 早先这里写 1200×630 与真图不符，抓取方按声明尺寸裁图会拿到错的缩略图。
         url: "https://www.diagonal-art.com/images/diagonal-logo.jpg",
-        width: 1200,
-        height: 630,
+        width: 640,
+        height: 640,
         alt: "DIAGONAL · 真空制盐工艺 3D 解构",
       },
     ],

@@ -189,6 +189,14 @@ export default function Home() {
     status?: string;
   }[] = [
     {
+      // vacuum-salt 是独立 Next app（r3f + three），basePath 就是 /vacuum-salt，
+      // 所以它天然是目录形式，不需要为 canonical 另作处理。
+      href: "/vacuum-salt/",
+      code: t(lang, "vacuumSaltLabel"),
+      title: t(lang, "vacuumSaltTitle"),
+      desc: t(lang, "vacuumSaltDesc"),
+    },
+    {
       // 目录形式而非 index.html：与 index.html 里的 og:url 保持同一个 canonical，
       // 分享出去不会同一页面两个地址
       href: "/salt-plant-3d/",

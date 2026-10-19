@@ -7,6 +7,7 @@
     "images": "node scripts/optimize-images.js",
     "prebuild": "node scripts/optimize-images.js && node scripts/sync-sites.js",
     "build": "next build",
+    "build:with-vacuum": "npm run build && node scripts/merge-vacuum.js",
     "merge:vacuum": "node scripts/merge-vacuum.js",
     "sync:sites": "node scripts/sync-sites.js",
     "preview": "npm run build && npx serve out",
