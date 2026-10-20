@@ -212,12 +212,8 @@ export default function Home() {
       desc: t(lang, "gatehouseDesc"),
       status: t(lang, "labWip"),
     },
-    {
-      href: "/apparel-rack/",
-      code: t(lang, "apparelRackLabel"),
-      title: t(lang, "apparelRackTitle"),
-      desc: t(lang, "apparelRackDesc"),
-    },
+    // 虚拟衣架已于 2026-10-19 封存：布料版型与观感未达标，暂不上线。
+    // 源码保留在仓库 apparel-rack/，恢复时把下面这段 + sitemap + 登记表三处补回即可。
     {
       href: "/lab/salt-particle",
       code: "INTERACTIVE",

@@ -19,7 +19,7 @@ It is **not** a data pipeline or a headless CMS: the archive itself is plain HTM
 | `/artists` | Artist files for project participants |
 | `/projects/[project]` | Long-form project overviews |
 | `/lab/salt-particle` | Real-time salt-crystal particle simulation |
-| `/salt-plant-3d/`, `/gatehouse-3d/`, `/apparel-rack/` | Standalone static subsites shipped in `public/` (see below) |
+| `/salt-plant-3d/`, `/gatehouse-3d/` | Standalone static subsites shipped in `public/` (see below) |
 | `/colophon` | Colophon: the making of the site, with the developer's own work index |
 | `/admin` | Browser-only content console (see below) |
 
@@ -56,12 +56,13 @@ src/content/archive committed document bodies (.html, one per language) + _store
 src/lib/            data loading, i18n, path helpers, sanitiser, admin plumbing
 salt-plant-3d/      standalone 3D subsite: the timber derrick (well-head tower)
 gatehouse-3d/       standalone 3D subsite: a fictional gatehouse in voxel form
-apparel-rack/       standalone subsite: the virtual garment rack (Verlet cloth)
+apparel-rack/       SEALED 2026-10-19 — virtual garment rack (Verlet cloth); cloth pattern
+                    and look fell short of the bar. Unlisted, not synced into public/;
+                    to revive it, restore the three registrations (see src/lib/subsites.json).
 shared/viewer/      shared chrome for every subsite: chrome.css (topbar/sidebar/info drawer)
                     and loader.css (curtain reveal) — edit here, all subsites follow
 scripts/            image variant generation, subsite sync, deploy helpers
 .impeccable.md      the design context this repo's UI is held to
-COORDINATION.md     multi-session build rules: shared files, subsite sync discipline
 ```
 
 The three `*-3d/` directories are **independent static apps**. The repo root is the single source of truth; their copies under `public/` are generated at build time and are git-ignored.

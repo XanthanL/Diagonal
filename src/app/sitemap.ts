@@ -16,14 +16,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${siteUrl}/artists`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/about`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/colophon`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    // THE LAB：前四项是主站 App Router 之外的独立子站，与 src/lib/subsites.json
+    // THE LAB：前三项是主站 App Router 之外的独立子站，与 src/lib/subsites.json
     // 同源登记，新增 / 改名子站时两处都要动；最后一项本身是 App Router 页面。
     // （vacuum-salt 是独立 Next app，由 merge-vacuum.js 并入 out/vacuum-salt，
     // 不进 public/，故 sync 标志为 false —— 但 URL 必须在这里登记。）
     { url: `${siteUrl}/vacuum-salt/`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/salt-plant-3d/`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/gatehouse-3d/`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${siteUrl}/apparel-rack/`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${siteUrl}/lab/salt-particle`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
   ];
 
