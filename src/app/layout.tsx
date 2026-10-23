@@ -5,6 +5,7 @@ import { Providers } from "@/components/Providers";
 import { GlobalNav } from "@/components/GlobalNav";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteFooter } from "@/components/SiteFooter";
+import { InkField } from "@/components/InkField";
 import "./globals.css";
 
 // 精确加载所需字重，避免加载完整可变字体
@@ -88,6 +89,8 @@ export default function RootLayout({
           <GlobalNav />
           <PageTransition>{children}</PageTransition>
           <SiteFooter />
+          {/* 墨脉：压在页面之上、导航之下的着色器反馈层，自身不接收指针事件 */}
+          <InkField />
         </Providers>
       </body>
     </html>

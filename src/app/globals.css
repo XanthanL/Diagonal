@@ -463,4 +463,28 @@ body {
   color: inherit;
 }
 
+/* —— 墨脉 InkField：全站指针 / 触控的着色器反馈层 ——
+   一块整屏 fixed 画布（见 src/components/InkField.tsx）。
+   z-65：压在页面与吸底跳转条（z-60）之上，落在移动端抽屉（z-70）、
+   顶栏（z-80）、转场纸面（z-90）之下 —— 导航是压在页面上的另一张纸，
+   墨不该漫过它；翻页时更不该在那张纸上涂鸦。
+   ⚠️ pointer-events:none 是硬要求：整套效果只读指针事件，绝不参与命中测试。
+   ⚠️ canvas 是被替换元素，仅靠 inset:0 时 width:auto 会用「属性宽度」而非拉伸，
+   所以宽高必须显式写成 100%，否则高分屏上画布只占左上角一块。 */
+.ink-field {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 65;
+  pointer-events: none;
+  display: block;
+}
+/* 前庭敏感 / 省电模式：整层撤掉（组件侧同样直接 return，这里是双保险） */
+@media (prefers-reduced-motion: reduce) {
+  .ink-field {
+    display: none;
+  }
+}
+
 
