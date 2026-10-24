@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { InkFieldEngine } from "@/lib/inkField";
+import { DropletLensEngine } from "@/lib/dropletLens";
 
-/** 判定「是否悬停在可交互元素上」——命中后换成细笔尖 */
+/** 判定「是否悬停在可交互元素上」——命中后水滴收紧一点，像被吸住 */
 const INTERACTIVE = 'a,button,[role="button"],input,textarea,select,summary,label,.press,.press-card';
 
 /** 背景明暗采样节流间隔：getComputedStyle 会触发样式重算，不能每帧来 */
@@ -16,8 +16,8 @@ const SAMPLE_MS = 110;
  *
  * 为什么需要它：着色器拿不到页面像素，无法自己判断底色。
  * - /atlas 整页黑底，首页那块盐粒子画布是 #0c0c0e；
- * - 一律画墨（#1A1A1A）的话，这些区块上会完全看不见；
- * - 一律画浅色的话，纸面上又会浮出一圈刺眼的白边。
+ * - 一律走墨（压暗）的话，这些区块上会完全看不见；
+ * - 一律走浅色的话，纸面上又会浮出一圈刺眼的白边。
  * 所以由这里给出 uDark，让引擎在「墨」与「粉笔」两套色板间平滑取舍。
  */
 function sampleBackdrop(x: number, y: number): boolean | null {
@@ -44,12 +44,15 @@ function sampleBackdrop(x: number, y: number): boolean | null {
 }
 
 /**
- * 墨脉：全站指针 / 触控的着色器反馈层。
+ * 水滴透镜：全站指针 / 触控的着色器反馈层。
  *
  * 挂载在 root layout 里、脱离 main 之外，不参与任何路由重挂载，也不吃指针事件，
- * 所以对既有页面结构零侵入 —— 全站只多了一块固定定位画布和一层 window 监听。
+ * 所以对既有页面结构零侵入 —— 全站只多了一块固定定位的小画布和一层 window 监听。
+ *
+ * 画布不再铺满屏幕（只有 200px 见方，靠 transform 跟手），
+ * 所以既不会出现满屏墨痕，也不必在每帧遍历整个视口。
  */
-export function InkField() {
+export function DropletLens() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const pathname = usePathname();
   const off = pathname.startsWith("/admin");
@@ -59,20 +62,19 @@ export function InkField() {
     if (!canvas || off) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    let engine: InkFieldEngine;
+    let engine: DropletLensEngine;
     try {
-      engine = new InkFieldEngine(canvas, { mobile: window.innerWidth < 768 });
+      engine = new DropletLensEngine(canvas, { mobile: window.innerWidth < 768 });
     } catch (err) {
       // 没有 WebGL / 着色器编译失败就安静退场，绝不影响页面任何功能。
       // 留一条 warn 而不是彻底吞掉：这是唯一能在线上回答"为什么没效果"的线索。
-      console.warn("[InkField] 墨脉未启用：", err);
+      console.warn("[DropletLens] 水滴透镜未启用：", err);
       return;
     }
 
     let lastSample = 0;
     let dark: boolean | null = null;
     let lastTarget: Element | null = null;
-    let scrollPrev = window.scrollY;
 
     const sample = (x: number, y: number, force: boolean) => {
       const now = performance.now();
@@ -96,23 +98,25 @@ export function InkField() {
     };
 
     const onDown = (e: PointerEvent) => {
-      // 触屏上 pointerdown 常常早于第一次 pointermove，先补一次位置，press 才有落点
+      // 触屏上 pointerdown 常常早于第一次 pointermove，先补一次位置，水滴才有落点
       engine.move(e.pointerId, e.clientX, e.clientY);
       engine.press(e.pointerId);
       sample(e.clientX, e.clientY, true);
     };
 
-    // 鼠标抬起后仍然要跟着走（一直在屏幕上），所以不 release；触屏 / 触控笔则拉走
+    // 鼠标抬起后水滴仍要跟着走（指针还在屏幕上），所以不 release；
+    // 触屏 / 触控笔抬手后留一小段余韵再蒸发。
     const onUp = (e: PointerEvent) => {
-      if (e.pointerType !== "mouse") engine.release(e.pointerId);
+      if (e.pointerType !== "mouse") engine.release(e.pointerId, 260);
     };
-    const onCancel = (e: PointerEvent) => engine.release(e.pointerId);
+    // 页面上只要手指一滑，Chrome 就把它判成滚动手势并 pointercancel。
+    // 不能立刻消失（那样触屏等于一动就没），留 600ms 让水滴跟完那一小截。
+    const onCancel = (e: PointerEvent) => engine.release(e.pointerId, 600);
 
-    const onScroll = () => {
-      const y = window.scrollY;
-      engine.scroll(y - scrollPrev);
-      scrollPrev = y;
-    };
+    // 指针移出文档（鼠标划出窗口）→ 淡出
+    const onLeave = () => engine.release(-1, 350);
+
+    const onResize = () => engine.resize();
 
     const onVisibility = () => {
       if (document.hidden) engine.stop();
@@ -123,7 +127,10 @@ export function InkField() {
     window.addEventListener("pointerdown", onDown, { passive: true });
     window.addEventListener("pointerup", onUp, { passive: true });
     window.addEventListener("pointercancel", onCancel, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
+    document.documentElement.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
+    window.addEventListener("resize", onResize, { passive: true });
+    window.addEventListener("orientationchange", onResize);
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
@@ -131,7 +138,10 @@ export function InkField() {
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
-      window.removeEventListener("scroll", onScroll);
+      document.documentElement.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("blur", onLeave);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
       document.removeEventListener("visibilitychange", onVisibility);
       engine.dispose();
     };
@@ -139,5 +149,12 @@ export function InkField() {
 
   if (off) return null;
 
-  return <canvas ref={canvasRef} className="ink-field" role="presentation" aria-hidden="true" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="droplet-lens"
+      role="presentation"
+      aria-hidden="true"
+    />
+  );
 }
