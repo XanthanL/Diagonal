@@ -7,8 +7,9 @@
  *
  * —— 为什么是水滴 / 透镜 ——
  * 全站是暖纸、墨、暗朱的文献调性。发光拖尾太躁，满屏墨痕太闹；而一枚压在纸上的
- * 水珠本身也是「物质」：它有厚度（表面张力的暗带）、有边界（菲涅耳亮环）、
+ * 水珠本身也是「物质」：它有厚度（表面张力那圈暖痕）、有边界（菲涅耳亮环）、
  * 有反光（左上角一枚镜面高光）。它不添加任何新母题，只是让指针落点有了重量。
+ * 边界一律不取墨色 —— 在暖纸上那会读成一道描边，而不是一滴水。
  *
  * —— 为什么不做真折射 ——
  * canvas 覆盖在页面之上，**读不到它底下的页面像素**（没有 backdrop 采样这种东西，
@@ -37,15 +38,20 @@ precision highp float;
 varying vec2 vUv;
 
 uniform vec2  uRes;     // 画布像素尺寸（算抗锯齿宽度用）
-uniform float uDark;    // 0 = 浅底（走墨）  1 = 深底（走粉笔）
+uniform float uDark;    // 0 = 浅底（走湿痕）  1 = 深底（走粉笔）
 uniform vec2  uDir;     // 速度方向单位向量
 uniform float uSpeed;   // 归一化速度 0..1
 uniform float uScale;   // 出现 / 消失 0..1
 uniform float uPress;   // 按压脉冲 0..1
 uniform float uNib;     // 悬停在可交互元素上 0..1
 
-const vec3 INK   = vec3(0.078, 0.074, 0.068);   // #141312 墨
 const vec3 CHALK = vec3(0.992, 0.968, 0.930);   // 暖白反光
+// 暖纸上「被水浸过」的颜色：比纸暗一档，但带着明显的暖色相。
+// 边界**不取墨色** —— 墨压在 #FAFAF8 上就是一道马克笔描边；水痕才是同一种语言。
+// 亮度刻意压得很浅（实测最深处只比纸暗 13/255），可见度靠 R-B 的暖偏移撑起来：
+// 边界读起来是「纸被浸湿了」，而不是「被描了一道灰边」。
+const vec3 WET   = vec3(0.855, 0.792, 0.700);   // #DACA B3 湿痕
+const vec3 WET2  = vec3(0.925, 0.878, 0.806);   // 更淡一档，给菲涅耳环与透镜本体
 
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -63,25 +69,32 @@ void main() {
 
   // 剔除边界要留到菲涅耳环之外，否则环的外半圈会被 body 的硬边切掉
   float w = 0.085;   // 环宽：太窄会变成一条硬边线，就不是玻璃了
-  if (r > 1.0 + w + 0.03) discard;
+  if (r > 1.0 + w + 0.06) discard;
 
   float body = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, r);
 
   float core    = 1.0 - smoothstep(0.0, 0.92, r);          // 透镜本体
-  float tension = smoothstep(0.52, 1.0, r) * body;         // 表面张力暗带
 
-  // 菲涅耳细环，三条通道各错开一点点半径 —— 边缘那丝彩镶边是「透明介质」最经济的暗示
-  float ringR = smoothstep(0.900, 1.000, r) * (1.0 - smoothstep(1.000, 1.000 + w, r));
-  float ringG = smoothstep(0.906, 1.006, r) * (1.0 - smoothstep(1.006, 1.006 + w, r));
-  float ringB = smoothstep(0.912, 1.012, r) * (1.0 - smoothstep(1.012, 1.012 + w, r));
-  vec3  aRing = vec3(ringR, ringG, ringB) * 0.22;
+  // 表面张力：厚度阴影必须收在**环之内**就衰减干净。
+  // 旧版它一路顶到 r=1，和菲涅耳环叠在一起，边界就成了实心的一圈 —— 那正是「黑边」。
+  float tension = smoothstep(0.44, 0.90, r) * body * (1.0 - smoothstep(0.90, 1.04, r));
+
+  // 菲涅耳细环，三条通道各错开一点点半径 —— 边缘那丝彩镶边是「透明介质」最经济的暗示。
+  // 掠射角反射最强，所以最外缘本该是**亮**的：环取暖白，绝不用墨色去描边。
+  float ringR = smoothstep(0.905, 1.005, r) * (1.0 - smoothstep(1.005, 1.005 + w, r));
+  float ringG = smoothstep(0.911, 1.011, r) * (1.0 - smoothstep(1.011, 1.011 + w, r));
+  float ringB = smoothstep(0.917, 1.017, r) * (1.0 - smoothstep(1.017, 1.017 + w, r));
+  vec3  aRing = vec3(ringR, ringG, ringB) * mix(0.26, 0.32, uDark);
 
   // 高光必须在屏幕固定方向（光从左上），不能跟着拉伸旋转，否则会露馅
   vec2 sp = p / R;
   float spec  = (1.0 - smoothstep(0.0, 0.34, length(sp - vec2(-0.38, -0.44)))) * body;
   float spec2 = (1.0 - smoothstep(0.0, 0.26, length(sp - vec2( 0.32,  0.42)))) * body;
 
-  vec3  base  = mix(INK, CHALK, uDark);
+  // 边界两件套：浅底走「湿痕」（暖、比纸暗一点点，但绝不是黑），深底仍然走粉笔亮环。
+  vec3  base  = mix(WET2, CHALK, uDark); // 透镜本体；浅底上暖白几乎不可见，靠它给一点存在感
+  vec3  thick = mix(WET, CHALK, uDark);   // 厚度阴影
+  vec3  edge  = mix(WET2, CHALK, uDark);  // 菲涅耳环
   float specA = mix(0.14, 0.50, uDark);   // 白纸上镜面高光本就看不见，物理正确
 
   // 累加成「颜色 × alpha」的预乘和
@@ -89,14 +102,14 @@ void main() {
   float a   = 0.0;
 
   float lensA = core * 0.060 * mix(1.0, 0.30, uDark);   // 透镜聚光：纸面上略提亮
-  acc += CHALK * lensA;  a += lensA;
+  acc += base * lensA;   a += lensA;
 
-  float tbA = tension * 0.15;                           // 表面张力：靠边越厚越暗
-  acc += base * tbA;     a += tbA;
+  float tbA = tension * 0.12;                           // 表面张力：靠边越厚越暗（收在环内）
+  acc += thick * tbA;    a += tbA;
 
   // 逐通道给 alpha，不能求和 —— 求和会让环的 alpha 直接翻三倍，边缘糊成一圈硬黑边。
-  // 逐通道的副作用正是我们要的：哪条通道先到，那一条就被墨吃掉更多，于是镶边显色。
-  acc += base * aRing;
+  // 逐通道的副作用正是我们要的：哪条通道先到，那一条就先被染上湿痕，于是镶边显色。
+  acc += edge * aRing;
   a   += max(max(aRing.r, aRing.g), aRing.b);
 
   float sA = spec * specA;
