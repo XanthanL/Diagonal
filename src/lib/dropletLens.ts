@@ -183,6 +183,8 @@ export class DropletLensEngine {
   private lastDraw = 0;
   private idle = 0;
   private releaseAt = 0; // 预约的淡出时刻（0 = 无预约）
+  private sx0: number | null = null; // 上一帧的滚动位置：水滴要跟着纸走
+  private sy0: number | null = null;
 
   constructor(canvas: HTMLCanvasElement, opts: DropletOptions = {}) {
     this.canvas = canvas;
@@ -258,6 +260,7 @@ export class DropletLensEngine {
     }
     this.want = 1;
     this.idle = 0;
+    this.releaseAt = 0; // 指针回来了，之前预约的淡出作废
     this.wake();
   }
 
@@ -266,6 +269,7 @@ export class DropletLensEngine {
     this.pressV = 1;
     this.want = 1;
     this.idle = 0;
+    this.releaseAt = 0;
     this.wake();
   }
 
@@ -322,6 +326,24 @@ export class DropletLensEngine {
 
     const dt = Math.min(Math.max((now - this.last) / 1000, 1 / 240), 1 / 24);
     this.last = now;
+
+    // 水滴是「纸上的东西」，不是贴在屏幕玻璃上的贴纸：页面一滚，它得跟着内容走。
+    // 不处理的话，滚屏时指针不动、水滴就僵在原地不动 —— 一眼假。
+    // px/py 也要同步减，否则这段位移会被算成速度，水滴瞬间被抽成一根条。
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    if (this.sx0 !== null && this.sy0 !== null) {
+      const dx = sx - this.sx0;
+      const dy = sy - this.sy0;
+      if (dx || dy) {
+        this.tx -= dx; this.ty -= dy;
+        this.x  -= dx; this.y  -= dy;
+        this.px -= dx; this.py -= dy;
+        this.idle = 0;
+      }
+    }
+    this.sx0 = sx;
+    this.sy0 = sy;
 
     // 位置：tau 0.045s —— 几乎贴着指针走，但保留一点点惯性，甩动时才有「重量」
     this.px = this.x;
