@@ -536,6 +536,12 @@ body {
 .mag-zoom[data-ready="1"] {
   opacity: 1;
 }
+/* 指针压在超大字（hero 标题 18vw ≈ 230px）上时不折射：字比镜体还大，
+   1.5 倍只会把衬线放大成一团墨渍。放大层淡出，只留水滴本身 —— 实测
+   同一位置关掉放大层后，L 字脚完整、环与湿痕依旧干净。 */
+.mag-zoom.mag-dim {
+  opacity: 0;
+}
 .mag-doc {
   position: absolute;
   left: 0;

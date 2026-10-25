@@ -50,6 +50,23 @@ function collectFixed(root: Element): number[][] {
   return out;
 }
 
+/** 超大字号阈值：字比镜体还大时，折射只会把笔画放大成黑团 —— 干脆不折射。 */
+const HUGE_PX = 96;
+
+/**
+ * 指针下（含短祖先链）是否有超大字。hero 标题是 18vw，230px 的衬线在
+ * 112px 镜体里放大 1.5 倍就是一团墨渍 —— 这种位置放大层应当退场。
+ */
+function sampleHuge(x: number, y: number): boolean {
+  let node = document.elementFromPoint(x, y) as HTMLElement | null;
+  let guard = 0;
+  while (node && guard++ < 4) {
+    if (parseFloat(getComputedStyle(node).fontSize) >= HUGE_PX) return true;
+    node = node.parentElement;
+  }
+  return false;
+}
+
 /**
  * 采样指针下方第一个「基本不透明」的背景色亮度。
  * 返回 null 表示没采到（保留上一次判断），避免在过渡区域来回抖。
@@ -171,6 +188,7 @@ export function DropletLens() {
 
     let lastSample = 0;
     let dark: boolean | null = null;
+    let lastHuge = false;
     let lastTarget: Element | null = null;
 
     const sample = (x: number, y: number, force: boolean) => {
@@ -181,6 +199,12 @@ export function DropletLens() {
       if (d !== null && d !== dark) {
         dark = d;
         engine.setDark(d);
+      }
+      // 超大字上放大层退场（同受节流管，getComputedStyle 不能每帧来）
+      const huge = sampleHuge(x, y);
+      if (huge !== lastHuge) {
+        lastHuge = huge;
+        zoomRef.current?.classList.toggle("mag-dim", huge);
       }
     };
 
@@ -291,6 +315,7 @@ export function DropletLens() {
     return () => {
       buildRef.current = null;
       zoom.removeAttribute("data-ready");
+      zoom.classList.remove("mag-dim");
       doc.replaceChildren();
     };
   }, [off, pathname]);
