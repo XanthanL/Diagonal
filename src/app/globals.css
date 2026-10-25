@@ -487,4 +487,45 @@ body {
   }
 }
 
+/* ——— 镜体：透镜里那一份真实 DOM 副本 ———
+   canvas 盖在页面之上、读不到底下像素，所以「真折射」只能靠把页面再渲染一份：
+   文字是 DOM 文本（不是位图），放大走 CSS scale，由浏览器按矢量重绘 ——
+   字体、字重、字距、clip-path 全部原样，这是 html2canvas / foreignObject 快照做不到的。
+   z-64 落在画布（65）之下：菲涅耳环、湿痕和高光要压在这份放大内容之上。 */
+.droplet-mag {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 64;
+  pointer-events: none;
+  will-change: transform;
+}
+.mag-lens {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  will-change: transform;
+}
+.mag-doc {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+/* 副本只用来「被看」，不参与任何交互、动画和布局副作用：
+   入场动画重放会让元素停在 opacity:0 的第一帧（透镜里就成了空白），
+   所以直接把时间轴拨到末尾并冻结 —— 既拿到最终状态，也省掉一堆无谓的动画。 */
+.mag-doc,
+.mag-doc * {
+  animation-delay: -10s !important;
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .droplet-mag {
+    display: none;
+  }
+}
+
 

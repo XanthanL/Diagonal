@@ -145,7 +145,20 @@ export interface DropletOptions {
   mobile?: boolean;
 }
 
+/**
+ * 每帧交给 DOM 镜体的状态。着色器里的水滴和 DOM 里的放大内容是同一样东西的两半，
+ * 必须共用同一套位置 / 直径，否则环和放大区会各走各的。
+ */
+export interface DropletFrame {
+  x: number; // 渲染中心（视口坐标）
+  y: number;
+  k: number; // 直径系数：appear × 按压收缩 × 悬停收缩，与水滴半径 R 同源
+}
+
 export class DropletLensEngine {
+  /** 每帧回调，供 DOM 镜体同步位置与直径。null 表示没有镜体（移动端 / 未启用）。 */
+  onFrame: ((f: DropletFrame) => void) | null = null;
+
   private canvas: HTMLCanvasElement;
   private gl: WebGLRenderingContext;
   private prog: WebGLProgram;
@@ -318,6 +331,8 @@ export class DropletLensEngine {
     // 而那时水滴只褪到渲染阈值附近而非归零 —— 不清就是一层擦不掉的脏斑。
     this.gl.clearColor(0, 0, 0, 0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    // 镜体同步归零，否则 DOM 那一份放大内容会留在原地不消失
+    if (this.onFrame) this.onFrame({ x: this.x, y: this.y, k: 0 });
   }
 
   private frame = (now: number): void => {
@@ -399,7 +414,18 @@ export class DropletLensEngine {
     gl.uniform1f(this.u.uPress!, this.pressV);
     gl.uniform1f(this.u.uNib!, this.nib);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    if (this.onFrame) {
+      // 与水滴半径 R = 0.56 × uScale × (1 − press×0.12) × mix(1, 0.84, nib) 逐一对应
+      const k = this.appear * (1 - this.pressV * 0.12) * (1 - 0.16 * this.nib);
+      this.onFrame({ x: this.x, y: this.y, k });
+    }
   };
+
+  /** 镜体的基准直径（CSS px）：合成层尺寸要靠它算，与水滴 0.56×画布 同源。 */
+  lensDiameter(): number {
+    return 0.56 * this.size;
+  }
 
   dispose(): void {
     this.stop();
