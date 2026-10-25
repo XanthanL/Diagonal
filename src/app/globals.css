@@ -502,9 +502,39 @@ body {
 }
 .mag-lens {
   position: absolute;
+  left: 0;
+  top: 0;
   border-radius: 50%;
   overflow: hidden;
   will-change: transform;
+}
+/* 放大层：径向渐隐到 0，露出底下那层 1:1 的副本。
+   没有这层渐隐，水滴就是「一个硬边圆形放大镜」；有了它，边缘回到原尺寸、
+   和页面严丝合缝地接上，边界就看不见了 —— 这才是透镜。
+   过渡区上下两层会叠出一点重影，而真实透镜边缘本来就有像散，正好对味。
+   半径由 --k 驱动：水滴出现就是放大区从中心扩散开，而不是整块淡入。 */
+.mag-zoom {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  --k: 0;
+  /* 副本是在首次移动后的 idle 里建的（几百 ms），建好之前这层是空的。
+     直接显示会「啪」地冒出一块放大内容，所以等副本就绪再淡入。 */
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  -webkit-mask-image: radial-gradient(
+    circle at center,
+    #000 calc(56% * var(--k)),
+    transparent calc(100% * var(--k))
+  );
+  mask-image: radial-gradient(
+    circle at center,
+    #000 calc(56% * var(--k)),
+    transparent calc(100% * var(--k))
+  );
+}
+.mag-zoom[data-ready="1"] {
+  opacity: 1;
 }
 .mag-doc {
   position: absolute;

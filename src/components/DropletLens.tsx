@@ -16,8 +16,11 @@ const SAMPLE_MS = 110;
  */
 const MAG = 1.5;
 
-/** 收集 fixed 元素时的遍历深度上限：顶栏 / 吸底跳条都在浅层，没必要整树走完。 */
-const FIXED_DEPTH = 6;
+/**
+ * 收集 fixed 元素时的遍历深度上限。顶栏 / 吸底跳条都在很浅的一两层，
+ * 而这一趟是按元素逐个读 computed style 的 —— 深度从 6 收到 3，构建耗时降一大截。
+ */
+const FIXED_DEPTH = 3;
 
 /**
  * 在原 DOM 上收集所有 `position: fixed` 元素的索引路径。
@@ -93,6 +96,7 @@ export function DropletLens() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const magRef = useRef<HTMLDivElement>(null);
   const lensRef = useRef<HTMLDivElement>(null);
+  const zoomRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<HTMLDivElement>(null);
   const buildRef = useRef<(() => void) | null>(null);
   const pathname = usePathname();
@@ -125,25 +129,33 @@ export function DropletLens() {
     if (lens) {
       lens.style.width = d + "px";
       lens.style.height = d + "px";
+      // 镜体在容器内居中即可，跟随由容器负责 —— 它自己再叠一次视口级 translate 就会偏双倍
       lens.style.left = `calc(50% - ${d / 2}px)`;
       lens.style.top = `calc(50% - ${d / 2}px)`;
     }
 
-    // 每帧把位置 / 直径交给 DOM 副本。着色器那枚水滴和这份放大内容是同一枚水滴的两半，
+    let lastK = -1;
+    // 每帧把位置 / 直径交给 DOM 副本。着色器那枚水滴和这两层内容是同一枚水滴的两半，
     // 各走各的会立刻露馅（环圈住的范围和放大范围对不上）。
     engine.onFrame = (f: DropletFrame) => {
       const m = magRef.current;
-      const l = lensRef.current;
+      const zoom = zoomRef.current;
       const doc = docRef.current;
-      if (!m || !l || !doc) return;
-      m.style.transform = `translate3d(${f.x - size / 2}px, ${f.y - size / 2}px, 0)`;
-      l.style.transform = `scale(${f.k})`;
-      // 副本坐标系原点在文档左上角：把指针所在的文档点 P 推到镜心，再整体放大 MAG 倍。
-      // 于是「指针指着的那个字」正好落在镜体正中，周围按 1.5 倍铺开。
+      if (!m || !zoom || !doc) return;
+
       const r = d / 2;
+      m.style.transform = `translate3d(${f.x - size / 2}px, ${f.y - size / 2}px, 0)`;
+
+      // 放大层：把指针所在的文档点 P 推到镜心，再整体放大 MAG 倍
       const px = f.x + window.scrollX;
       const py = f.y + window.scrollY;
       doc.style.transform = `translate(${r - MAG * px}px, ${r - MAG * py}px) scale(${MAG})`;
+
+      // 半径只在明显变化时写：改 --k 会让这层重新光栅化 mask
+      if (Math.abs(f.k - lastK) > 0.004) {
+        zoom.style.setProperty("--k", String(f.k));
+        lastK = f.k;
+      }
     };
 
     // 副本留到真正要用时再建（首次移动），别拖慢首屏；路由换了由克隆 effect 清空重建。
@@ -242,7 +254,8 @@ export function DropletLens() {
    */
   useEffect(() => {
     const doc = docRef.current;
-    if (off || !doc) return;
+    const zoom = zoomRef.current;
+    if (off || !doc || !zoom) return;
     if (window.innerWidth < 768) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -267,6 +280,7 @@ export function DropletLens() {
         if (el) el.remove();
       }
       doc.querySelectorAll("script,noscript,iframe,video,canvas").forEach((n) => n.remove());
+      zoom.setAttribute("data-ready", "1");
     };
     buildRef.current = build;
 
@@ -276,6 +290,7 @@ export function DropletLens() {
 
     return () => {
       buildRef.current = null;
+      zoom.removeAttribute("data-ready");
       doc.replaceChildren();
     };
   }, [off, pathname]);
@@ -285,8 +300,12 @@ export function DropletLens() {
   return (
     <>
       <div ref={magRef} className="droplet-mag" role="presentation" aria-hidden="true">
+        {/* 只一层副本：径向 mask 把放大内容渐隐到透明，露出的就是真实页面本身 —— 
+            比再垫一层 1:1 副本更无缝，也省掉一整份 DOM。 */}
         <div ref={lensRef} className="mag-lens">
-          <div ref={docRef} className="mag-doc" />
+          <div ref={zoomRef} className="mag-zoom">
+            <div ref={docRef} className="mag-doc" />
+          </div>
         </div>
       </div>
       <canvas
