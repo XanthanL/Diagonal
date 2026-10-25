@@ -558,4 +558,20 @@ body {
   }
 }
 
+/* ——— 方形取样框：图集照片上那块 canvas ———
+   它画的第一层就是照片本身，所以整块画布的 opacity 从不透明底下浮上来时
+   画面不会有任何跳变 —— 底下那张 <img> 和它画的是同一张图。
+   只有一块 canvas 在整段里复用，指针移到哪张照片就挪进哪张的容器。 */
+.lens-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+  will-change: opacity;
+}
+
 

@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
+import { SquareLensGallery } from "@/components/SquareLensGallery";
 
 export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; subId: string }) {
   const { lang } = useI18n();
@@ -32,26 +32,8 @@ export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; sub
           <h1 className="text-4xl md:text-6xl font-black uppercase italic">{subCollection.title}</h1>
         </header>
 
-        <section className="columns-1 md:columns-2 gap-12 space-y-12">
-          {subCollection.gallery.map((img, index) => (
-            <div key={index} className="break-inside-avoid space-y-4">
-              <div className="relative group p-0">
-                <img
-                  src={getCloudinaryUrl(img.url, 1080)}
-                  srcSet={getCloudinarySrcSet(img.url) || undefined}
-                  sizes="(min-width: 768px) 620px, 100vw"
-                  alt={img.caption || `${subCollection.title}_${(index + 1).toString().padStart(3, '0')}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-auto"
-                />
-              </div>
-              <p className="archive-text text-[12px] opacity-65 uppercase tracking-widest pl-2">
-                {img.caption || `${subCollection.title}_${(index + 1).toString().padStart(3, '0')}`}
-              </p>
-            </div>
-          ))}
-        </section>
+        {/* 照片墙 + 指针取样框：框内是同批次的下一张底片 */}
+        <SquareLensGallery photos={subCollection.gallery} label={subCollection.title} />
       </div>
     </div>
   );
