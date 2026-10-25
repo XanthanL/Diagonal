@@ -4,6 +4,17 @@ import { t } from "@/lib/translations";
 import Link from "next/link";
 import { getAssetPath, getLocalSrcSet, srcSetFallback } from "@/lib/path";
 
+/**
+ * 区位两字码。原来取的是 region 前两位，Southwest 和 Southeast 都会变成 "SO" ——
+ * 多了一个大区之后卡片上就分不出来了，改成显式映射。
+ */
+const REGION_CODE: Record<string, string> = {
+  Southwest: "SW",
+  Northeast: "NE",
+  Transition: "TR",
+  Southeast: "SE",
+};
+
 export function AtlasCover({ item }: { item: AtlasItem }) {
   const { lang } = useI18n();
   const localized = getLocalizedAtlasItem(item, lang);
@@ -36,7 +47,7 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
               />
             </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center opacity-50">
+            <div className="absolute inset-0 flex items-center justify-center bg-diagonal-warmGray opacity-60 text-foreground">
               <span className="archive-text text-[9px]">{t(lang, "noVisualRecord")}</span>
             </div>
           )}
@@ -46,8 +57,8 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
             <div className="archive-text text-[9px] bg-white/80 backdrop-blur-md px-2 py-1 text-foreground border border-black/10">
               {item.id}
             </div>
-            <div className="archive-text text-[9px] text-black/40 vertical-rl tracking-[0.3em]">
-              LOC: {item.location.code}_{item.region.toUpperCase().slice(0, 2)}
+            <div className="archive-text text-[9px] text-white/45 vertical-rl tracking-[0.3em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              LOC: {item.location.code}_{REGION_CODE[item.region] ?? item.region.toUpperCase()}
             </div>
           </div>
 
@@ -59,17 +70,17 @@ export function AtlasCover({ item }: { item: AtlasItem }) {
           </div>
         </div>
 
-        {/* 外部标题信息 */}
+        {/* 外部标题信息：/atlas 是黑底页，这里不能用 text-foreground（#1A1A1A 压黑底 = 看不见） */}
         <div className="mt-6 space-y-2">
           <div className="flex justify-between items-center">
-            <span className="archive-text text-[9px] text-black/40 tracking-widest uppercase italic">
+            <span className="archive-text text-[9px] text-white/45 tracking-widest uppercase italic">
               {localized.category}
             </span>
-            <span className="archive-text text-[9px] text-black/40">
+            <span className="archive-text text-[9px] text-white/45">
               {localized.location.city}
             </span>
           </div>
-          <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-diagonal-red transition-colors leading-snug">
+          <h3 className="text-xl font-bold tracking-tight text-white group-hover:text-diagonal-red transition-colors leading-snug">
             {localized.title}
           </h3>
         </div>

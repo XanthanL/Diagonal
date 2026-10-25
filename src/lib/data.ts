@@ -54,7 +54,7 @@ export interface AtlasItem {
   categoryEn: string;
   cover?: string;
   location: Location;
-  region: "Southwest" | "Northeast" | "Transition";
+  region: "Southwest" | "Northeast" | "Transition" | "Southeast";
   subCollections?: {
     id: string;
     title: string;
@@ -213,8 +213,8 @@ export const archiveData: ArchiveItem[] = [
 export const atlasData: AtlasItem[] = [
   {
     id: "ATLAS-ZG-2.0",
-    title: "生命之盐 2.0",
-    titleEn: "The Salt of Life 2.0",
+    title: "生命之盐",
+    titleEn: "The Salt of Life",
     author: "对角线计划 (Diagonal)",
     authorEn: "Diagonal",
     date: "2026.04 - 06",
@@ -303,33 +303,47 @@ export const atlasData: AtlasItem[] = [
     ]
   },
   {
-    id: "ATLAS-ZG-1.0",
-    title: "生命之盐 1.0",
-    titleEn: "The Salt of Life 1.0",
-    author: "对角线计划 (Diagonal)",
-    authorEn: "Diagonal",
-    date: "2026.02",
-    excerpt: "作为项目的启动阶段，1.0 聚焦于火井沱社区的口述史采集与工业遗存初步调研。12位创作者在20天的时间里，通过考察与调研在自贡留下了深刻印记。",
-    excerptEn: "As the project’s inaugural phase, 1.0 focused on oral history collection in Huojingtuo community and preliminary research into industrial remnants. Twelve creators left a profound mark on Zigong through 20 days of fieldwork and investigation.",
-    category: "Atlas",
-    categoryEn: "Atlas",
-    location: { city: "自贡", code: "ZG" },
-    region: "Southwest",
-    cover: "",
-  },
-  {
-    id: "ATLAS-HG",
-    title: "鹤岗",
-    titleEn: "Hegang",
-    author: "占位符",
-    authorEn: "TBC",
-    date: "2024.12",
-    excerpt: "在零下三十度的极端气候中，我们试图捕捉那些正在消逝的工业纹理与人的面孔...",
-    excerptEn: "In the extreme climate of minus 30 degrees, we attempt to capture the fading industrial textures and human faces...",
+    /**
+     * 个人影像：XanthanL 的校园花卉记录。
+     * 与其它条目不同，这里没有 subCollections —— 打开相册即是照片墙
+     * （AtlasDetailClient 在没有子集合时直接渲染 gallery）。
+     *
+     * 12 帧全是 2.164:1 的全景画幅：1–8 横、9–12 竖。画幅写进 width/height，
+     * 画廊组件据此分区（横幅整幅铺开 / 竖幅压成小格），不做任何裁切。
+     */
+    id: "ATLAS-HZ",
+    title: "Xanthan摄影作品",
+    titleEn: "Xanthan Photography",
+    author: "XanthanL",
+    authorEn: "XanthanL",
+    date: "2022.04",
+    excerpt: "2022 年 4 月摄于杭州校园。茶花、晚樱、红花檵木、紫藤，湖边的垂柳。",
+    excerptEn:
+      "Shot on a campus in Hangzhou, April 2022. Camellia, late cherry blossom, Chinese fringeflower, wisteria, and the willows by the lake.",
     category: "Visual Record",
     categoryEn: "Visual Record",
-    location: { city: "鹤岗", code: "HG" },
-    region: "Northeast",
-    cover: "",
+    location: { city: "杭州", code: "HZ" },
+    region: "Southeast",
+    // 封面：原图 4624×2136，卡片是 4:5 —— 满高裁切后宽度只能是 1709，
+    // 而这朵茶花本身就有 1607 宽（占裁切框 94%），所以留白天然很窄。
+    // g_auto 把花推到了左边（花瓣被左边缘切掉），改成按实测的花心坐标硬裁：
+    // 花 bbox x 1379–2985、中心 2182 → 裁切起点 2182 − 1709/2 ≈ 1327，
+    // 左右各留 ~55px，花正好落在封面中央。
+    cover:
+      "https://res.cloudinary.com/de0wfewt8/image/upload/f_auto,q_auto/c_crop,x_1327,y_0,w_1709,h_2136/c_fill,w_800,h_1000/v1792908147/1_r3dorv.jpg",
+    gallery: [
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908147/1_r3dorv.jpg", caption: "Xanthan摄影作品_001 摄影师：XanthanL", captionEn: "Xanthan Photography_001 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908150/2_bynjpc.jpg", caption: "Xanthan摄影作品_002 摄影师：XanthanL", captionEn: "Xanthan Photography_002 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908142/3_tatoap.jpg", caption: "Xanthan摄影作品_003 摄影师：XanthanL", captionEn: "Xanthan Photography_003 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908155/4_zmmknq.jpg", caption: "Xanthan摄影作品_004 摄影师：XanthanL", captionEn: "Xanthan Photography_004 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908149/5_hko1hm.jpg", caption: "Xanthan摄影作品_005 摄影师：XanthanL", captionEn: "Xanthan Photography_005 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908138/6_eln626.jpg", caption: "Xanthan摄影作品_006 摄影师：XanthanL", captionEn: "Xanthan Photography_006 Photo: XanthanL", width: 2220, height: 1026 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908140/7_szf28g.jpg", caption: "Xanthan摄影作品_007 摄影师：XanthanL", captionEn: "Xanthan Photography_007 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908144/8_un8nk0.jpg", caption: "Xanthan摄影作品_008 摄影师：XanthanL", captionEn: "Xanthan Photography_008 Photo: XanthanL", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908155/9_b7hwwz.jpg", caption: "Xanthan摄影作品_009 摄影师：XanthanL", captionEn: "Xanthan Photography_009 Photo: XanthanL", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908166/10_xjzaxl.jpg", caption: "Xanthan摄影作品_010 摄影师：XanthanL", captionEn: "Xanthan Photography_010 Photo: XanthanL", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908156/11_hzstuj.jpg", caption: "Xanthan摄影作品_011 摄影师：XanthanL", captionEn: "Xanthan Photography_011 Photo: XanthanL", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908169/12_gwitxc.jpg", caption: "Xanthan摄影作品_012 摄影师：XanthanL", captionEn: "Xanthan Photography_012 Photo: XanthanL", width: 2136, height: 4624 },
+    ],
   }
 ];

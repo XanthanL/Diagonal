@@ -6,6 +6,7 @@ import { t } from "@/lib/translations";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
+import { SquareLensGallery } from "@/components/SquareLensGallery";
 
 export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   const { lang } = useI18n();
@@ -64,6 +65,9 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
               </Link>
             ))}
           </section>
+        ) : localized.gallery && localized.gallery.length > 0 ? (
+          // 没有子集合的相册（如个人影像记录）：打开即是照片墙，按画幅分区
+          <SquareLensGallery photos={localized.gallery} label={localized.title} layout="sequence" />
         ) : (
           <div className="py-40 text-center border border-dashed border-white/10 opacity-20 archive-text">
             {t(lang, "noSubCollections")}
