@@ -317,9 +317,9 @@ export const atlasData: AtlasItem[] = [
     author: "XanthanL",
     authorEn: "XanthanL",
     date: "2022.04",
-    excerpt: "2022 年 4 月摄于杭州校园。茶花、晚樱、红花檵木、紫藤，湖边的垂柳。",
+    excerpt: "2022 年 4 月摄于杭州校园。山茶、木绣球、晚樱、红花檵木、石楠、紫藤，还有湖边的垂柳。",
     excerptEn:
-      "Shot on a campus in Hangzhou, April 2022. Camellia, late cherry blossom, Chinese fringeflower, wisteria, and the willows by the lake.",
+      "Shot on a campus in Hangzhou, April 2022. Camellia, snowball viburnum, late cherry, Chinese fringeflower, photinia, wisteria — and the willows by the lake.",
     category: "Visual Record",
     categoryEn: "Visual Record",
     location: { city: "杭州", code: "HZ" },
@@ -331,19 +331,20 @@ export const atlasData: AtlasItem[] = [
     // 左右各留 ~55px，花正好落在封面中央。
     cover:
       "https://res.cloudinary.com/de0wfewt8/image/upload/f_auto,q_auto/c_crop,x_1327,y_0,w_1709,h_2136/c_fill,w_800,h_1000/v1792908147/1_r3dorv.jpg",
+    // 图注 = 花名 + 一句观看的落点。作者已在条目上写明，故不再逐张署名摄影师。
     gallery: [
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908147/1_r3dorv.jpg", caption: "Xanthan摄影作品_001 摄影师：XanthanL", captionEn: "Xanthan Photography_001 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908150/2_bynjpc.jpg", caption: "Xanthan摄影作品_002 摄影师：XanthanL", captionEn: "Xanthan Photography_002 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908142/3_tatoap.jpg", caption: "Xanthan摄影作品_003 摄影师：XanthanL", captionEn: "Xanthan Photography_003 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908155/4_zmmknq.jpg", caption: "Xanthan摄影作品_004 摄影师：XanthanL", captionEn: "Xanthan Photography_004 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908149/5_hko1hm.jpg", caption: "Xanthan摄影作品_005 摄影师：XanthanL", captionEn: "Xanthan Photography_005 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908138/6_eln626.jpg", caption: "Xanthan摄影作品_006 摄影师：XanthanL", captionEn: "Xanthan Photography_006 Photo: XanthanL", width: 2220, height: 1026 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908140/7_szf28g.jpg", caption: "Xanthan摄影作品_007 摄影师：XanthanL", captionEn: "Xanthan Photography_007 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908144/8_un8nk0.jpg", caption: "Xanthan摄影作品_008 摄影师：XanthanL", captionEn: "Xanthan Photography_008 Photo: XanthanL", width: 4624, height: 2136 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908155/9_b7hwwz.jpg", caption: "Xanthan摄影作品_009 摄影师：XanthanL", captionEn: "Xanthan Photography_009 Photo: XanthanL", width: 2136, height: 4624 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908166/10_xjzaxl.jpg", caption: "Xanthan摄影作品_010 摄影师：XanthanL", captionEn: "Xanthan Photography_010 Photo: XanthanL", width: 2136, height: 4624 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908156/11_hzstuj.jpg", caption: "Xanthan摄影作品_011 摄影师：XanthanL", captionEn: "Xanthan Photography_011 Photo: XanthanL", width: 2136, height: 4624 },
-      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908169/12_gwitxc.jpg", caption: "Xanthan摄影作品_012 摄影师：XanthanL", captionEn: "Xanthan Photography_012 Photo: XanthanL", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908147/1_r3dorv.jpg", caption: "山茶，重瓣的一朵", captionEn: "Camellia — one double bloom", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908150/2_bynjpc.jpg", caption: "山茶开满一丛，天色正蓝", captionEn: "A camellia bush in bloom, an open blue sky", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908142/3_tatoap.jpg", caption: "红花檵木，紫叶托着流苏", captionEn: "Chinese fringeflower — tassels on maroon leaves", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908155/4_zmmknq.jpg", caption: "木绣球，举过头顶的白", captionEn: "Snowball viburnum, white overhead", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908149/5_hko1hm.jpg", caption: "晚樱，蓝天底下的重瓣", captionEn: "Late cherry, double petals against blue", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908138/6_eln626.jpg", caption: "晚樱与逆光", captionEn: "Late cherry, backlit", width: 2220, height: 1026 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908140/7_szf28g.jpg", caption: "柳线垂空，枝头已开尽", captionEn: "Willow threads, the branches bloomed out", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908144/8_un8nk0.jpg", caption: "湖上的柳影", captionEn: "Willows over the lake", width: 4624, height: 2136 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908155/9_b7hwwz.jpg", caption: "石楠的白伞，靠着红墙", captionEn: "Photinia in white, against the brick wall", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908166/10_xjzaxl.jpg", caption: "红花檵木，一树紫红", captionEn: "Chinese fringeflower, a crimson canopy", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908156/11_hzstuj.jpg", caption: "紫藤垂下来，一串接一串", captionEn: "Wisteria hanging, string after string", width: 2136, height: 4624 },
+      { url: "https://res.cloudinary.com/de0wfewt8/image/upload/v1792908169/12_gwitxc.jpg", caption: "园中小径，落满树影", captionEn: "A path through the garden, all leaf shadow", width: 2136, height: 4624 },
     ],
   }
 ];

@@ -67,6 +67,11 @@ export const translations = {
     timeline: "Timeline",
     noSubCollections: "NO_SUB_COLLECTIONS",
     openAtlas: "OPEN_ATLAS+",
+    // 图集照片全屏（手机端）
+    photoHintIdle: "点按画面 · 取出取样框",
+    photoHintArmed: "按住方框可移动 · 点别处返回",
+    photoHintOff: "点任意处返回相册",
+    photoClose: "关闭",
 
     // Components
     archiveDataPending: "ARCHIVE DATA<br />[IMAGE PENDING]",
@@ -143,6 +148,11 @@ export const translations = {
     timeline: "Timeline",
     noSubCollections: "NO_SUB_COLLECTIONS",
     openAtlas: "OPEN_ATLAS+",
+    // Photo full-screen view (mobile)
+    photoHintIdle: "TAP THE FRAME · PICK A SAMPLE",
+    photoHintArmed: "DRAG THE BOX · TAP ELSEWHERE TO CLOSE",
+    photoHintOff: "TAP ANYWHERE TO GO BACK",
+    photoClose: "CLOSE",
 
     // Components
     archiveDataPending: "ARCHIVE DATA<br />[IMAGE PENDING]",

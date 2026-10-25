@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ShaderToggles } from "@/components/ShaderToggles";
 
 /**
  * 全局 sticky 导航：在所有页面顶部固定显示
@@ -123,6 +124,8 @@ export function GlobalNav() {
                 {item.label}
               </Link>
             ))}
+            {/* 两层着色器的开关：常驻在栏目之后、语言切换之前 */}
+            <ShaderToggles className="ml-2" />
             <div className="ml-4">
               <LanguageSwitcher />
             </div>
@@ -189,9 +192,17 @@ export function GlobalNav() {
           })}
         </ul>
 
+        {/* 抽屉里也放一份开关：移动端顶栏只有语言切换和汉堡键，塞不下 */}
         <div
-          className="nav-drawer-item space-y-1 px-6 pt-10 pb-[max(1.5rem,env(safe-area-inset-bottom))] archive-text text-[9px] opacity-45"
+          className="nav-drawer-item flex flex-wrap items-center gap-x-6 gap-y-4 px-6 pt-8"
           style={{ "--i": navItems.length } as CSSProperties}
+        >
+          <ShaderToggles />
+        </div>
+
+        <div
+          className="nav-drawer-item space-y-1 px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] archive-text text-[9px] opacity-45"
+          style={{ "--i": navItems.length + 1 } as CSSProperties}
         >
           <div>ZIGONG / HEGANG / CHENGDU</div>
           <div>EST. 2024 — ONGOING</div>

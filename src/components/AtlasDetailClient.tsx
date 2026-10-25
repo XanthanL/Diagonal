@@ -7,6 +7,7 @@ import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
 import { SquareLensGallery } from "@/components/SquareLensGallery";
+import { ShaderToggles } from "@/components/ShaderToggles";
 
 export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   const { lang } = useI18n();
@@ -17,10 +18,15 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
     <div className="min-h-screen bg-black text-white pt-32 pb-60 selection:bg-diagonal-red font-sans">
       <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/#atlas" className="archive-text text-sm font-bold flex items-center gap-2 group text-white">
+          <Link href="/#atlas" className="archive-text text-xs font-bold sm:text-sm flex items-center gap-2 group text-white">
             <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToAtlas")}
           </Link>
-          <LanguageSwitcher />
+          {/* 详情页不挂 GlobalNav，开关要在这里也留一份 —— 方形取样框就活在这一页。
+              手机 390 宽下这一条要塞下返回链接 + 两个开关 + 语言切换，间距和字号都得收一档 */}
+          <div className="flex items-center gap-3 sm:gap-8">
+            <ShaderToggles />
+            <LanguageSwitcher />
+          </div>
         </div>
       </nav>
 

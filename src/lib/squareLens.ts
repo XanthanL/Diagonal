@@ -137,6 +137,11 @@ function compile(gl: WebGLRenderingContext, type: number, src: string): WebGLSha
   return sh;
 }
 
+/** 纹理上限（2 的幂）：1024 足够取样框看，也让 mipmap 有得用 */
+const POT_MAX = 1024;
+
+const pow2Near = (n: number) => 2 ** Math.round(Math.log2(Math.max(1, n)));
+
 /** 位置弹簧：dt 无关的指数逼近，换帧率手感不变 */
 function approach(cur: number, target: number, dt: number, tau: number): number {
   return target + (cur - target) * Math.exp(-dt / tau);
@@ -161,6 +166,14 @@ export class SquareLensEngine {
   private w = 1;
   private h = 1;
   private dpr = 1;
+  /** 方框半边长（单位：画布短边的一半）。全屏视图里画布更大，框要相对放大才读得清 */
+  private boxHalf = 0.2;
+
+  /**
+   * 强度参数。刻意偏保守：上一版全屏效果被判「眼花缭乱」，问题在幅度不在结构。
+   * 手机全屏时框只占一两百像素，色散和畸变按桌面那套给就成了彩虹噪点，所以另给一档更克制的值。
+   */
+  private tuning = { lens: 0.55, chroma: 0.7, wave: 0.35, grain: 0.35 };
 
   /** 指针目标 / 当前（画布内归一化，v 向上） */
   private tx = 0.5;
@@ -248,6 +261,9 @@ export class SquareLensEngine {
     if (!a || !b) return false;
     this.out = a;
     this.in = b;
+    // 纹理到位之前 show() 来过的话，循环会因为「没纹理」停下而再也不动 ——
+    // 表现是画布已在页面上、透明度却永远 0。这里补一次唤醒。
+    if (this.want > 0.5) this.wake();
     return true;
   }
 
@@ -265,21 +281,63 @@ export class SquareLensEngine {
     if (!t) return null;
     gl.bindTexture(gl.TEXTURE_2D, t);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-    // 照片几乎都不落在 2 的幂上：非 POT 必须 CLAMP_TO_EDGE + 不带 mipmap
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    /**
+     * 先把图缩进一块 2 的幂画布，再上传。
+     *
+     * 不是为了省显存 —— 是为了能开 mipmap。取样框里那张「下一张底片」是
+     * **缩小**着看的（框只一两百像素），WebGL1 里非 2 的幂纹理不能带 mipmap，
+     * 缩小时就只有 LINEAR 一路走样：密一点的画面直接碎成一片彩色噪点。
+     * 桌面那档看起来还凑合，手机把框放大之后就成了彩虹糊。
+     */
+    const sw = img.naturalWidth;
+    const sh = img.naturalHeight;
+    let rec: TexRec | null = null;
     try {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      const scale = Math.min(1, POT_MAX / Math.max(sw, sh));
+      const pw = Math.min(POT_MAX, pow2Near(sw * scale));
+      const ph = Math.min(POT_MAX, pow2Near(sh * scale));
+      const cv = document.createElement("canvas");
+      cv.width = pw;
+      cv.height = ph;
+      const ctx = cv.getContext("2d");
+      if (!ctx) throw new Error("2d context 不可用");
+      // cover：保比例铺满画布，多出来的居中裁掉 —— 与着色器的 coverUv 同一套规则
+      const s = Math.max(pw / sw, ph / sh);
+      const dw = sw * s;
+      const dh = sh * s;
+      ctx.drawImage(img, (pw - dw) / 2, (ph - dh) / 2, dw, dh);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      rec = { tex: t, w: pw, h: ph };
     } catch {
-      // 跨域污染：texImage2D 会抛 SecurityError。这一层就此放弃，别连累页面
+      // 跨域污染：画进 canvas 会污染它，texImage2D 抛 SecurityError。
+      // 这一层就此放弃，别连累页面
       gl.deleteTexture(t);
       return null;
     }
-    const rec: TexRec = { tex: t, w: img.naturalWidth, h: img.naturalHeight };
     this.texCache.set(key, rec);
     return rec;
+  }
+
+  /**
+   * 方框大小。默认 0.2（短边的 40%）。
+   *
+   * 手机上那张 2.16:1 的全景只有 166px 高，0.2 的框算出来才 66px ——
+   * 框里那张「下一张底片」根本认不出来，只剩一团彩边。所以全屏视图里
+   * 放到 0.28，框大一圈，取样才成立。命中判定必须用同一个值。
+   */
+  setBox(half: number): void {
+    this.boxHalf = half;
+  }
+
+  /** 覆盖强度参数（只给传进来的那几项） */
+  setTuning(t: Partial<{ lens: number; chroma: number; wave: number; grain: number }>): void {
+    this.tuning = { ...this.tuning, ...t };
   }
 
   /** 指针移动（画布内归一化，y 已由调用方翻到 v 向上） */
@@ -375,14 +433,13 @@ export class SquareLensEngine {
     gl.uniform2f(this.u.uTexOut!, this.out.w, this.out.h);
     gl.uniform2f(this.u.uTexIn!, this.in.w, this.in.h);
     gl.uniform2f(this.u.uPointer!, this.x, this.y);
-    gl.uniform1f(this.u.uBox!, 0.20);
+    gl.uniform1f(this.u.uBox!, this.boxHalf);
     gl.uniform1f(this.u.uEnter!, this.enter);
     gl.uniform1f(this.u.uTime!, (now - this.t0) / 1000);
-    // 参数刻意偏保守：上一版全屏效果被判「眼花缭乱」，问题在幅度不在结构
-    gl.uniform1f(this.u.uLens!, 0.55);
-    gl.uniform1f(this.u.uChroma!, 0.70);
-    gl.uniform1f(this.u.uWave!, 0.35);
-    gl.uniform1f(this.u.uGrain!, 0.35);
+    gl.uniform1f(this.u.uLens!, this.tuning.lens);
+    gl.uniform1f(this.u.uChroma!, this.tuning.chroma);
+    gl.uniform1f(this.u.uWave!, this.tuning.wave);
+    gl.uniform1f(this.u.uGrain!, this.tuning.grain);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     void this.w;
@@ -406,13 +463,23 @@ export class SquareLensEngine {
  * 直接拿它当纹理会污染画布。所以这里用一个不同的宽度（不同 URL → 独立缓存条目）
  * 重新发起一次带 CORS 的请求。跨域失败就返回 null，由调用方静默降级。
  */
-export function loadCors(src: string): Promise<HTMLImageElement | null> {
+export function loadCors(src: string, attempt = 0): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const im = new Image();
     im.crossOrigin = "anonymous";
     im.decoding = "async";
     im.onload = () => resolve(im);
-    im.onerror = () => resolve(null);
+    im.onerror = () => {
+      // 失败一次多半是网络抖动。**必须**重试：这一层没有兜底画面，
+      // 直接放弃就等于用户点了半天什么也没出现
+      if (attempt < 1) {
+        setTimeout(() => {
+          void loadCors(src, attempt + 1).then(resolve);
+        }, 260);
+      } else {
+        resolve(null);
+      }
+    };
     im.src = src;
   });
 }

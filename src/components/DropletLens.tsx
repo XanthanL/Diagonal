@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { DropletLensEngine, type DropletFrame } from "@/lib/dropletLens";
+import { readShaderPrefs, subscribeShaderPrefs } from "@/lib/shaderPrefs";
 
 /** 判定「是否悬停在可交互元素上」——命中后水滴收紧一点，像被吸住 */
 const INTERACTIVE = 'a,button,[role="button"],input,textarea,select,summary,label,.press,.press-card';
@@ -119,9 +120,17 @@ export function DropletLens() {
   const pathname = usePathname();
   const off = pathname.startsWith("/admin");
 
+  // 顶栏可以勾掉这一层。先按「开」渲染，effect 里再对齐 localStorage，
+  // 否则服务端与客户端首帧对不上
+  const [enabled, setEnabled] = useState(true);
+  useEffect(() => {
+    setEnabled(readShaderPrefs().droplet);
+    return subscribeShaderPrefs((p) => setEnabled(p.droplet));
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || off) return;
+    if (!canvas || off || !enabled) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let engine: DropletLensEngine;
@@ -267,7 +276,7 @@ export function DropletLens() {
       document.removeEventListener("visibilitychange", onVisibility);
       engine.dispose();
     };
-  }, [off]);
+  }, [off, enabled]);
 
   /**
    * 镜体内容：页面的一份真实 DOM 副本。
@@ -279,7 +288,7 @@ export function DropletLens() {
   useEffect(() => {
     const doc = docRef.current;
     const zoom = zoomRef.current;
-    if (off || !doc || !zoom) return;
+    if (off || !enabled || !doc || !zoom) return;
     if (window.innerWidth < 768) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -318,9 +327,9 @@ export function DropletLens() {
       zoom.classList.remove("mag-dim");
       doc.replaceChildren();
     };
-  }, [off, pathname]);
+  }, [off, enabled, pathname]);
 
-  if (off) return null;
+  if (off || !enabled) return null;
 
   return (
     <>
