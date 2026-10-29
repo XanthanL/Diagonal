@@ -55,6 +55,12 @@ export interface AtlasItem {
   cover?: string;
   location: Location;
   region: "Southwest" | "Northeast" | "Transition" | "Southeast";
+  /**
+   * 详情页的专属视觉。不给 = 走全站默认的黑底 + 品牌红。
+   * "herbarium"：给个人摄影专辑用的草木 section —— 底色、强调色、背景光都换成
+   * 从相册照片里取出来的那组色，字体与排版不动。
+   */
+  theme?: "herbarium";
   subCollections?: {
     id: string;
     title: string;
@@ -324,6 +330,9 @@ export const atlasData: AtlasItem[] = [
     categoryEn: "Visual Record",
     location: { city: "杭州", code: "HZ" },
     region: "Southeast",
+    // 详情页走专属的草木配色：色值是从下面这些照片本身取出来的（山茶红 / 苔绿 / 玫红），
+    // 背景光也直接拿相册里的三张图做虚焦处理，见 components/FloraBackdrop
+    theme: "herbarium",
     // 封面：原图 4624×2136，卡片是 4:5 —— 满高裁切后宽度只能是 1709，
     // 而这朵茶花本身就有 1607 宽（占裁切框 94%），所以留白天然很窄。
     // g_auto 把花推到了左边（花瓣被左边缘切掉），改成按实测的花心坐标硬裁：

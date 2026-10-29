@@ -8,17 +8,33 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
 import { SquareLensGallery } from "@/components/SquareLensGallery";
 import { ShaderToggles } from "@/components/ShaderToggles";
+import { FloraBackdrop } from "@/components/FloraBackdrop";
 
 export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   const { lang } = useI18n();
   const localized = getLocalizedAtlasItem(item, lang);
   const subCollections = localized.subCollections || [];
 
+  // 草木主题只给这一个相册（data.ts 里 item.theme === "herbarium"）。
+  // 版式与字体一行不动，换的只是色：底色、字色、强调色、细线，
+  // 以及一层只在页头露面的底光（flowers themselves，见 FloraBackdrop）。
+  const isFlora = item.theme === "herbarium";
+  const accent = isFlora ? "text-[var(--flora-accent)]" : "text-diagonal-red";
+  const line = isFlora ? "border-[color:var(--flora-line)]" : "border-white/10";
+  const surface = isFlora ? "bg-[var(--flora-bg)] text-[var(--flora-ink)] flora" : "bg-black text-white";
+  const selection = isFlora ? "selection:bg-[var(--flora-accent)]" : "selection:bg-diagonal-red";
+
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-60 selection:bg-diagonal-red font-sans">
+    <div className={`relative isolate min-h-screen pt-32 pb-60 font-sans ${surface} ${selection}`}>
+      {isFlora && <FloraBackdrop />}
       <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/#atlas" className="archive-text text-xs font-bold sm:text-sm flex items-center gap-2 group text-white">
+          <Link
+            href="/#atlas"
+            className={`archive-text text-xs font-bold sm:text-sm flex items-center gap-2 group ${
+              isFlora ? "text-[var(--flora-ink)]" : "text-white"
+            }`}
+          >
             <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToAtlas")}
           </Link>
           {/* 详情页不挂 GlobalNav，开关要在这里也留一份 —— 方形取样框就活在这一页。
@@ -33,12 +49,12 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
       <div className="max-w-7xl mx-auto px-6">
         <header className="mb-24 grid grid-cols-1 md:grid-cols-12 gap-12 items-start">
           <div className="md:col-span-8 space-y-6">
-            <div className="archive-text text-xs text-diagonal-red font-bold tracking-[0.4em]">
+            <div className={`archive-text text-xs font-bold tracking-[0.4em] ${accent}`}>
               {localized.region.toUpperCase()} / {localized.category.toUpperCase()}
             </div>
             <h1 className="text-5xl md:text-7xl font-black uppercase italic">{localized.title}</h1>
           </div>
-          <div className="md:col-span-4 space-y-4 border-l border-white/10 pl-6">
+          <div className={`md:col-span-4 space-y-4 border-l pl-6 ${line}`}>
             <div className="archive-text text-[10px] opacity-60 uppercase">{t(lang, "investigator")}</div>
             <div className="text-lg font-bold italic">{localized.author}</div>
             <div className="archive-text text-[10px] opacity-60 uppercase pt-2">{t(lang, "timeline")}</div>
@@ -54,7 +70,7 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
           <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
             {subCollections.map((sub) => (
               <Link key={sub.id} href={`/atlas/${item.id}/${sub.id}`} className="group block">
-                <div className="relative aspect-[4/5] overflow-hidden border border-white/10">
+                <div className={`relative aspect-[4/5] overflow-hidden border ${line}`}>
                   <img
                     src={getCloudinaryUrl(sub.cover, 800)}
                     srcSet={getCloudinarySrcSet(sub.cover, [480, 800, 1200]) || undefined}
@@ -66,8 +82,7 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <h3 className="text-3xl font-bold uppercase">{sub.title}</h3>
-                  </div>
-                </div>
+                  </div>                </div>
               </Link>
             ))}
           </section>
@@ -75,7 +90,7 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
           // 没有子集合的相册（如个人影像记录）：打开即是照片墙，按画幅分区
           <SquareLensGallery photos={localized.gallery} label={localized.title} layout="sequence" />
         ) : (
-          <div className="py-40 text-center border border-dashed border-white/10 opacity-20 archive-text">
+          <div className={`py-40 text-center border border-dashed opacity-20 archive-text ${line}`}>
             {t(lang, "noSubCollections")}
           </div>
         )}

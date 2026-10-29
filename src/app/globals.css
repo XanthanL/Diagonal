@@ -580,4 +580,136 @@ body {
   will-change: opacity;
 }
 
+/* ——— 草木主题：给个人摄影专辑（ATLAS-HZ）的详情页 ———
+   色值不是挑的，是从相册那 12 张照片里量出来的：
+   山茶中心区 86% 是 #c7132d 的饱和红，红花檵木是 #9e474c / #ca7591 的赭红与玫红，
+   晚樱 #ba919a 的柔粉，木绣球与石楠则是 #799441 / #789246 的苔绿。
+   所以底不是纯黑（往绿的方向偏一度，让叶子的绿落得住），
+   字也不是纯白（收一度偏暖，和山茶的红在同一个温度上）。
+   字号、字体、间距一律不动 —— 换的是色，不是版。 */
+.flora {
+  --flora-bg: #080b09;
+  --flora-ink: #f4f1ea;
+  --flora-accent: #d1463f; /* 山茶红的可用版：做小字够亮，铺大面积也不刺眼 */
+  --flora-green: #799441; /* 木绣球的苔绿，只用在极细的线索上 */
+  --flora-line: rgba(244, 241, 234, 0.12);
+}
+
+/* 底光层：三张虚焦的自家照片。整层用 mask 往下淡出到透明，
+   走到照片墙那一段就彻底干净 —— 看照片的时候，背景不许有颜色掺进来。 */
+.flora-field {
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, rgba(0, 0, 0, 0.5) 74%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, rgba(0, 0, 0, 0.5) 74%, transparent 100%);
+}
+.flora-bloom {
+  position: absolute;
+  background-size: cover;
+  background-position: center;
+  mix-blend-mode: screen;
+  /* 光斑要真的散开：Cloudinary 那记 e_blur 只够磨掉细节（还看得出叶子），
+     真正的柔边交给 CSS 的 blur，再配一层径向 mask 把边缘收成透明。
+     少了这层 mask，div 的矩形边会在 screen 下原样显形 —— 试过，是一道道直边。 */
+  filter: blur(78px) saturate(1.1);
+  /* closest-side 而不是 farthest-corner：后者在元素的边线上还剩约 20% 不透明度，
+     screen 之下就是一道笔直的边（第一次做就栽在这里）。
+     closest-side 保证元素边界处必然已经透明，光斑读起来才是一团光。 */
+  mask-image: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.5) 52%, transparent 100%);
+  -webkit-mask-image: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.5) 52%, transparent 100%);
+}
+/* 位置与浓度按各自的主色配。全部用 top 定位 —— 混用 bottom 时，
+   百分比是相对 170vh 高的这一层算的，红块会掉到首屏下面去（踩过）。 */
+/* 位置与浓度按各自的主色配。一律用 top 定位 —— 混用 bottom 时，
+   百分比是相对 170vh 高的这一层算的，红块会掉到首屏下面去（踩过）。
+   三条硬性间距：
+   ① 红只罩到 h1 那一带（约 46vh 以上），正文落在它下面的干净暗底上 ——
+      试过铺满首屏，op 0.82 的成片红光把正文压出一团红玻璃，白字的对比度掉了三成。
+   ② 绿不许和红横向重叠：两者叠起来是灰浊的中间调（互补色在暗底上只会互相抵消），
+      所以绿收到右上角自己的一块，中间留出没人碰过的黑。
+   ③ 赭红与血红同族，沉在左下压住画面底边。 */
+.flora-bloom-1 {
+  top: -8vh;
+  left: -10vw;
+  width: 96vw;
+  height: 60vh;
+  opacity: 0.72;
+  /* 主光要横跨整个标题，默认的 closest-side 会把它锁成一个圆（受限于较小的那条边），
+     所以这里单独给一个椭圆：横半径 52%、纵半径 50%，中心偏左 —— 读起来是
+     「一层从左涌过来的红光」，而不是贴在角落的一块斑。 */
+  mask-image: radial-gradient(
+    ellipse 52% 50% at 40% 52%,
+    #000 14%,
+    rgba(0, 0, 0, 0.58) 52%,
+    transparent 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 52% 50% at 40% 52%,
+    #000 14%,
+    rgba(0, 0, 0, 0.58) 52%,
+    transparent 100%
+  );
+}
+.flora-bloom-2 {
+  top: -22vh;
+  right: -34vw;
+  width: 54vw;
+  height: 62vh;
+  opacity: 0.44;
+}
+.flora-bloom-3 {
+  top: 60vh;
+  left: -22vw;
+  width: 60vw;
+  height: 50vh;
+  opacity: 0.44;
+}
+@media (max-width: 767px) {
+  /* 窄屏放不下三块，也不该让它们互相覆盖成一团灰：保留红与绿，面积放大到盖满屏宽 */
+  .flora-bloom-1 {
+    top: 34vh;
+    left: -52vw;
+    width: 150vw;
+    height: 46vh;
+    opacity: 0.6;
+  }
+  .flora-bloom-2 {
+    top: -14vh;
+    right: -52vw;
+    width: 150vw;
+    height: 48vh;
+    opacity: 0.42;
+  }
+  .flora-bloom-3 {
+    top: 72vh;
+    left: -20vw;
+    width: 120vw;
+    height: 40vh;
+    opacity: 0.45;
+  }
+}
+/* 压在最上面的一层遮罩，把底光的绝对亮度收回来 ——
+   不压的话，饱和到 s=0.87 的山茶红会把整个页头染成一块红玻璃。 */
+.flora-field-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 11, 9, 0.22) 0%,
+    rgba(8, 11, 9, 0.44) 30%,
+    rgba(8, 11, 9, 0.76) 60%,
+    var(--flora-bg) 84%
+  );
+}
+/* 纸纤维：把大块纯色暗底的「塑料感」磨掉。
+   baseFrequency 0.9 是细颗粒；numOctaves 4 让它有疏密而不是均匀的电视雪花。
+   0.028 是能察觉的最低量 —— 再高一点点就会在照片之间的空隙里显脏。 */
+.flora-grain {
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
 
