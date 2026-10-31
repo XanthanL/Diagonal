@@ -22,7 +22,9 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   const accent = isFlora ? "text-[var(--flora-accent)]" : "text-diagonal-red";
   const line = isFlora ? "border-[color:var(--flora-line)]" : "border-white/10";
   const surface = isFlora ? "bg-[var(--flora-bg)] text-[var(--flora-ink)] flora" : "bg-black text-white";
-  const selection = isFlora ? "selection:bg-[var(--flora-accent)]" : "selection:bg-diagonal-red";
+  const selection = isFlora
+    ? "selection:bg-[var(--flora-accent)] selection:text-[var(--flora-bg)]"
+    : "selection:bg-diagonal-red";
 
   // 拉丁字母斜体、汉字正体。
   // 中文没有真斜体，整块 italic 时浏览器是拿字模硬推的 ——「摄影作品」四个字会被推歪，
@@ -43,7 +45,12 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   return (
     <div className={`relative isolate min-h-screen pt-32 pb-60 font-sans ${surface} ${selection}`}>
       {isFlora && <FloraBackdrop />}
-      <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference">
+      {/* ⚠ 草木主题下必须摘掉 mix-blend-difference：它是给深色 hero 设计的，算法是
+          |底色 − 字色|。深底上「白字 → 白字」成立；换成纸以后 |243 − 深墨| 反而
+          算出一个浅灰（212→读作 31 的反向），整套导航会糊成一片看不清。
+          这一页的背景是自家的单一纸色，本来就不需要靠反相去适配内容，
+          直接用 --flora-ink 反而更干净、也更可控。内容一字未改。 */}
+      <nav className={`fixed top-0 left-0 w-full z-50 p-6 ${isFlora ? "" : "mix-blend-difference"}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link
             href="/#atlas"
@@ -85,11 +92,11 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
             </h1>
           </div>
           <div className={`md:col-span-4 space-y-4 border-l pl-6 ${line}`}>
-            <div className="archive-text text-[10px] opacity-60 uppercase">{t(lang, "investigator")}</div>
+            <div className="archive-text text-[10px] opacity-75 uppercase">{t(lang, "investigator")}</div>
             <div className={`font-medium italic ${isFlora ? "text-2xl" : "text-lg font-bold"}`}>
               {localized.author}
             </div>
-            <div className="archive-text text-[10px] opacity-60 uppercase pt-2">{t(lang, "timeline")}</div>
+            <div className="archive-text text-[10px] opacity-75 uppercase pt-2">{t(lang, "timeline")}</div>
             <div className={`font-medium italic ${isFlora ? "text-2xl" : "text-lg font-bold"}`}>
               {localized.date}
             </div>
@@ -97,10 +104,10 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
         </header>
 
         <section className="max-w-3xl mb-24">
+          {/* 纸底上的正文要比深底那版实一档才读得住：深底是压暗背景去托字，
+              这里是压深字迹去压纸，opacity-75 那版在纸上会发灰飘起来 */}
           <p
-            className={`text-xl opacity-70 italic ${
-              isFlora ? "leading-loose opacity-75" : "leading-relaxed"
-            }`}
+            className={`text-xl ${isFlora ? "leading-loose opacity-90 italic" : "leading-relaxed opacity-70 italic"}`}
           >
             {localized.excerpt}
           </p>

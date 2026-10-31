@@ -584,18 +584,37 @@ body {
    色值不是挑的，是从相册那 12 张照片里量出来的：
    山茶中心区 86% 是 #c7132d 的饱和红，红花檵木是 #9e474c / #ca7591 的赭红与玫红，
    晚樱 #ba919a 的柔粉，木绣球与石楠则是 #799441 / #789246 的苔绿。
+   这套 variable 反过来一遍就能在深浅之间来回切，别在别的地方硬编码这些颜色。 */
 
-   底色因此不是黑，而是**叶背的那种深苔绿**（#111d15）——
-   黑会把这批照片的暗部吃掉，绿色这一度偏色让叶子在画面里接得住，
-   红也能马上跳出来。#080b09 试过，太接近纯黑，读起来还是档案而不是园艺。
-   拆成 rgb 分量是为了让下面那层遮罩能复用同一个颜色加透明度。 */
+/* 底色最终定为**纸**（2026-10-31，用户要浅色调）。
+   不是纯白：标本册的纸是暖的、带一点植物压过的黄绿，所以取 #f3f1e7 ——
+   比主站的暖纸 #FAFAF8 暗一档、黄一档，能把 12 张照片的白边柔和地接住，
+   而纯白会把照片的边缘切得像贴上去的标签。
+   字反过来从「暖白」变成墨，且**不取纯黑**：#1f2419 是偏绿的墨，和纸上铅字、
+   铜版印刷的墨同一个色偏 —— 这样红才跳得出来，绿也不显得脏。 */
 .flora {
-  --flora-bg-rgb: 17, 29, 21;
+  --flora-bg-rgb: 243, 241, 231;
   --flora-bg: rgb(var(--flora-bg-rgb));
-  --flora-ink: #f2efe6; /* 不纯白：收一度偏暖，和山茶的红在同一个温度上 */
-  --flora-accent: #d1463f; /* 山茶红的可用版：做小字够亮，铺大面积也不刺眼 */
-  --flora-green: #8ba352; /* 木绣球的苔绿，只用在极细的线索上 */
-  --flora-line: rgba(242, 239, 230, 0.14);
+  --flora-ink: #1f2419; /* 偏绿的墨，不是黑 */
+  --flora-accent: #7d1c18; /* 山茶红压暗到能在纸上当小字读（实测 9.0:1 —— 要压得够深才顶得住红晕上的反击，6:1 那版会被吞） */
+  --flora-green: #6d8438; /* 苔绿压暗，浅底才看得出绿而不是黄 */
+  --flora-line: rgba(31, 36, 25, 0.16);
+}
+
+/* 顶栏那两个勾选项在纸底上会发灰：它们原本靠 mix-blend-difference 的反相把
+   10px 的小字提亮，这一页把反相摘了（见 AtlasDetailClient 的 nav），opacity-80
+   就直接暴露成一层灰。这里只补回对比，钩的文本、画法一行不动。 */
+.flora nav [role="checkbox"] {
+  /* 10px 的汉字在纸面上比在深色面上更难认（深色那版是借反相把笔画撑亮的），
+     这一页提到 11px 并放松字距 —— 动字号不动内容。 */
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+.flora nav [role="checkbox"][aria-checked="true"] {
+  opacity: 1;
+}
+.flora nav [role="checkbox"][aria-checked="false"] {
+  opacity: 0.5;
 }
 
 /* 这一辑要用画廊级的衬线：Cormorant Garamond（--font-flora）打头，缺字回退到全站的
@@ -623,44 +642,65 @@ body {
   position: absolute;
   background-size: cover;
   background-position: center;
-  mix-blend-mode: screen;
+  /* ⚠ screen 与 multiply 是这一整套主题的**开关**，深浅切换时必须跟着翻：
+     深底要 screen（加光），浅底要 multiply（染色）—— 反过来用在浅底上，
+     screen 会把红花直接提成一死白，等于背景不存在（第一版就这样，白做）。
+     multiply 的物理语义也对：白色透过去不动，花的颜色留在纸上，
+     读起来是「纸被花汁洇了一块」，正是标本册的样子。 */
+  mix-blend-mode: multiply;
   /* 光斑要真的散开：Cloudinary 那记 e_blur 只够磨掉细节（还看得出叶子），
      真正的柔边交给 CSS 的 blur，再配一层径向 mask 把边缘收成透明。
-     少了这层 mask，div 的矩形边会在 screen 下原样显形 —— 试过，是一道道直边。 */
-  filter: blur(78px) saturate(1.1);
+     少了这层 mask，div 的矩形边会在 blend 之下原样显形 —— 试过，是一道道直边。 */
+  /* multiply 不会把颜色加深，只会按它本来的亮度淡染 —— 直接搬深色版的参数，
+     红花出来的是 #f5b3bb（饱和 27%）的粉，被读成褪色的雾。
+     先 brightness 压深（配合 saturate 提纯度）才染得出明确的色：
+     这一步是把「一层粉雾」变成「花汁」的关键，比调 opacity 有效得多。 */
+  filter: blur(78px) saturate(1.35) brightness(0.82);
   /* closest-side 而不是 farthest-corner：后者在元素的边线上还剩约 20% 不透明度，
-     screen 之下就是一道笔直的边（第一次做就栽在这里）。
-     closest-side 保证元素边界处必然已经透明，光斑读起来才是一团光。 */
+     叠色之下就是一道笔直的边（第一次做就栽在这里）。
+     closest-side 保证元素边界处必然已经透明，读起来才是一团晕开的色。 */
   mask-image: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.5) 52%, transparent 100%);
   -webkit-mask-image: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.5) 52%, transparent 100%);
 }
 /* 三条硬性间距，都是一轮轮截图砸出来的：
-   ① 红只罩到 h1 那一带（约 46vh 以上），正文落在它下面的干净暗底上 ——
-      试过铺满首屏，op 0.82 的成片红光把正文压出一团红玻璃，白字的对比度掉了三成。
-   ② 绿不许和红横向重叠：两者叠起来是灰浊的中间调（互补色在暗底上只会互相抵消），
-      所以绿收到右上角自己的一块，中间留出没人碰过的黑。
-   ③ 赭红与血红同族，沉在左下压住画面底边。 */
+   ① 红只罩到 h1 那一带（约 46vh 以上），正文落在它下面的干净纸上 ——
+      试过铺满首屏，整片红压下来，墨字的对比度掉了三成。
+   ② 绿不许和红横向重叠：两者叠起来是灰浊的中间调（互补色只会互相抵消），
+      所以绿收到右上角自己的一块，中间留出没人碰过的干净纸。
+   ③ 赭红与血红同族，沉在左下压住画面底边。
+   ⚠ multiply 的着色力比 screen 强一个量级：深底那套 0.5 搬到纸上会直接洇成
+     一块脏斑。浅底的量级是 0.1 起 —— 每一片都降到了原来的三分之一左右。 */
 .flora-bloom-1 {
-  top: -8vh;
-  left: -10vw;
-  width: 96vw;
-  height: 60vh;
-  /* 底色换成苔绿以后红益发跳，0.72 会读成「贴上去的一层红」而不是环境光；
-     它是散进空气里的花粉质感，掉到 0.58 才有呼吸。 */
-  opacity: 0.5;
-  /* 主光要横跨整个标题，默认的 closest-side 会把它锁成一个圆（受限于较小的那条边），
-     所以这里单独给一个椭圆：横半径 52%、纵半径 50%，中心偏左 —— 读起来是
-     「一层从左涌过来的红光」，而不是贴在角落的一块斑。 */
+  /* 主光单独用一轮更小的 blur：78px 在纸上只剩一层没有形状的雾，
+     56px 才留得住「一滴花汁洇开」的轮廓。另提一档饱和抵掉 multiply 的褪色。 */
+  filter: blur(56px) saturate(1.5) brightness(0.8);
+  /* 面积必须收住。第一批这层是 96vw 横着扫过去的，右侧信息栏（INVESTIGATOR /
+     TIMELINE）那些小字落到 sat 29% 的底上就再也读不清 —— 同一条规矩在这里
+     又应了一次：**主光只罩得住标题那一带，压到小字就出事**。58vw 是把右半边
+     还给干净的纸；top 定在 11vh 则是纵向的两难：再往上会盖住 SOUTHEAST /
+     VISUAL RECORD 那行红字（红字压红地，对比度只剩 2.5，等于看不见），
+     往下又会去啃正文 —— 落在这里才两边都不碰。 */
+  top: 11vh;
+  left: -14vw;
+  width: 58vw;
+  height: 52vh;
+  /* 浓度：截图逐档加出来的。0.15 在 multiply 下是「褪色」，0.3 仍是雾 ——
+     关键在于 opacity 本身就是这条混色公式的权重
+     （结果 = 底色×(1−α) + 染料×底色/255×α），α 不提上去，染料再深也只沈一小撮。
+     0.55 配上面压深过的染料才有实感；再往上（0.7+）它就变成一块真的污渍。 */
+  opacity: 0.55;
+  /* 中心收紧、边缘放开：14% 起的那版中心太散，看起来是一层雾而不是一朵花洇开 ——
+     把实心头推到 22% 并略缩横半径，晕就有形状了。 */
   mask-image: radial-gradient(
-    ellipse 52% 50% at 46% 52%,
-    #000 14%,
-    rgba(0, 0, 0, 0.58) 52%,
+    ellipse 48% 47% at 44% 50%,
+    #000 22%,
+    rgba(0, 0, 0, 0.58) 55%,
     transparent 100%
   );
   -webkit-mask-image: radial-gradient(
-    ellipse 52% 50% at 46% 52%,
-    #000 14%,
-    rgba(0, 0, 0, 0.58) 52%,
+    ellipse 48% 47% at 44% 50%,
+    #000 22%,
+    rgba(0, 0, 0, 0.58) 55%,
     transparent 100%
   );
 }
@@ -669,17 +709,16 @@ body {
   right: -34vw;
   width: 60vw;
   height: 72vh;
-  /* 苔绿的物理亮度天生比山茶红低，同样 opacity 下右边会显得空；但上一轮补到 0.56
-     又反过来抢视线，整页重心翻到右侧。两边都只当「隐隐一层光」才算平衡 ——
-     左右的秤 SG 靠这两行数反复拉，别再往上堆了。 */
-  opacity: 0.5;
+  /* 苔绿的物理亮度天生比山茶红低，同样 opacity 下右边会显得空；但补过头
+     又反过来抢视线，整页重心翻到右侧。两边都只当「隐隐一层」才算平衡。 */
+  opacity: 0.34;
 }
 .flora-bloom-3 {
-  top: 60vh;
+  top: 104vh;
   left: -22vw;
   width: 60vw;
   height: 50vh;
-  opacity: 0.44;
+  opacity: 0.28;
 }
 @media (max-width: 767px) {
   /* 窄屏放不下三块，也不该让它们互相覆盖成一团灰：保留红与绿，面积放大到盖满屏宽 */
@@ -688,45 +727,50 @@ body {
     left: -52vw;
     width: 150vw;
     height: 46vh;
-    opacity: 0.6;
+    opacity: 0.2;
   }
   .flora-bloom-2 {
     top: -14vh;
     right: -52vw;
     width: 150vw;
     height: 48vh;
-    opacity: 0.42;
+    opacity: 0.16;
   }
   .flora-bloom-3 {
     top: 72vh;
     left: -20vw;
     width: 120vw;
     height: 40vh;
-    opacity: 0.45;
+    opacity: 0.15;
   }
 }
-/* 压在最上面的一层遮罩，把底光的绝对亮度收回来 ——
-   不压的话，饱和到 s=0.87 的山茶红会把整个页头染成一块红玻璃。 */
+/* 压在最上面的一层，把染料收回到纸色 —— 不收的话整页会洇得发脏，
+   而往下 84% 之后必须回到**完全的纸色**：照片墙那一段要绝对干净，
+   看照片时底色不许掺任何颜色。（深浅两版共用同一组数值，因为
+   rgba 用的就是 --flora-bg 本身，切换主题时这里不用动。） */
 .flora-field-fade {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(var(--flora-bg-rgb), 0.22) 0%,
-    rgba(var(--flora-bg-rgb), 0.44) 30%,
-    rgba(var(--flora-bg-rgb), 0.76) 60%,
+    rgba(var(--flora-bg-rgb), 0.1) 0%,
+    rgba(var(--flora-bg-rgb), 0.26) 30%,
+    rgba(var(--flora-bg-rgb), 0.55) 60%,
     var(--flora-bg) 84%
   );
 }
-/* 纸纤维：把大块纯色暗底的「塑料感」磨掉。
+/* 纸纤维：把大块平整的底色的「塑料感」磨掉。
    baseFrequency 0.9 是细颗粒；numOctaves 4 让它有疏密而不是均匀的电视雪花。
-   0.028 是能察觉的最低量 —— 再高一点点就会在照片之间的空隙里显脏。 */
+   0.03 是能察觉的最低量 —— 再高一点点就会在照片之间的空隙里显脏。
+   ⚠ 浅底上必须加 multiply： turbulence 出来的是**彩色**噪点，直接铺在纸上会
+   泛出一层说不清的虹彩，压暗混进去才是纸浆本身的疏密。 */
 .flora-grain {
   position: absolute;
   inset: 0;
   z-index: -10;
   pointer-events: none;
-  opacity: 0.028;
+  mix-blend-mode: multiply;
+  opacity: 0.045;
   background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
