@@ -192,9 +192,10 @@ body {
   .pt-carriage {
     transition: none !important;
   }
-  /* 兜底自动揭幕必须保留（无 JS 时它是唯一的出路），只把滑动压成瞬时 */
+  /* 纸面不掠过：直接停在已揭幕的位置（承载层在视口外），连那 280ms 定格一并跳过 */
   .pt-intro .pt-carriage {
-    animation-duration: 1ms;
+    animation: none;
+    transform: translate3d(var(--pt-travel), 0, 0);
   }
   /* 抽屉：瞬时开合，不做滑入与错峰入场 */
   .nav-drawer,
@@ -296,14 +297,18 @@ body {
   transform: translate3d(var(--pt-travel), 0, 0);
   transition: transform 600ms var(--ease-wipe);
 }
-/* 首次进入：SSR 首帧即「已被纸面盖满」，随后走标准揭幕 */
+/* 首次进入：SSR 首帧即「已被纸面盖满」，纸面随后自行右移揭幕。
+   ⚠️ 这条 CSS 动画是首屏揭幕的唯一真相，刻意不等 JS：
+   之前由 hydration 后的 setTimeout 驱动，手机上 bundle 解析 + hydration 常要几秒，
+   那几秒里整屏只有一块暖纸（顶栏底栏 z-index 更高所以露在外面），读起来就是「白屏」；
+   而原先那条 2.6s 兜底又会在 hydration 迟到时把已抬开的纸重新盖回去一次。
+   现在整段生命周期在 ~880ms 内确定性走完，脚本被拦 / bundle 报错也一样会开。
+   JS 侧只负责到点把 class 摘掉，且必须直接落到 idle —— 绝不能经手 pt-reveal，
+   那会把 transform 拉回 0，等于再盖一次。 */
 .pt-intro .pt-carriage {
   transform: translate3d(0, 0, 0);
   transition: none;
-  /* 兜底：JS 没跑起来（脚本被拦截 / bundle 报错 / 标签页被挂起）时，
-     纯 CSS 也会在 2.6s 后自行揭幕，页面绝不会永远压在纸面下。
-     正常路径上 JS 远早于此就切到 pt-reveal，动画随之撤销，不会二次触发 */
-  animation: ptIntroLift 620ms var(--ease-wipe) 2600ms forwards;
+  animation: ptIntroLift 600ms var(--ease-wipe) 280ms forwards;
 }
 @keyframes ptIntroLift {
   to {

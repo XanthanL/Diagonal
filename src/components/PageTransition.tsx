@@ -9,7 +9,8 @@ type TransitionPhase = "idle" | "intro" | "cover" | "reveal";
 const COVER_MS = 460; // 斜切纸面自左侧掠入盖满：与 CSS 的 .pt-cover 时长严格对齐
 const HOLD_MS = 140; // 盖满后的短促定格，让纸面上的字标有一拍可读
 const REVEAL_MS = 600; // 同一方向继续右移揭开新页
-const INTRO_HOLD_MS = 280; // 首屏定格：让字标先被读到一眼，再走标准揭幕
+// 首屏纸面的完整生命周期（280ms 定格 + 600ms 右移）由 globals.css 的 .pt-intro 独占，
+// JS 只负责事后摘 class；两侧时长必须保持对齐。
 const LOAD_TIMEOUT_MS = 2600; // 路由迟迟不提交时的强制揭幕上限
 
 // 独立部署的子项目：主站 App Router 里没有对应路由，必须走整页跳转。
@@ -47,6 +48,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const pendingExternal = useRef(false);
   const pendingRoute = useRef<string | null>(null);
   const fallbackTimer = useRef<number | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
 
@@ -102,19 +104,42 @@ export function PageTransition({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [phase]);
 
-  // 首次加载：SSR 首帧就已经是「纸面盖满」态，所以不必等 rAF 确认绘制，直接定时揭幕。
-  // ⚠️ 这里刻意不用 requestAnimationFrame 驱动：rAF 在后台 / 被遮挡的标签页里会被浏览器
-  // 完全暂停——从搜索结果或聊天工具里新开标签页进来时，那两个回调永不触发，
-  // 纸面就一直盖着，只能手动刷新才进得来（真实故障）。setTimeout 在后台页只是
-  // 被节流到 ≥1s，仍然会执行；CSS 侧另有一条 2.6s 兜底自动揭幕。
+  // 首次加载的揭幕由 CSS 动画自行完成（SSR 首帧落到纸面 / 到点自行右移），
+  // 这里刻意不参与「抬纸」这件事：
+  // ⚠️ 之前是 hydration 后才开始计时，手机上 bundle 解析 + hydration 常要几秒，
+  //    那几秒屏幕被纸盖着（只有 z-index 更高的顶栏底栏露着）= 用户看到的白屏；
+  // ⚠️ 也不能走 setPhase("reveal")：pt-reveal 的起始位置是「纸面盖满」，
+  //    hydration 迟到时它会把 CSS 已经抬开的纸重新盖回去，屏幕闪一次再开。
+  //    表现为「要加载挺久，手机才刷新出来」。
+  // JS 现在的职责只剩一件事：动画跑完后把 pt-intro 摘掉，交还给 idle 的驻车态。
+  // ⚠️ 摘早了会把正在揭幕的纸面当场撤走（半开的纸骤然消失），所以不问计时器，
+  //    直接向动画本身要状态：还在跑就等 finished，跑完了就立刻 idle。
+  //    两者的终态都在视口外（+travel / -travel），互换不可见 —— 这正是「迟到也不再盖回去」的关键。
   useEffect(() => {
     if (phase !== "intro") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setPhase("idle");
       return;
     }
-    const timer = window.setTimeout(() => setPhase("reveal"), INTRO_HOLD_MS);
-    return () => window.clearTimeout(timer);
+    const carriage = overlayRef.current?.querySelector<HTMLElement>(".pt-carriage");
+    if (!carriage || typeof carriage.getAnimations !== "function") {
+      setPhase("idle");
+      return;
+    }
+    // 慢网络上 CSS 本身可能比 hydration 到得还晚：那时动画压根还没创建，
+    // 不能干等到某个想象中的时刻，直接摘掉即可（纸面尚未出现，无中间态可跳）
+    const running = carriage.getAnimations().filter((a) => a.playState !== "finished");
+    if (!running.length) {
+      setPhase("idle");
+      return;
+    }
+    let cancelled = false;
+    Promise.all(running.map((a) => a.finished.catch(() => {}))).then(() => {
+      if (!cancelled) setPhase("idle");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [phase]);
 
   // bfcache 修复：进入独立子项目是整页跳转，本组件冻结在 cover 相位；
@@ -201,6 +226,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
       {/* 斜切纸面：idle 时整块停在视口左侧外，不拦截任何交互 */}
       <div
+        ref={overlayRef}
         aria-hidden="true"
         className={`page-transition-overlay ${
           phase === "cover"
