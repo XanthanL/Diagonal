@@ -318,7 +318,7 @@ export const atlasData: AtlasItem[] = [
      * 画廊组件据此分区（横幅整幅铺开 / 竖幅压成小格），不做任何裁切。
      */
     id: "ATLAS-HZ",
-    title: "Xanthan摄影作品",
+    title: "Xanthan 摄影作品",
     titleEn: "Xanthan Photography",
     author: "XanthanL",
     authorEn: "XanthanL",

@@ -584,15 +584,33 @@ body {
    色值不是挑的，是从相册那 12 张照片里量出来的：
    山茶中心区 86% 是 #c7132d 的饱和红，红花檵木是 #9e474c / #ca7591 的赭红与玫红，
    晚樱 #ba919a 的柔粉，木绣球与石楠则是 #799441 / #789246 的苔绿。
-   所以底不是纯黑（往绿的方向偏一度，让叶子的绿落得住），
-   字也不是纯白（收一度偏暖，和山茶的红在同一个温度上）。
-   字号、字体、间距一律不动 —— 换的是色，不是版。 */
+
+   底色因此不是黑，而是**叶背的那种深苔绿**（#111d15）——
+   黑会把这批照片的暗部吃掉，绿色这一度偏色让叶子在画面里接得住，
+   红也能马上跳出来。#080b09 试过，太接近纯黑，读起来还是档案而不是园艺。
+   拆成 rgb 分量是为了让下面那层遮罩能复用同一个颜色加透明度。 */
 .flora {
-  --flora-bg: #080b09;
-  --flora-ink: #f4f1ea;
+  --flora-bg-rgb: 17, 29, 21;
+  --flora-bg: rgb(var(--flora-bg-rgb));
+  --flora-ink: #f2efe6; /* 不纯白：收一度偏暖，和山茶的红在同一个温度上 */
   --flora-accent: #d1463f; /* 山茶红的可用版：做小字够亮，铺大面积也不刺眼 */
-  --flora-green: #799441; /* 木绣球的苔绿，只用在极细的线索上 */
-  --flora-line: rgba(244, 241, 234, 0.12);
+  --flora-green: #8ba352; /* 木绣球的苔绿，只用在极细的线索上 */
+  --flora-line: rgba(242, 239, 230, 0.14);
+}
+
+/* 这一辑要用画廊级的衬线：Cormorant Garamond（--font-flora）打头，缺字回退到全站的
+   Newsreader / 思源宋体。**只有内容容器挂着 flora-type** —— 顶栏不在其中、不受影响，
+   而 archive-text 自带 font-mono（优先级更高），所以编号与分组标注仍是档案的那一套。
+   字距刻意放开了一点：这一页是园艺图册不是档案卡，挤在一起会读成标题党。 */
+.flora-type {
+  font-family: var(--font-flora), var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  letter-spacing: 0.012em;
+}
+.flora-type h1 {
+  /* 一定不能重：Cormorant 的笔画对比靠细画撑着，一加到 600 就掉回黑体的观感；
+     思源宋体这边也只有 400 才够清瘦，和拉丁的高对比衬线站到一起才有同一种呼吸。 */
+  font-weight: 400;
+  letter-spacing: 0.004em;
 }
 
 /* 底光层：三张虚焦的自家照片。整层用 mask 往下淡出到透明，
@@ -616,11 +634,7 @@ body {
   mask-image: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.5) 52%, transparent 100%);
   -webkit-mask-image: radial-gradient(closest-side, #000 18%, rgba(0, 0, 0, 0.5) 52%, transparent 100%);
 }
-/* 位置与浓度按各自的主色配。全部用 top 定位 —— 混用 bottom 时，
-   百分比是相对 170vh 高的这一层算的，红块会掉到首屏下面去（踩过）。 */
-/* 位置与浓度按各自的主色配。一律用 top 定位 —— 混用 bottom 时，
-   百分比是相对 170vh 高的这一层算的，红块会掉到首屏下面去（踩过）。
-   三条硬性间距：
+/* 三条硬性间距，都是一轮轮截图砸出来的：
    ① 红只罩到 h1 那一带（约 46vh 以上），正文落在它下面的干净暗底上 ——
       试过铺满首屏，op 0.82 的成片红光把正文压出一团红玻璃，白字的对比度掉了三成。
    ② 绿不许和红横向重叠：两者叠起来是灰浊的中间调（互补色在暗底上只会互相抵消），
@@ -631,29 +645,34 @@ body {
   left: -10vw;
   width: 96vw;
   height: 60vh;
-  opacity: 0.72;
+  /* 底色换成苔绿以后红益发跳，0.72 会读成「贴上去的一层红」而不是环境光；
+     它是散进空气里的花粉质感，掉到 0.58 才有呼吸。 */
+  opacity: 0.5;
   /* 主光要横跨整个标题，默认的 closest-side 会把它锁成一个圆（受限于较小的那条边），
      所以这里单独给一个椭圆：横半径 52%、纵半径 50%，中心偏左 —— 读起来是
      「一层从左涌过来的红光」，而不是贴在角落的一块斑。 */
   mask-image: radial-gradient(
-    ellipse 52% 50% at 40% 52%,
+    ellipse 52% 50% at 46% 52%,
     #000 14%,
     rgba(0, 0, 0, 0.58) 52%,
     transparent 100%
   );
   -webkit-mask-image: radial-gradient(
-    ellipse 52% 50% at 40% 52%,
+    ellipse 52% 50% at 46% 52%,
     #000 14%,
     rgba(0, 0, 0, 0.58) 52%,
     transparent 100%
   );
 }
 .flora-bloom-2 {
-  top: -22vh;
+  top: -18vh;
   right: -34vw;
-  width: 54vw;
-  height: 62vh;
-  opacity: 0.44;
+  width: 60vw;
+  height: 72vh;
+  /* 苔绿的物理亮度天生比山茶红低，同样 opacity 下右边会显得空；但上一轮补到 0.56
+     又反过来抢视线，整页重心翻到右侧。两边都只当「隐隐一层光」才算平衡 ——
+     左右的秤 SG 靠这两行数反复拉，别再往上堆了。 */
+  opacity: 0.5;
 }
 .flora-bloom-3 {
   top: 60vh;
@@ -693,9 +712,9 @@ body {
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(8, 11, 9, 0.22) 0%,
-    rgba(8, 11, 9, 0.44) 30%,
-    rgba(8, 11, 9, 0.76) 60%,
+    rgba(var(--flora-bg-rgb), 0.22) 0%,
+    rgba(var(--flora-bg-rgb), 0.44) 30%,
+    rgba(var(--flora-bg-rgb), 0.76) 60%,
     var(--flora-bg) 84%
   );
 }

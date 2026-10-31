@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Newsreader, Noto_Serif_SC } from "next/font/google";
+import { Cormorant_Garamond, Inter, JetBrains_Mono, Newsreader, Noto_Serif_SC } from "next/font/google";
 import { getAbsoluteUrl, siteUrl } from "@/lib/path";
 import { Providers } from "@/components/Providers";
 import { GlobalNav } from "@/components/GlobalNav";
@@ -15,6 +15,16 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", weigh
 const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif", weight: ["400", "500", "700"], style: ["normal", "italic"] });
 // Noto Serif SC（思源宋体）：中文标题/引文的衬线渲染，排在拉丁衬线之后按字形回退；CJK 体量大，禁用预加载
 const serifCjk = Noto_Serif_SC({ variable: "--font-serif-cjk", weight: ["400", "500", "700"], preload: false });
+// Cormorant Garamond：画廊级的 display 衬线，只给 Xanthan摄影作品那一辑用（.flora 作用域内）。
+// 它比 Newsreader 高对比、小写体更长，大字号下就是美术馆展签的那一口气。
+// preload:false —— 全站只有这一页用，不该让其它页面为它付出 downloaded bytes。
+const floraDisplay = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-flora",
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  preload: false,
+});
 
 const siteTitle = "DIAGONAL | 对角线计划";
 const siteDescription = "对角线计划 (Diagonal) 是一个从东北到西南、以行为艺术档案与跨学科研究为核心的长期艺术项目。";
@@ -69,7 +79,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable}`}>
+    <html lang="zh-CN" className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}>
       <head>
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         {/* JS 禁用时撤下首次加载的过渡幕布，保证内容可读 */}
