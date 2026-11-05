@@ -131,6 +131,73 @@ body {
   opacity: 0.2;
 }
 
+/* —— Hero 轴线：字标背后的对角基准线 ——
+   语义不是「装饰在字上的划痕」，而是测绘/档案里穿过地名的一条基准轴。
+   几何由一次 rotate(-45deg) 独占：线、控制点、两根刻度都活在同一个旋转
+   坐标系里，刻度天然垂直于主线、方块天然呈菱形，不必各自再算角度。
+   颜色走 --foreground / --diagonal-red，档案风与草木风自动各取各的墨与红。 */
+.hero-axis {
+  /* 控制点不放在轴心：轴心在 GONAL 的黑色笔画上，红点会被字盖掉。
+     沿轴向右上挪到字标外的空白带，让唯一的色彩落在一个读得清的地方。 */
+  --pin-offset: clamp(46px, 7.6vw, 110px);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: rotate(-45deg);
+  transform-origin: center center;
+  animation: heroAxisIn 620ms var(--ease-out) 120ms both;
+}
+@keyframes heroAxisIn {
+  from { opacity: 0; transform: rotate(-45deg) scale(0.9); }
+  to   { opacity: 1; transform: rotate(-45deg) scale(1); }
+}
+.hero-axis-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: clamp(200px, 44vw, 560px);
+  height: 1px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--foreground) 10%,
+    var(--foreground) 90%,
+    transparent 100%
+  );
+  opacity: 0.32;
+}
+/* 控制点：一圈纸色描边把线「挖断」一小截，红菱形骑在轴上 */
+.hero-axis-node {
+  position: absolute;
+  left: var(--pin-offset);
+  top: 0;
+  width: 6px;
+  height: 6px;
+  transform: translate(-50%, -50%);
+  background: var(--diagonal-red);
+  box-shadow: 0 0 0 3px var(--background);
+}
+/* 两根刻度是镜像：围着控制点夹住它，只差左右符号 */
+.hero-axis-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 9px;
+  transform: translateY(-50%);
+  background: var(--foreground);
+  opacity: 0.5;
+}
+.hero-axis-tick[data-side="left"] { left: calc(var(--pin-offset) - 15px); }
+.hero-axis-tick[data-side="right"] { left: calc(var(--pin-offset) + 15px); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-axis { animation: none; opacity: 1; }
+}
+
 /* 档案详情页 HTML 内容样式重塑 */
 .archive-html-content {
   @apply space-y-12 text-lg leading-relaxed font-serif;

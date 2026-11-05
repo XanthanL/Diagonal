@@ -7,7 +7,7 @@ import { archiveData, atlasData, getLocalizedArchiveItem, getLocalizedAtlasItem 
 import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { getAssetPath } from "@/lib/path";
-import { DiagonalSlash } from "@/components/DiagonalSlash";
+import { HeroAxis } from "@/components/HeroAxis";
 
 // 与 CSS 的 --ease-out 同一条曲线，避免 JS 与 CSS 两套手感
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -234,15 +234,16 @@ export default function Home() {
             className="font-serif font-black leading-[0.8] tracking-tighter relative"
           >
             {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠。
-                宽屏下字号随视口放大，让字标撑满栏宽、右侧不再空荡 */}
-            <span className="block text-[18vw] sm:text-8xl md:text-[clamp(6rem,12vw,11rem)]">DIA</span>
+                宽屏下字号随视口放大，让字标撑满栏宽、右侧不再空荡。
+                轴线在字标之下，笔画会把线切断 */}
+            <span className="relative z-10 block text-[18vw] sm:text-8xl md:text-[clamp(6rem,12vw,11rem)]">DIA</span>
             <span
-              className="block text-[18vw] sm:text-8xl md:text-[clamp(6rem,12vw,11rem)] -mt-2 md:-mt-4"
+              className="relative z-10 block text-[18vw] sm:text-8xl md:text-[clamp(6rem,12vw,11rem)] -mt-2 md:-mt-4"
               style={{ transform: "translateX(0.3em)" }}
             >
               GONAL
             </span>
-            <DiagonalSlash />
+            <HeroAxis />
           </motion.h1>
 
           <div className="md:flex md:items-end md:justify-between md:gap-16">
