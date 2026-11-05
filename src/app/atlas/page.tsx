@@ -10,7 +10,7 @@ export default function AtlasIndexPage() {
   const { lang } = useI18n();
 
   return (
-    <div className="relative overflow-hidden pt-32 min-h-screen bg-black text-white">
+    <div className="relative overflow-hidden pt-32 min-h-screen site-surface-dark">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
         <div className="diagonal-line opacity-5" />
       </div>
@@ -35,7 +35,7 @@ export default function AtlasIndexPage() {
           <p className="max-w-xl text-sm opacity-50 leading-relaxed italic">
             {t(lang, "atlasIntro")}
           </p>
-          <div className="w-full h-px bg-white/20 relative overflow-hidden max-w-xs">
+          <div className="w-full h-px bg-current/20 relative overflow-hidden max-w-xs">
             <motion.div
               animate={{ x: ["-100%", "400%"] }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}

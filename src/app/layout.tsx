@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter, JetBrains_Mono, Newsreader, Noto_Serif_SC } from "next/font/google";
 import { getAbsoluteUrl, siteUrl } from "@/lib/path";
+import { SITE_THEME_KEY } from "@/lib/themePrefs";
 import { Providers } from "@/components/Providers";
 import { GlobalNav } from "@/components/GlobalNav";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DropletLens } from "@/components/DropletLens";
+import { SiteThemeBackdrop } from "@/components/SiteThemeBackdrop";
 import "./globals.css";
 
 // 精确加载所需字重，避免加载完整可变字体
@@ -15,9 +17,8 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", weigh
 const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif", weight: ["400", "500", "700"], style: ["normal", "italic"] });
 // Noto Serif SC（思源宋体）：中文标题/引文的衬线渲染，排在拉丁衬线之后按字形回退；CJK 体量大，禁用预加载
 const serifCjk = Noto_Serif_SC({ variable: "--font-serif-cjk", weight: ["400", "500", "700"], preload: false });
-// Cormorant Garamond：画廊级的 display 衬线，只给 Xanthan摄影作品那一辑用（.flora 作用域内）。
-// 它比 Newsreader 高对比、小写体更长，大字号下就是美术馆展签的那一口气。
-// preload:false —— 全站只有这一页用，不该让其它页面为它付出 downloaded bytes。
+// Cormorant Garamond：画廊级的 display 衬线。原先只给 Xanthan摄影作品那一辑用，
+// 现在草木主题会把它铺到全站标题；仍 preload:false，档案风不必为它付出首屏字节。
 const floraDisplay = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-flora",
@@ -79,15 +80,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}>
+    <html
+      lang="zh-CN"
+      suppressHydrationWarning
+      className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}
+    >
       <head>
+        {/* 风格必须在 CSS 生效前落到 <html> 上：切到草木后刷新，
+            若等 React effect 再补属性，用户会先吃一帧档案风的白。
+            与 lib/themePrefs.ts 的 SITE_THEME_KEY 是同一个键。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('${SITE_THEME_KEY}')==='herbarium'){document.documentElement.setAttribute('data-theme','herbarium')}}catch(e){}`,
+          }}
+        />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         {/* JS 禁用时撤下首次加载的过渡幕布，保证内容可读 */}
         <noscript>
           <style>{`.page-transition-overlay{display:none!important}`}</style>
         </noscript>
       </head>
-      <body className="antialiased min-h-screen bg-[#FAFAF8] text-[#1A1A1A]">
+      {/* 底色与字色交给 globals.css 的 body{color:var(--foreground);background:var(--background)}：
+          原先写死在 className 里的 bg-[#FAFAF8] 是 utility，优先级高于那条规则，
+          草木主题覆盖变量时会盖不动它。 */}
+      <body className="antialiased min-h-screen">
         <Providers>
           {/* Skip-nav：键盘用户按 Tab 可跳过导航直达主内容 */}
           <a
@@ -96,6 +112,8 @@ export default function RootLayout({
           >
             跳转到主内容
           </a>
+          {/* 草木主题的虚焦花汁底光：由 CSS 按 data-theme 显隐，档案风下不下载图 */}
+          <SiteThemeBackdrop />
           <GlobalNav />
           <PageTransition>{children}</PageTransition>
           <SiteFooter />

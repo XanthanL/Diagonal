@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { SquareLensGallery } from "@/components/SquareLensGallery";
 
 export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; subId: string }) {
@@ -17,13 +18,16 @@ export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; sub
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-60 selection:bg-diagonal-red font-sans">
-      <nav className="fixed top-0 left-0 w-full z-50 p-6 mix-blend-difference">
+    <div className="min-h-screen site-surface-dark pt-32 pb-60 selection:bg-diagonal-red font-sans">
+      <nav className="fixed top-0 left-0 w-full z-50 p-6 site-invert-nav mix-blend-difference">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href={`/atlas/${item.id}`} className="archive-text text-sm font-bold flex items-center gap-2 group text-white">
+          <Link href={`/atlas/${item.id}`} className="archive-text text-sm font-bold flex items-center gap-2 group">
             <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToAtlasItem").replace("{title}", localized.title.toUpperCase())}
           </Link>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-6">
+            <ThemeSwitch />
+            <LanguageSwitcher />
+          </div>
         </div>
       </nav>
 

@@ -8,6 +8,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
 import { SquareLensGallery } from "@/components/SquareLensGallery";
 import { ShaderToggles } from "@/components/ShaderToggles";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { FloraBackdrop } from "@/components/FloraBackdrop";
 
 export function AtlasDetailClient({ item }: { item: AtlasItem }) {
@@ -21,7 +22,7 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
   const isFlora = item.theme === "herbarium";
   const accent = isFlora ? "text-[var(--flora-accent)]" : "text-diagonal-red";
   const line = isFlora ? "border-[color:var(--flora-line)]" : "border-white/10";
-  const surface = isFlora ? "bg-[var(--flora-bg)] text-[var(--flora-ink)] flora" : "bg-black text-white";
+  const surface = isFlora ? "bg-[var(--flora-bg)] text-[var(--flora-ink)] flora theme-locked" : "site-surface-dark";
   const selection = isFlora
     ? "selection:bg-[var(--flora-accent)] selection:text-[var(--flora-bg)]"
     : "selection:bg-diagonal-red";
@@ -50,12 +51,12 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
           算出一个浅灰（212→读作 31 的反向），整套导航会糊成一片看不清。
           这一页的背景是自家的单一纸色，本来就不需要靠反相去适配内容，
           直接用 --flora-ink 反而更干净、也更可控。内容一字未改。 */}
-      <nav className={`fixed top-0 left-0 w-full z-50 p-6 ${isFlora ? "" : "mix-blend-difference"}`}>
+      <nav className={`fixed top-0 left-0 w-full z-50 p-6 ${isFlora ? "" : "site-invert-nav mix-blend-difference text-white"}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link
             href="/#atlas"
             className={`archive-text text-xs font-bold sm:text-sm flex items-center gap-2 group ${
-              isFlora ? "text-[var(--flora-ink)]" : "text-white"
+              isFlora ? "text-[var(--flora-ink)]" : ""
             }`}
           >
             <span className="group-hover:-translate-x-2 transition-transform">←</span> {t(lang, "backToAtlas")}
@@ -64,6 +65,7 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
               手机 390 宽下这一条要塞下返回链接 + 两个开关 + 语言切换，间距和字号都得收一档 */}
           <div className="flex items-center gap-3 sm:gap-8">
             <ShaderToggles />
+            <ThemeSwitch />
             <LanguageSwitcher />
           </div>
         </div>

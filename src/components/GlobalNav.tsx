@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ShaderToggles } from "@/components/ShaderToggles";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 
 /**
  * 全局 sticky 导航：在所有页面顶部固定显示
@@ -103,8 +104,8 @@ export function GlobalNav() {
             ? // 抽屉展开时顶栏与抽屉同色，读作同一张纸
               "bg-background text-foreground"
             : scrolled
-              ? "bg-[#FAFAF8]/90 backdrop-blur-md shadow-sm text-foreground"
-              : "mix-blend-difference text-white"
+              ? "site-nav-scrolled backdrop-blur-md shadow-sm text-foreground"
+              : "site-invert-nav mix-blend-difference text-white"
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -126,6 +127,7 @@ export function GlobalNav() {
             ))}
             {/* 两层着色器的开关：常驻在栏目之后、语言切换之前 */}
             <ShaderToggles className="ml-2" />
+            <ThemeSwitch className="ml-2" />
             <div className="ml-4">
               <LanguageSwitcher />
             </div>
@@ -198,6 +200,7 @@ export function GlobalNav() {
           style={{ "--i": navItems.length } as CSSProperties}
         >
           <ShaderToggles />
+          <ThemeSwitch />
         </div>
 
         <div

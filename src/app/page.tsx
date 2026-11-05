@@ -223,7 +223,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="relative overflow-hidden pt-24 min-h-screen">
+    <div className="relative overflow-hidden pt-24 min-h-screen site-surface">
       {/* Hero Section —— 原样保留（字标 / 斜切母题 / 介绍 / 右缘 meta） */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-10 md:py-20">
         <div className="relative space-y-8 md:space-y-12">

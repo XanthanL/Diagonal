@@ -597,13 +597,199 @@ body {
    而纯白会把照片的边缘切得像贴上去的标签。
    字反过来从「暖白」变成墨，且**不取纯黑**：#1f2419 是偏绿的墨，和纸上铅字、
    铜版印刷的墨同一个色偏 —— 这样红才跳得出来，绿也不显得脏。 */
-.flora {
+/* ==========================================================================
+   全站风格切换：档案风（默认） / 草木风
+   --------------------------------------------------------------------------
+   用户希望 Xanthan摄影作品那一辑的浅纸草木气质能铺到全站，同时随时切回原貌。
+   所有差异收敛到 <html data-theme> 这一个开关：CSS 变量 + 三条语义表面类 +
+   一层背景光。组件里不再出现第二套 if/else 配色，切回去就是逐像素的原样。
+   layout 的 <head> 同步脚本在 CSS 生效前写好属性，所以刷新不会闪一帧旧配色。
+   ========================================================================== */
+
+/* 草木色板提到 :root：相册页的 .flora 与全站共用一份，不写两遍。
+   值就是那一辑逐档量出来的：纸 #f3f1e7 / 偏绿墨 / 山茶暗红（vs 纸 9.0:1）。 */
+:root {
   --flora-bg-rgb: 243, 241, 231;
   --flora-bg: rgb(var(--flora-bg-rgb));
-  --flora-ink: #1f2419; /* 偏绿的墨，不是黑 */
-  --flora-accent: #7d1c18; /* 山茶红压暗到能在纸上当小字读（实测 9.0:1 —— 要压得够深才顶得住红晕上的反击，6:1 那版会被吞） */
-  --flora-green: #6d8438; /* 苔绿压暗，浅底才看得出绿而不是黄 */
+  --flora-ink: #1f2419;
+  --flora-accent: #7d1c18;
+  --flora-green: #6d8438;
   --flora-line: rgba(31, 36, 25, 0.16);
+}
+
+/* 语义表面：archive 下逐一还原原本写死在 className 里的字面量，像素不变。
+   herbarium 下统一透明 —— 纸底由 body 提供，花汁光层在 body 与内容之间透上来。
+   ⚠ 不能只覆盖 --background：bg-white / bg-black / text-white 都是 Tailwind 字面量，
+     不读变量；而整页容器只要还留着不透明底，底光就永远透不上来。 */
+.site-surface {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+.site-surface-white {
+  background-color: #fff;
+  color: #000;
+}
+.site-surface-dark {
+  background-color: #000;
+  color: #fff;
+}
+
+html[data-theme="herbarium"] {
+  --background: var(--flora-bg);
+  --foreground: var(--flora-ink);
+  --diagonal-red: var(--flora-accent);
+  --surface-dark: var(--flora-bg);
+}
+
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.site-surface, .site-surface-white, .site-surface-dark) {
+  background-color: transparent;
+  color: var(--flora-ink);
+}
+/* 纯色表面上的白/黑字统一回到继承色；照片上的白字（AtlasCover、角标、lightbox）
+   不带这些类，保持原样 —— 翻成墨色会在暗照片上彻底看不见。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.text-foreground, .text-black) {
+  color: inherit;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .bg-white {
+  background-color: var(--flora-bg);
+}
+/* Tailwind 的 diagonal-red 是字面量（为支持 /alpha 修饰），不读 CSS 变量 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.text-diagonal-red, .hover\:text-diagonal-red:hover) {
+  color: var(--flora-accent);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .bg-diagonal-red {
+  background-color: var(--flora-accent);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .border-diagonal-red {
+  border-color: var(--flora-accent);
+}
+
+/* 字体气质：正文与标题走 Cormorant → Newsreader → 思源宋体，
+   眉标 / 顶栏的 .archive-text 仍是等宽（顶栏不动，这是那一辑定下的规矩）。
+   ⚠ Cormorant 的笔画对比靠细画撑，标题继续挂 font-black(900) 会掉回黑体观感，
+     所以只在这里把 h1–h3 的字重收到 400；字号、字距层级一行不改。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body {
+  font-family: var(--font-flora), var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body :is(.font-sans, .font-serif) {
+  font-family: inherit;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body :is(.archive-text, [class*="font-mono"]) {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body :is(h1, h2, h3) {
+  font-weight: 400;
+  letter-spacing: 0.004em;
+}
+
+/* 反相导航是给深底设计的：|底色 − 字色|，纸底上会把深墨算成浅灰、整条糊掉。
+   与相册页同一条结论，这里统一到语义类上摘掉。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-invert-nav {
+  mix-blend-mode: normal;
+  color: var(--flora-ink);
+}
+/* 卷动后的顶栏：原本是 bg-[#FAFAF8]/90 字面量，主题一换就露馅。
+   color-mix 让两档共用同一条声明，档案风下仍是 90% 的暖纸。 */
+.site-nav-scrolled {
+  background-color: color-mix(in srgb, var(--background) 90%, transparent);
+}
+
+/* —— 全站花汁底光 ——
+   absolute 而非 fixed：它必须随文档滚走，否则滑到照片墙时那一抹红还钉在视口上，
+   会把照片染脏（相册页那条「往下走必须完全干净」的约束在这里同样成立）。
+   body 上的 isolation 让 z-index:-1 的这层画在纸底之上、内容之下。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body {
+  position: relative;
+  isolation: isolate;
+}
+.site-flora-field {
+  display: none;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 44%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 44%, transparent 96%);
+}
+.site-flora-plane {
+  position: absolute;
+  inset: 0;
+}
+/* 复用相册页调过的 .flora-bloom-1/2 定位与浓度：主光只罩标题那一带、
+   绿不与红横向重叠。第三片（104vh 的赭红）在这一屏里看不见，全站层压根不渲染。 */
+.site-flora-fade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--flora-bg-rgb), 0.1) 0%,
+    rgba(var(--flora-bg-rgb), 0.26) 34%,
+    rgba(var(--flora-bg-rgb), 0.55) 68%,
+    var(--flora-bg) 96%
+  );
+}
+.site-flora-plane .flora-grain {
+  z-index: 0;
+}
+
+/* —— 风格切换按钮 ——
+   两枚标签由 CSS 按 data-theme 显隐，按钮本身不持有 state：刷新时文字与配色
+   同一帧到位，不会有 hydration 抖动。色样用 --background / --diagonal-red，
+   于是两种风格下它都是那一套配色的缩略。 */
+.theme-swatch {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border: 1px solid currentColor;
+  background-color: var(--background);
+}
+.theme-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background-color: var(--diagonal-red);
+}
+.theme-switch-label[data-label="herbarium"] {
+  display: none;
+}
+html[data-theme="herbarium"] .theme-switch-label[data-label="archive"] {
+  display: none;
+}
+html[data-theme="herbarium"] .theme-switch-label[data-label="herbarium"] {
+  display: inline;
+}
+/* 10px 汉字在纸面上比在深色面上难认（深色那版借反相把笔画撑亮），补回对比 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(nav, header) .theme-switch,
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(nav, header) [role="checkbox"] {
+  opacity: 0.9;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+/* 纸底上的浅字会「飘」：深底是压暗背景托字，纸底反过来得压深字迹。
+   那一辑量过纸面细字不能低于 0.75，这里按原档分级抬一档，
+   保留层次（0.4 仍比 0.6 淡）而不是把所有小字一律拉到不透明。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.opacity-30, .opacity-40, .opacity-45) {
+  opacity: 0.72;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-50 {
+  opacity: 0.78;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-60 {
+  opacity: 0.82;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-70 {
+  opacity: 0.88;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-75 {
+  opacity: 0.9;
 }
 
 /* 顶栏那两个勾选项在纸底上会发灰：它们原本靠 mix-blend-difference 的反相把

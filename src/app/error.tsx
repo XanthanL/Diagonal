@@ -16,7 +16,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white text-black px-6">
+    <div className="min-h-screen flex items-center justify-center site-surface-white px-6">
       <div className="max-w-xl space-y-8">
         <div className="archive-text text-[10px] tracking-[0.3em] text-diagonal-red border-l-2 border-diagonal-red pl-4">
           ERROR / 500

@@ -9,7 +9,7 @@ export default function SaltParticlePage() {
   const { lang } = useI18n();
 
   return (
-    <main className="relative min-h-screen bg-[#FAFAF8] pt-24">
+    <main className="relative min-h-screen site-surface pt-24">
       {/* 对角斜线装饰（呼应首页母题，仅作氛围） */}
       <div className="absolute top-0 left-0 w-full h-72 pointer-events-none opacity-[0.04]">
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-black to-transparent transform skew-y-12" />

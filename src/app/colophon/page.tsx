@@ -309,7 +309,7 @@ export default function ColophonPage() {
   const zh = lang === "zh";
 
   return (
-    <div className="relative overflow-hidden pt-32 min-h-screen bg-white text-black">
+    <div className="relative overflow-hidden pt-32 min-h-screen site-surface-white">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
         <div className="diagonal-line opacity-5" />
       </div>

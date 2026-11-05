@@ -16,35 +16,39 @@
  * 3. 只留三种颜色。晚樱那层试过，柔粉在这么暗的底上只能读出一片脏灰
  *    （裁出来的平均色 #806f6f，饱和度 13%），叠上去是糊不是光，砍掉。
  */
-export function FloraBackdrop() {
-  const layers = [
-    {
-      // 山茶：饱和正红，主光。bbox 是拿原图按红色连通域量出来的，不是目测
-      id: "camellia",
-      src: "https://res.cloudinary.com/de0wfewt8/image/upload/c_crop,x_1379,y_260,w_1610,h_1620/w_480,e_blur:1200/v1792908147/1_r3dorv.jpg",
-      className: "flora-bloom-1",
-    },
-    {
-      // 木绣球：苔绿。这张整图本来就是叶子的绿（#77904a），不必裁
-      id: "viburnum",
-      src: "https://res.cloudinary.com/de0wfewt8/image/upload/w_480,e_blur:1200/v1792908155/4_zmmknq.jpg",
-      className: "flora-bloom-2",
-    },
-    {
-      // 红花檵木：赭红偏玫。竖幅，裁中间那丛
-      id: "fringeflower",
-      src: "https://res.cloudinary.com/de0wfewt8/image/upload/c_crop,x_140,y_1400,w_1856,h_1820/w_420,e_blur:1400/v1792908166/10_xjzaxl.jpg",
-      className: "flora-bloom-3",
-    },
-  ];
+/**
+ * 三片花汁底光的图源，供相册页与全站草木主题共用。
+ * 顺序即叠放顺序，前两片（红 / 绿）是首屏的主光，第三片只在长页面底部压边。
+ */
+export const FLORA_LAYERS = [
+  {
+    // 山茶：饱和正红，主光。bbox 是拿原图按红色连通域量出来的，不是目测
+    id: "camellia",
+    src: "https://res.cloudinary.com/de0wfewt8/image/upload/c_crop,x_1379,y_260,w_1610,h_1620/w_480,e_blur:1200/v1792908147/1_r3dorv.jpg",
+    className: "flora-bloom-1",
+  },
+  {
+    // 木绣球：苔绿。这张整图本来就是叶子的绿（#77904a），不必裁
+    id: "viburnum",
+    src: "https://res.cloudinary.com/de0wfewt8/image/upload/w_480,e_blur:1200/v1792908155/4_zmmknq.jpg",
+    className: "flora-bloom-2",
+  },
+  {
+    // 红花檵木：赭红偏玫。竖幅，裁中间那丛
+    id: "fringeflower",
+    src: "https://res.cloudinary.com/de0wfewt8/image/upload/c_crop,x_140,y_1400,w_1856,h_1820/w_420,e_blur:1400/v1792908166/10_xjzaxl.jpg",
+    className: "flora-bloom-3",
+  },
+];
 
+export function FloraBackdrop() {
   return (
     <>
       <div
         aria-hidden="true"
         className="flora-field pointer-events-none absolute inset-x-0 top-0 -z-10 h-[170vh] overflow-hidden"
       >
-        {layers.map((layer) => (
+        {FLORA_LAYERS.map((layer) => (
           <div
             key={layer.id}
             className={`flora-bloom ${layer.className}`}
