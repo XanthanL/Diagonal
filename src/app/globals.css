@@ -813,6 +813,8 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field {
    原图整幅自带粉→米白渐变底，已由 verify/_vine_alpha.cjs 把绿色藤蔓
    抠成真透明：纸底与花光从叶缝里透出来，既没有矩形硬边，也不会和首页
    手绘题图、站点花光再叠一轮粉（上一轮刚撤掉的 bloom-1 就是叠出来的）。
+   _sprig_trim.cjs 再按 alpha 包围盒裁掉死透明画布（竖枝原本 42% 是空白），
+   下面按 data-variant 配横/竖两种框，细长垂藤才不会被 contain 压成一条线。
    档案风下父层与自身都 display:none + img lazy，连一张 webp 都不下载。 */
 .herb-sprig {
   display: none;
@@ -825,7 +827,29 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig {
   height: min(30vw, 340px);
   pointer-events: none;
   z-index: 1;
+  opacity: 0.58;
+}
+/* 5 枝长宽比差三倍（1.87 / 1.21 / 0.76 / 0.37 / 0.53）。统一塞进横框用
+   contain，两根细长垂藤会被压到只剩 ~110px 宽，肉眼看等于没画。
+   所以按 data-variant 给各自的框：横枝用横框、垂枝用竖框，面积预算接近。
+   透明度按每枝绿像素密度反向补一点，密丛压淡、淡枝提亮，视觉重量才齐。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="2"] {
   opacity: 0.5;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="3"] {
+  width: min(24vw, 290px);
+  height: min(30vw, 360px);
+  opacity: 0.66;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="4"] {
+  width: min(16vw, 200px);
+  height: min(34vw, 460px);
+  opacity: 0.56;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="5"] {
+  width: min(19vw, 250px);
+  height: min(34vw, 460px);
+  opacity: 0.72;
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="right"] {
   right: -1rem;
@@ -847,11 +871,32 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig img {
   object-fit: contain;
   object-position: right top;
 }
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig:is([data-variant="4"], [data-variant="5"]) img {
+  object-position: center top;
+}
 @media (max-width: 640px) {
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig {
     width: 62vw;
+    height: 52vw;
+    opacity: 0.52;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="2"] {
+    opacity: 0.46;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="3"] {
+    width: 52vw;
     height: 62vw;
-    opacity: 0.42;
+    opacity: 0.6;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="4"] {
+    width: 38vw;
+    height: 74vw;
+    opacity: 0.5;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="5"] {
+    width: 46vw;
+    height: 74vw;
+    opacity: 0.66;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="right"] {
     right: -2rem;

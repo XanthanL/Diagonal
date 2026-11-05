@@ -32,6 +32,18 @@ function hashPath(s: string): number {
   return h >>> 0;
 }
 
+// FNV-1a 的低几位几乎只由输入字节的异或决定，对一批同前缀的 URL 不随机：
+// 曾经直接 % 4 / % 2 / % 5，结果 3 号枝独占 8 页、1 号只有 2 页，
+// 19 个出现页里 16 个全压在左边。过一遍 murmur3 finalizer 把高位雪崩到低位再取模。
+function mix32(x: number): number {
+  x ^= x >>> 16;
+  x = Math.imul(x, 0x7feb352d);
+  x ^= x >>> 15;
+  x = Math.imul(x, 0x846ca68b);
+  x ^= x >>> 16;
+  return x >>> 0;
+}
+
 function excluded(pathname: string): boolean {
   if (pathname === "/" || pathname.startsWith("/admin")) return true;
   if (/^\/atlas\/[^/]+/.test(pathname)) return true; // 含 /atlas/[id]/[subId]
@@ -43,17 +55,28 @@ export function HerbariumSprig() {
   const pathname = usePathname() || "/";
   if (excluded(pathname)) return null;
 
-  const h = hashPath(pathname);
+  const h = mix32(hashPath(pathname));
   if (h % 4 === 0) return null; // 留四分之一的页面干干净净
 
-  const variant = ((h >>> 3) % SPRIG_COUNT) + 1;
-  // 左右角与上下错落各用一份独立哈希：同一个 h 的高位在短路径里分布不均，
-  // 会让绝大多数页面都把压花压在左边。
-  const side = hashPath(`${pathname}|side`) % 2 ? "right" : "left";
-  const lift = hashPath(`${pathname}|lift`) % 3;
+  // 三项各用一份带盐的混合值，避免留白 / 枝号 / 左右互相相关。
+  // 枝号走「高位分桶」而不是 % 5：对这批同前缀 URL，取模仍会让 4 号扎堆
+  // （实测 9 次 vs 5 号 2 次）。_sprig_hash.cjs 离线枚举过真实路由集合，
+  // 这组参数得到 5 枝 [4,6,4,5,5]、留白 7/31、左右 11/13。
+  const variant =
+    Math.floor(
+      (mix32(hashPath(`${pathname}|variant`) ^ 0x9e3779b9) / 4294967296) * SPRIG_COUNT
+    ) + 1;
+  const side = mix32(hashPath(`${pathname}|side`)) % 2 ? "right" : "left";
+  const lift = mix32(hashPath(`${pathname}|lift`)) % 3;
 
   return (
-    <div className="herb-sprig" data-side={side} data-lift={lift} aria-hidden="true">
+    <div
+      className="herb-sprig"
+      data-variant={variant}
+      data-side={side}
+      data-lift={lift}
+      aria-hidden="true"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={getAssetPath(`/images/vines/sprig-${variant}.webp`)}
