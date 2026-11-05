@@ -233,6 +233,21 @@ export default function Home() {
             transition={{ delay: 0.15, duration: 0.55, ease: EASE_OUT }}
             className="font-serif font-black leading-[0.8] tracking-tighter relative"
           >
+            {/* 草木主题专属题图：手绘粉晕 + 水彩藤蔓穿过 DIA / GONAL。
+                画里已经含字，草木风下 CSS 会把下面两行文本字标收进 sr-only，
+                由这幅画独占首屏；档案风下它 display:none，lazy 让 130KB 也不下载。 */}
+            <div className="hero-botanical-frame">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={getAssetPath("/images/hero-botanical.webp")}
+                alt="DIAGONAL — 草木主题题图：水彩藤蔓与粉色晕染"
+                width={1920}
+                height={974}
+                loading="lazy"
+                decoding="async"
+                className="hero-botanical-art"
+              />
+            </div>
             {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠。
                 宽屏下字号随视口放大，让字标撑满栏宽、右侧不再空荡。
                 轴线在字标之下，笔画会把线切断 */}

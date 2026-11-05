@@ -1025,12 +1025,54 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-75 {
    档案风是「档案柜」：通栏细线 + 等宽编号列 + 逐行横线 + 方形描边按钮。
    草木风改成「压制标本册」：短线记号、疏行距、圆形标本图、衬线斜体编号、
    题字般疏排的字标。所有选择器的权重都压得住 Tailwind 的 utility 字面量。 */
+
+/* —— 草木主题 · Hero 题图（用户手绘的那一幅）——
+   原画 1920×974：左侧粉晕、深墨衬线字标、水彩藤蔓自右上斜穿到左下。
+   画里已经有 DIA / GONAL，所以草木风下只留这一份字：两行 HTML 字标收进
+   sr-only（读屏与 SEO 仍在），轴线直接不画。档案风下整幅 display:none，
+   它是草木风的扉页，不是全站通用装饰；loading=lazy 让档案风连 90KB 都不下。
+
+   ⚠ 页面用的是 hero-botanical.webp（带 alpha 的派生版），不是 JPEG 原作：
+   四边由 verify/_hero_alpha.cjs 羽化成真透明，透出底下 site-flora-field 的花光，
+   边界才彻底消失。试过 CSS 伪元素渐隐到 --flora-bg —— 周围实际铺着花光、颜色
+   并不等于纸色，斜坡走完仍留一道亮矩形边，别退回那个做法。 */
+.hero-botanical-frame,
+.hero-botanical-art {
+  display: none;
+}
+html[data-theme="herbarium"] .home-page .hero-botanical-frame {
+  display: block;
+  position: relative;
+  /* 抵掉 section 的 px-6：题图比正文栏左右各出血 24px，像图鉴的跨页扉画 */
+  width: calc(100% + 3rem);
+  margin-left: -1.5rem;
+}
+html[data-theme="herbarium"] .home-page .hero-botanical-art {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+}
+html[data-theme="herbarium"] .home-page h1 > span.block {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  opacity: 0;
+}
+html[data-theme="herbarium"] .home-page .hero-axis {
+  display: none;
+}
 html[data-theme="herbarium"] .home-page {
   --wordmark-shift: 0.04em;
+  /* 题图从顶栏下就起：原先两层 padding 叠加会把画推到首屏中部 */
+  padding-top: 4.5rem;
 }
 html[data-theme="herbarium"] .home-page section:first-of-type {
-  padding-top: 5rem;
-  padding-bottom: 2rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 html[data-theme="herbarium"] .home-page h1 > span.block {
   line-height: 1.06;
