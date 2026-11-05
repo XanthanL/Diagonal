@@ -1053,6 +1053,16 @@ html[data-theme="herbarium"] .home-page .hero-botanical-art {
   max-width: none;
   height: auto;
 }
+/* ⚠ 首页别再叠第二轮红。
+   题图左半自带一整片柔和粉晕；全站花光的 flora-bloom-1（山茶红主光，
+   left:-14vw / 58vw / opacity .55）恰好也压在同一侧。两片红形状不同、
+   浓度相加，接缝处读成一块近矩形的玫红色斑（用户实测「不和谐」）。
+   逐层测过：视口最左 x=40 的粉 sat21% 全部来自 bloom-1，关掉它即回纯纸
+   sat5%；题图内 x=150 的粉 sat26% 则完全来自题图自己，与该层无关。
+   这里只撤红这一片，苔绿 bloom-2 留着和藤蔓同色系呼应；其它页面原样。 */
+html[data-theme="herbarium"]:has(.home-page) .site-flora-field .flora-bloom-1 {
+  display: none;
+}
 html[data-theme="herbarium"] .home-page h1 > span.block {
   position: absolute;
   width: 1px;
