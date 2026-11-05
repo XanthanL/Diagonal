@@ -64,7 +64,7 @@ export default function ArchiveIndexPage() {
     archiveData.filter((item) => item.project === project).length;
 
   return (
-    <div className="relative overflow-hidden pt-32 min-h-screen site-surface-white">
+    <div className="relative overflow-hidden pt-32 min-h-screen site-surface-white archive-index">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
         <div className="diagonal-line opacity-5" />
       </div>

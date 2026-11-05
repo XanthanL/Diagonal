@@ -10,7 +10,7 @@ export default function AtlasIndexPage() {
   const { lang } = useI18n();
 
   return (
-    <div className="relative overflow-hidden pt-32 min-h-screen site-surface-dark">
+    <div className="relative overflow-hidden pt-32 min-h-screen site-surface-dark atlas-index">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
         <div className="diagonal-line opacity-5" />
       </div>

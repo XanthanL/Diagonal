@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { FLORA_LAYERS } from "@/components/FloraBackdrop";
+import { HerbariumSprig } from "@/components/HerbariumSprig";
 
 /**
  * 草木主题下的全站背景：把 Xanthan摄影作品那一辑的「花汁洇在纸上」铺到所有页面。
@@ -32,6 +33,7 @@ export function SiteThemeBackdrop() {
         <div className="site-flora-fade" />
         <div className="flora-grain site-flora-grain" />
       </div>
+      <HerbariumSprig />
     </div>
   );
 }

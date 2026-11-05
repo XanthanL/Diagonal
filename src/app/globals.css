@@ -804,6 +804,63 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field {
   z-index: 0;
 }
 
+/* —— 草木主题 · 首屏压花 ——
+   5 枝水彩藤蔓按路由确定性轮换，只在 herbarium 主题、且只在部分页面的
+   首屏背景一角出现一次（组件里另有 1/4 的页面直接不挂），才是「偶尔」。
+   挂在 .site-flora-field 内：那层本身就是 z-index:-1 的首屏背景，压花与花光
+   同层、永远在内容之下，不会穿过文字；整层还带向下 mask，压花底部自然淡出，
+   随首屏滚走一次而不是钉在视口上。
+   原图整幅自带粉→米白渐变底，已由 verify/_vine_alpha.cjs 把绿色藤蔓
+   抠成真透明：纸底与花光从叶缝里透出来，既没有矩形硬边，也不会和首页
+   手绘题图、站点花光再叠一轮粉（上一轮刚撤掉的 bloom-1 就是叠出来的）。
+   档案风下父层与自身都 display:none + img lazy，连一张 webp 都不下载。 */
+.herb-sprig {
+  display: none;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig {
+  display: block;
+  position: absolute;
+  top: 4%;
+  width: min(30vw, 360px);
+  height: min(30vw, 340px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.5;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="right"] {
+  right: -1rem;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="left"] {
+  left: -1rem;
+  transform: scaleX(-1);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-lift="1"] {
+  top: 9%;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-lift="2"] {
+  top: 14%;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: right top;
+}
+@media (max-width: 640px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig {
+    width: 62vw;
+    height: 62vw;
+    opacity: 0.42;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="right"] {
+    right: -2rem;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="left"] {
+    left: -2rem;
+  }
+}
+
 /* —— 风格切换按钮 ——
    两枚标签由 CSS 按 data-theme 显隐，按钮本身不持有 state：刷新时文字与配色
    同一帧到位，不会有 hydration 抖动。色样用 --background / --diagonal-red，
@@ -1220,6 +1277,291 @@ html[data-theme="herbarium"] .home-page .full-index-link:hover {
   opacity: 0.045;
   background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
+}
+
+/* ==========================================================================
+   草木主题 · 板块 / 文章入口的独立版式
+   --------------------------------------------------------------------------
+   档案风是「索引柜」：通栏线、等宽编号列、等距网格、直角封面、大写黑体。
+   草木风另立一套「标本台 / 图鉴跨页」：非对称错落、拱窗裱纸、斜体题签、
+   大留白。用户要求两套风格可以截然不同、不必拘泥于条条目目 —— 但只在
+   :not(:has(.theme-locked)) 作用域内改，DOM 只加语义 class，档案风零影响。
+
+   ⚠ 三处不能退让：
+   1. framer-motion 会把 inline transform 写在 motion.div 上，所以错位/旋转
+      一律作用在它内部的 <a>/卡片上，别写在外层，否则被 inline 覆盖。
+   2. 纸面细字 opacity 不能低于 0.75（那一辑量过），白字必须翻成墨色。
+   3. 颜色只走 :root 的 --flora-* 变量，别写字面量。
+   ========================================================================== */
+
+/* 两页共同的档案风灰斜线、页头编号 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.atlas-index, .archive-index) .diagonal-line {
+  display: none;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.atlas-index, .archive-index) header {
+  margin-bottom: clamp(5rem, 10vw, 9rem);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.atlas-index, .archive-index) header > .archive-text {
+  border-left-width: 0;
+  padding-left: 0;
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: none;
+  color: var(--flora-accent);
+  opacity: 0.9;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.atlas-index, .archive-index) h1 {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.005em;
+  font-size: clamp(4.2rem, 10.5vw, 9.5rem);
+  line-height: 0.98;
+}
+/* 说明文字推到右侧另起一栏，不再紧贴大标题下方 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.atlas-index, .archive-index) header > p {
+  max-width: 24rem;
+  margin-left: auto;
+  text-align: right;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 2;
+  opacity: 0.82;
+}
+/* 页头那条来回扫描的红线，收成一道静态压痕（标本册不跑进度条） */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index header > div:last-child {
+  width: 130px;
+  max-width: none;
+  margin-left: auto;
+  background-color: var(--flora-accent);
+  background-image: none;
+  opacity: 0.55;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index header > div:last-child > div {
+  display: none;
+}
+
+/* —— THE ATLAS：压制标本拼贴 —— */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(3rem, 7vw, 7rem) clamp(2.5rem, 6vw, 6rem);
+  max-width: 68rem;
+  margin-inline: auto;
+}
+/* 三列不等宽：中间那列窄，像图鉴里被挤进去的一张小标本 */
+@media (min-width: 1024px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid {
+    grid-template-columns: 1.08fr 0.82fr 1.08fr;
+    column-gap: clamp(3rem, 6vw, 7rem);
+    row-gap: clamp(5rem, 9vw, 10rem);
+  }
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid > * > a {
+  display: block;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid > *:nth-child(3n + 1) > a {
+  transform: rotate(-1.4deg);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid > *:nth-child(3n + 2) > a {
+  transform: translateY(3.5rem) rotate(1.6deg);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid > *:nth-child(3n + 3) > a {
+  transform: translateY(-1.5rem) rotate(-0.7deg);
+}
+/* 直角封面 → 拱窗 + 纸色裱边 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card > div:first-child {
+  border: 7px solid var(--flora-bg);
+  border-radius: 48% 48% 5px 5px / 30% 30% 5px 5px;
+  background-color: var(--flora-bg);
+  box-shadow: 0 12px 34px rgba(31, 36, 25, 0.14);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card .mt-6 :is(span, h3) {
+  color: var(--flora-ink);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card .mt-6 span {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: none;
+  opacity: 0.78;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card .mt-6 h3 {
+  margin-top: 0.35rem;
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.5rem, 2.1vw, 2rem);
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+
+/* —— DOCUMENTS：卡片目录柜 —— */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(2.5rem, 5vw, 5rem);
+  row-gap: clamp(4rem, 8vw, 8rem);
+  max-width: 70rem;
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid > *:nth-child(3n + 2) {
+    margin-top: 4rem;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid > *:nth-child(3n + 3) {
+    margin-top: 8rem;
+  }
+}
+/* 筛选控件：方角描边 → 圆润题签 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index input,
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .mb-16 button {
+  border-radius: 999px;
+  border-color: var(--flora-line);
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .mb-16 button.bg-black {
+  background-color: var(--flora-ink);
+  border-color: var(--flora-ink);
+  color: var(--flora-bg);
+}
+/* 卡片：顶部横线撤掉，换成一枚细压线；照片同样裱进拱窗 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card {
+  border-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card > div:first-child {
+  border-top: 1px solid var(--flora-line);
+  padding-top: 0.9rem;
+  margin-bottom: 1.4rem;
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card > div:nth-child(2) {
+  border: 7px solid var(--flora-bg);
+  border-radius: 48% 48% 5px 5px / 30% 30% 5px 5px;
+  background-color: var(--flora-bg);
+  box-shadow: 0 10px 28px rgba(31, 36, 25, 0.12);
+  margin-bottom: 1.75rem;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card .bg-black {
+  background-color: transparent;
+  color: var(--flora-accent);
+  border: 1px solid var(--flora-accent);
+  padding: 0.15rem 0.55rem;
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card h3 {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.005em;
+  font-size: 1.7rem;
+  line-height: 1.3;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card p,
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card .space-y-4 > div:last-child span {
+  opacity: 0.8;
+}
+
+/* —— 首页两个入口：把「一条条」散成一张标本台 ——
+   motion.div 是 .index-row/.atlas-row 的父级，用 :has 选中它做奇偶错位，
+   不额外改 DOM。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .section-heading h2 {
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .section-heading::before {
+  width: 96px;
+  height: 2px;
+  transform: rotate(-3deg);
+  opacity: 0.75;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page div:has(> .index-row):nth-of-type(2n) > .index-row {
+  margin-left: clamp(0px, 6vw, 6rem);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page div:has(> .index-row):nth-of-type(2n + 1) > .index-row {
+  margin-right: clamp(0px, 4vw, 4rem);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .index-row > div:first-child {
+  position: relative;
+  padding-left: 2.6rem;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .index-row > div:first-child::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.15rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--flora-accent);
+  border-radius: 50%;
+  opacity: 0.65;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page div:has(> .atlas-row):nth-of-type(2n) .atlas-thumb {
+  width: 112px;
+  height: 112px;
+  transform: rotate(-6deg);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page div:has(> .atlas-row):nth-of-type(3n) .atlas-thumb {
+  transform: rotate(5deg);
+}
+
+/* —— 收敛：短列表、小屏、残留的档案风装饰 —— */
+/* 图集目前只有两张：三列不等宽会空出右侧一整列，退化成居中的两列 */
+@media (min-width: 1024px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section > .grid:has(> :nth-child(2):last-child) {
+    grid-template-columns: 1fr 1fr;
+    max-width: 54rem;
+  }
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index section {
+  padding-bottom: clamp(6rem, 12vw, 11rem);
+}
+/* 页脚那块档案风的灰色对角三角，在浅纸上是一块脏影 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .footer-diagonal {
+  display: none;
+}
+/* 纸面细字：Cormorant 细画在小字号下比等宽显淡，比档案风再提一档 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card .mt-6 span,
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .index-row > .archive-text:first-child,
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .atlas-row .archive-text {
+  opacity: 0.86;
+}
+@media (max-width: 640px) {
+  /* 窄栏里 1.7rem 的斜体中文会劈成五六行，收到能两行读完 */
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card h3 {
+    font-size: 1.15rem;
+    line-height: 1.45;
+    text-wrap: balance;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card .mt-6 h3 {
+    font-size: 1.25rem;
+    text-wrap: balance;
+  }
+  /* ⚠ 别用 :is(...) 把两页的 first-child 混在一起：/atlas 的 first-child
+     是封面，/archive 的 first-child 却是编号行 —— 误伤会给它套上 5px 灰框。 */
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .atlas-index .press-card > div:first-child {
+    border-width: 5px;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index .press-card > div:nth-child(2) {
+    border-width: 5px;
+  }
 }
 
 

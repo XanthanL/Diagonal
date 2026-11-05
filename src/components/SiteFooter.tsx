@@ -12,7 +12,7 @@ export function SiteFooter() {
   return (
     <footer className="relative overflow-hidden border-t border-black/10 px-6 py-16 md:py-24">
       {/* 对角线装饰 */}
-      <div className="absolute top-0 right-0 w-32 h-full pointer-events-none opacity-[0.04]">
+      <div className="footer-diagonal absolute top-0 right-0 w-32 h-full pointer-events-none opacity-[0.04]">
         <div className="absolute inset-0 bg-gradient-to-br from-transparent via-black to-transparent transform rotate-45 origin-top-right" />
       </div>
 
