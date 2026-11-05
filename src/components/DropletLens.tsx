@@ -12,10 +12,12 @@ const INTERACTIVE = 'a,button,[role="button"],input,textarea,select,summary,labe
 const SAMPLE_MS = 110;
 
 /**
- * 镜体放大倍率。真透镜的放大率由曲率决定，玻璃珠大约就是这个量级；
- * 再大就成放大镜 UI 了，跟「一滴水」不是一回事。
+ * 镜体放大倍率区间。真透镜的放大率由曲率决定，玻璃珠大约就是这个量级；
+ * 再大就成放大镜 UI 了。字越大倍率越低：230px 的 hero 字标按 1.5 倍放大，
+ * 112px 的镜体里只剩一团墨渍；但**所有文字都必须有折射**，不能有的整层退场。
  */
-const MAG = 1.5;
+const MAG_MAX = 1.5;
+const MAG_MIN = 1.15;
 
 /**
  * 收集 fixed 元素时的遍历深度上限。顶栏 / 吸底跳条都在很浅的一两层，
@@ -51,21 +53,26 @@ function collectFixed(root: Element): number[][] {
   return out;
 }
 
-/** 超大字号阈值：字比镜体还大时，折射只会把笔画放大成黑团 —— 干脆不折射。 */
-const HUGE_PX = 96;
+/** 字号归一上界：到这个字号就把倍率压到最低，再大也不继续降。 */
+const HUGE_PX = 120;
 
 /**
- * 指针下（含短祖先链）是否有超大字。hero 标题是 18vw，230px 的衬线在
- * 112px 镜体里放大 1.5 倍就是一团墨渍 —— 这种位置放大层应当退场。
+ * 按指针下的字号给出放大倍率。取祖先链上最大的字号（elementFromPoint 命中的
+ * 可能是 inline 的父级），小字 1.5 倍、超大字 1.15 倍，中间线性过渡。
+ * 关键是「不整层退场」：旧版在 ≥96px 上把放大层 opacity 归零，于是有的文字
+ * 有折射、有的只剩一个圈，观感不一致。
  */
-function sampleHuge(x: number, y: number): boolean {
+function sampleFontScale(x: number, y: number): number {
   let node = document.elementFromPoint(x, y) as HTMLElement | null;
+  let fs = 16;
   let guard = 0;
   while (node && guard++ < 4) {
-    if (parseFloat(getComputedStyle(node).fontSize) >= HUGE_PX) return true;
+    const n = parseFloat(getComputedStyle(node).fontSize);
+    if (n > fs) fs = n;
     node = node.parentElement;
   }
-  return false;
+  const t = Math.min(1, Math.max(0, (fs - 16) / (HUGE_PX - 16)));
+  return MAG_MAX - (MAG_MAX - MAG_MIN) * t;
 }
 
 /**
@@ -161,6 +168,7 @@ export function DropletLens() {
     }
 
     let lastK = -1;
+    let magScale = MAG_MAX; // 由指针下的字号实时收敛，见 sampleFontScale
     // 每帧把位置 / 直径交给 DOM 副本。着色器那枚水滴和这两层内容是同一枚水滴的两半，
     // 各走各的会立刻露馅（环圈住的范围和放大范围对不上）。
     engine.onFrame = (f: DropletFrame) => {
@@ -172,10 +180,10 @@ export function DropletLens() {
       const r = d / 2;
       m.style.transform = `translate3d(${f.x - size / 2}px, ${f.y - size / 2}px, 0)`;
 
-      // 放大层：把指针所在的文档点 P 推到镜心，再整体放大 MAG 倍
+      // 放大层：把指针所在的文档点 P 推到镜心，再按当前字号倍率放大
       const px = f.x + window.scrollX;
       const py = f.y + window.scrollY;
-      doc.style.transform = `translate(${r - MAG * px}px, ${r - MAG * py}px) scale(${MAG})`;
+      doc.style.transform = `translate(${r - magScale * px}px, ${r - magScale * py}px) scale(${magScale})`;
 
       // 半径只在明显变化时写：改 --k 会让这层重新光栅化 mask
       if (Math.abs(f.k - lastK) > 0.004) {
@@ -197,7 +205,6 @@ export function DropletLens() {
 
     let lastSample = 0;
     let dark: boolean | null = null;
-    let lastHuge = false;
     let lastTarget: Element | null = null;
 
     const sample = (x: number, y: number, force: boolean) => {
@@ -209,12 +216,8 @@ export function DropletLens() {
         dark = d;
         engine.setDark(d);
       }
-      // 超大字上放大层退场（同受节流管，getComputedStyle 不能每帧来）
-      const huge = sampleHuge(x, y);
-      if (huge !== lastHuge) {
-        lastHuge = huge;
-        zoomRef.current?.classList.toggle("mag-dim", huge);
-      }
+      // 字号决定折射倍率（同受节流管，getComputedStyle 不能每帧来）
+      magScale = sampleFontScale(x, y);
     };
 
     const onMove = (e: PointerEvent) => {
@@ -324,7 +327,6 @@ export function DropletLens() {
     return () => {
       buildRef.current = null;
       zoom.removeAttribute("data-ready");
-      zoom.classList.remove("mag-dim");
       doc.replaceChildren();
     };
   }, [off, enabled, pathname]);

@@ -101,7 +101,7 @@ function SectionHeading({
     <motion.div
       {...groupItem}
       transition={{ duration: 0.5, ease: EASE_OUT }}
-      className="border-t border-black/10 pt-8 mb-10 md:mb-12"
+      className="section-heading border-t border-black/10 pt-8 mb-10 md:mb-12"
     >
       <div className="md:flex md:items-end md:justify-between md:gap-16">
         <div className="space-y-4">
@@ -142,7 +142,7 @@ function IndexRow({
   return (
     <Link
       href={href}
-      className="press group block border-b border-black/5 py-5 md:grid md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-10"
+      className="index-row press group block border-b border-black/5 py-5 md:grid md:grid-cols-[11rem_1fr_auto] md:items-baseline md:gap-10"
     >
       <div className="archive-text flex justify-between gap-3 text-[11px] opacity-65 md:block md:space-y-1">
         {code}
@@ -223,7 +223,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="relative overflow-hidden pt-24 min-h-screen site-surface">
+    <div className="home-page relative overflow-hidden pt-24 min-h-screen site-surface">
       {/* Hero Section —— 原样保留（字标 / 斜切母题 / 介绍 / 右缘 meta） */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-10 md:py-20">
         <div className="relative space-y-8 md:space-y-12">
@@ -239,7 +239,7 @@ export default function Home() {
             <span className="relative z-10 block text-[18vw] sm:text-8xl md:text-[clamp(6rem,12vw,11rem)]">DIA</span>
             <span
               className="relative z-10 block text-[18vw] sm:text-8xl md:text-[clamp(6rem,12vw,11rem)] -mt-2 md:-mt-4"
-              style={{ transform: "translateX(0.3em)" }}
+              style={{ transform: "translateX(var(--wordmark-shift, 0.3em))" }}
             >
               GONAL
             </span>
@@ -266,7 +266,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.55, duration: 0.5, ease: EASE_OUT }}
-              className="hidden md:block archive-text text-[10px] leading-relaxed space-y-2 opacity-65 text-right pb-1"
+              className="hero-meta hidden md:block archive-text text-[10px] leading-relaxed space-y-2 opacity-65 text-right pb-1"
             >
               <div>{t(lang, "totalRecords")}: {archiveData.length}</div>
               <div>{t(lang, "axis")}</div>
@@ -317,7 +317,7 @@ export default function Home() {
           <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
             <Link
               href="/archive"
-              className="press group archive-text flex items-center gap-3 border border-diagonal-red px-8 py-3.5 text-xs font-bold text-diagonal-red hover:bg-diagonal-red hover:text-background"
+              className="full-index-link press group archive-text flex items-center gap-3 border border-diagonal-red px-8 py-3.5 text-xs font-bold text-diagonal-red hover:bg-diagonal-red hover:text-background"
             >
               {t(lang, "loadFullIndex")}
               <span className="transition-transform group-hover:translate-x-1.5">→</span>
@@ -361,10 +361,10 @@ export default function Home() {
                 >
                   <Link
                     href={`/atlas/${item.id}`}
-                    className="press group flex items-start gap-5 border-b border-black/5 py-6 md:gap-8"
+                    className="atlas-row press group flex items-start gap-5 border-b border-black/5 py-6 md:gap-8"
                   >
                     {item.cover && (
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden border border-black/10 bg-neutral-100 md:h-16 md:w-16">
+                      <div className="atlas-thumb relative h-14 w-14 shrink-0 overflow-hidden border border-black/10 bg-neutral-100 md:h-16 md:w-16">
                         <img
                           src={getAssetPath(item.cover)}
                           alt={localized.title}

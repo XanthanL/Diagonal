@@ -580,39 +580,37 @@ body {
   overflow: hidden;
   will-change: transform;
 }
-/* 放大层：径向渐隐到 0，露出底下那层 1:1 的副本。
-   没有这层渐隐，水滴就是「一个硬边圆形放大镜」；有了它，边缘回到原尺寸、
-   和页面严丝合缝地接上，边界就看不见了 —— 这才是透镜。
-   过渡区上下两层会叠出一点重影，而真实透镜边缘本来就有像散，正好对味。
+/* 放大层：中心实、边缘只留一道窄羽化。
+   ⚠ 必须有不透明底色：整页副本本身是透明的，圆内会同时看见「放大后的副本」
+   和底下「原尺寸的真实页面」，两份文字错位叠成重影（用户实测到的现象）。
+   这层底色把真实页面遮住，副本里的花色背景与内容照常画在它之上；
+   mask 只在最后 1% 半径里渐隐（约 0.5px 抗锯齿）。渐隐区一旦宽过 1px，
+   底下原尺寸的文字就会从这里透上来，和放大副本叠成重影 —— 边缘的柔度交给
+   着色器那圈湿痕/菲涅耳环去给，不靠这一层。
    半径由 --k 驱动：水滴出现就是放大区从中心扩散开，而不是整块淡入。 */
 .mag-zoom {
   position: absolute;
   inset: 0;
   overflow: hidden;
   --k: 0;
+  background: var(--background);
   /* 副本是在首次移动后的 idle 里建的（几百 ms），建好之前这层是空的。
      直接显示会「啪」地冒出一块放大内容，所以等副本就绪再淡入。 */
   opacity: 0;
   transition: opacity 0.28s ease;
   -webkit-mask-image: radial-gradient(
     circle at center,
-    #000 calc(56% * var(--k)),
+    #000 calc(99% * var(--k)),
     transparent calc(100% * var(--k))
   );
   mask-image: radial-gradient(
     circle at center,
-    #000 calc(56% * var(--k)),
+    #000 calc(99% * var(--k)),
     transparent calc(100% * var(--k))
   );
 }
 .mag-zoom[data-ready="1"] {
   opacity: 1;
-}
-/* 指针压在超大字（hero 标题 18vw ≈ 230px）上时不折射：字比镜体还大，
-   1.5 倍只会把衬线放大成一团墨渍。放大层淡出，只留水滴本身 —— 实测
-   同一位置关掉放大层后，L 字脚完整、环与湿痕依旧干净。 */
-.mag-zoom.mag-dim {
-  opacity: 0;
 }
 .mag-doc {
   position: absolute;
@@ -849,7 +847,7 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.opacity-30, .opacity-
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-50 {
   opacity: 0.78;
 }
-html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-60 {
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.opacity-60, .opacity-65) {
   opacity: 0.82;
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-70 {
@@ -1022,6 +1020,145 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .opacity-75 {
    0.03 是能察觉的最低量 —— 再高一点点就会在照片之间的空隙里显脏。
    ⚠ 浅底上必须加 multiply： turbulence 出来的是**彩色**噪点，直接铺在纸上会
    泛出一层说不清的虹彩，压暗混进去才是纸浆本身的疏密。 */
+/* ——— 草木主题 · 首页版式：标本册，而不是索引清单 ———
+   只在 .home-page + 草木风生效，档案风逐像素不动，DOM 结构也一行没改。
+   档案风是「档案柜」：通栏细线 + 等宽编号列 + 逐行横线 + 方形描边按钮。
+   草木风改成「压制标本册」：短线记号、疏行距、圆形标本图、衬线斜体编号、
+   题字般疏排的字标。所有选择器的权重都压得住 Tailwind 的 utility 字面量。 */
+html[data-theme="herbarium"] .home-page {
+  --wordmark-shift: 0.04em;
+}
+html[data-theme="herbarium"] .home-page section:first-of-type {
+  padding-top: 5rem;
+  padding-bottom: 2rem;
+}
+html[data-theme="herbarium"] .home-page h1 > span.block {
+  line-height: 1.06;
+  letter-spacing: 0.03em;
+}
+html[data-theme="herbarium"] .home-page h1 > span.block + span.block {
+  margin-top: 0.08em;
+}
+@media (min-width: 768px) {
+  html[data-theme="herbarium"] .home-page h1 > span.block {
+    font-size: clamp(5.5rem, 9.6vw, 9.5rem);
+  }
+}
+html[data-theme="herbarium"] .home-page section:first-of-type p {
+  max-width: 33rem;
+  font-size: 1.08rem;
+  line-height: 2;
+  letter-spacing: 0.02em;
+}
+html[data-theme="herbarium"] .home-page .hero-meta {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-size: 11px;
+  line-height: 2.2;
+  letter-spacing: 0.14em;
+  text-transform: none;
+  opacity: 0.78;
+  border-right: 1px solid var(--flora-line);
+  padding-right: 1.4rem;
+}
+/* 章节头：通栏线换成一枚短记号，编号退回衬线斜体 */
+html[data-theme="herbarium"] .home-page .section-heading {
+  position: relative;
+  border-top-color: transparent;
+  padding-top: 0;
+  margin-bottom: 3.6rem;
+}
+html[data-theme="herbarium"] .home-page .section-heading::before {
+  content: "";
+  position: absolute;
+  top: -1.5rem;
+  left: 0;
+  width: 30px;
+  height: 1px;
+  background: var(--diagonal-red);
+}
+html[data-theme="herbarium"] .home-page .section-heading .archive-text {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: none;
+  opacity: 0.8;
+}
+html[data-theme="herbarium"] .home-page .section-heading h2 {
+  font-size: clamp(2.1rem, 3.8vw, 3.3rem);
+  font-weight: 400;
+  letter-spacing: 0.045em;
+  line-height: 1.15;
+}
+html[data-theme="herbarium"] .home-page section:not(:first-of-type) > div.max-w-7xl {
+  padding-top: 3.5rem;
+  padding-bottom: 4.5rem;
+}
+/* 索引行：撤掉逐行横线，靠留白分组 */
+html[data-theme="herbarium"] .home-page :is(.index-row, .atlas-row) {
+  border-bottom-color: transparent;
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+  column-gap: 2.5rem;
+}
+html[data-theme="herbarium"] .home-page .index-row {
+  grid-template-columns: 8rem 1fr auto;
+}
+html[data-theme="herbarium"] .home-page .index-row > .archive-text:first-child {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  opacity: 0.78;
+}
+html[data-theme="herbarium"] .home-page :is(.index-row, .atlas-row) h3 {
+  font-weight: 400;
+  font-size: 1.55rem;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+html[data-theme="herbarium"] .home-page .index-row p {
+  line-height: 1.95;
+  opacity: 0.82;
+}
+/* 图版：方形缩略图换成圆形压花标本，斜线叠加层退场 */
+html[data-theme="herbarium"] .home-page .atlas-thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border-color: var(--flora-line);
+  box-shadow: 0 2px 16px rgba(31, 36, 25, 0.1);
+}
+html[data-theme="herbarium"] .home-page .atlas-thumb .diagonal-line {
+  display: none;
+}
+html[data-theme="herbarium"] .home-page .atlas-row .archive-text {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: none;
+  opacity: 0.8;
+}
+/* 全索引：描边方按钮改成一行带红下划线的斜体字 */
+html[data-theme="herbarium"] .home-page .full-index-link {
+  border: 0;
+  border-bottom: 1px solid var(--diagonal-red);
+  padding: 0 0 0.5rem;
+  background: transparent;
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+html[data-theme="herbarium"] .home-page .full-index-link:hover {
+  background: transparent;
+  color: var(--diagonal-red);
+}
+
 .flora-grain {
   position: absolute;
   inset: 0;
