@@ -780,12 +780,15 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field {
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 44%, transparent 96%);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 44%, transparent 96%);
 }
+/* 向下渐隐只作用于花光那一层。原先挂在 .site-flora-field 上，会把同层的
+   压花也一起削掉：藤蔓刚好处在 4%~14% 往下 340~460px 的区间，下半截被
+   mask 压到 0.6 以下，叠上水彩本身的淡，整枝就消失在纸里了。 */
 .site-flora-plane {
   position: absolute;
   inset: 0;
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 44%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.6) 44%, transparent 96%);
 }
 /* 复用相册页调过的 .flora-bloom-1/2 定位与浓度：主光只罩标题那一带、
    绿不与红横向重叠。第三片（104vh 的赭红）在这一屏里看不见，全站层压根不渲染。 */
@@ -827,35 +830,36 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig {
   height: min(30vw, 340px);
   pointer-events: none;
   z-index: 1;
-  opacity: 0.58;
+  opacity: 0.78;
 }
 /* 5 枝长宽比差三倍（1.87 / 1.21 / 0.76 / 0.37 / 0.53）。统一塞进横框用
    contain，两根细长垂藤会被压到只剩 ~110px 宽，肉眼看等于没画。
    所以按 data-variant 给各自的框：横枝用横框、垂枝用竖框，面积预算接近。
    透明度按每枝绿像素密度反向补一点，密丛压淡、淡枝提亮，视觉重量才齐。 */
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="2"] {
-  opacity: 0.5;
+  opacity: 0.7;
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="3"] {
   width: min(24vw, 290px);
   height: min(30vw, 360px);
-  opacity: 0.66;
+  opacity: 0.82;
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="4"] {
   width: min(16vw, 200px);
   height: min(34vw, 460px);
-  opacity: 0.56;
+  opacity: 0.76;
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="5"] {
   width: min(19vw, 250px);
   height: min(34vw, 460px);
-  opacity: 0.72;
+  opacity: 0.86;
 }
+/* 内收：原先 -1rem 贴边，加上父层 overflow:hidden，整枝有近一半被裁在视口外 */
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="right"] {
-  right: -1rem;
+  right: clamp(1rem, 3vw, 3.5rem);
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="left"] {
-  left: -1rem;
+  left: clamp(1rem, 3vw, 3.5rem);
   transform: scaleX(-1);
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-lift="1"] {
@@ -878,31 +882,68 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig:is([data-varia
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig {
     width: 62vw;
     height: 52vw;
-    opacity: 0.52;
+    opacity: 0.76;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="2"] {
-    opacity: 0.46;
+    opacity: 0.7;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="3"] {
     width: 52vw;
     height: 62vw;
-    opacity: 0.6;
+    opacity: 0.8;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="4"] {
     width: 38vw;
     height: 74vw;
-    opacity: 0.5;
+    opacity: 0.74;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-variant="5"] {
     width: 46vw;
     height: 74vw;
-    opacity: 0.66;
+    opacity: 0.84;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="right"] {
-    right: -2rem;
+    right: 0.5rem;
   }
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-side="left"] {
-    left: -2rem;
+    left: 0.5rem;
+  }
+}
+
+/* 首页单独落位：手绘题图的藤蔓从左下斜穿到右上，右下角是唯一干净的纸面。
+   放在首屏偏下，既不压字标，也避开题图自带的粉晕（左侧）与绿藤（中右）。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-home="1"] {
+  top: auto;
+  bottom: 4%;
+  right: 5vw;
+  left: auto;
+  width: min(30vw, 400px);
+  height: min(28vw, 350px);
+  transform: none;
+  opacity: 0.8;
+}
+/* 2 号枝右缘那列被画幅切断的碎叶，已在素材生成脚本里羽化到真透明
+   （_sprig_boost.cjs 的 RIGHT_FEATHER），这里只需把图压到框底。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-home="1"] img {
+  object-position: center bottom;
+  /* 素材右缘已羽化，但 contain 缩放后最右仍有一列浅影，
+     再从 74% 起柔收到透明，保证纸面上无直边。 */
+  mask-image: linear-gradient(to right, #000 74%, transparent 98%);
+  -webkit-mask-image: linear-gradient(to right, #000 74%, transparent 98%);
+}
+@media (max-width: 640px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-home="1"] {
+    bottom: 3%;
+    right: 3vw;
+    width: 62vw;
+    height: 56vw;
+    opacity: 0.76;
+  }
+  /* 手机首屏被正文占满，2 号枝顶端的散叶会飘进段落里。斜向渐隐只留
+     右下那丛密叶，左上完全退场，右缘也不会出现直边。 */
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .herb-sprig[data-home="1"] img {
+    mask-image: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.35) 32%, #000 62%);
+    -webkit-mask-image: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.35) 32%, #000 62%);
   }
 }
 

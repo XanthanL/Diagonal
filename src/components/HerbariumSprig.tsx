@@ -45,7 +45,7 @@ function mix32(x: number): number {
 }
 
 function excluded(pathname: string): boolean {
-  if (pathname === "/" || pathname.startsWith("/admin")) return true;
+  if (pathname.startsWith("/admin")) return true;
   if (/^\/atlas\/[^/]+/.test(pathname)) return true; // 含 /atlas/[id]/[subId]
   if (pathname.includes("ATLAS-HZ")) return true;
   return false;
@@ -55,18 +55,25 @@ export function HerbariumSprig() {
   const pathname = usePathname() || "/";
   if (excluded(pathname)) return null;
 
+  // 首页曾整页排除（怕和手绘题图抢），结果用户打开站点第一眼永远看不到藤蔓。
+  // 改为照常挂一枝，但由 CSS 单独放到右下角（题图藤蔓从左下斜上到右上，
+  // 右下是干净纸面），且首页不参与留白 —— 切到草木风就该立刻看见。
+  const isHome = pathname === "/";
   const h = mix32(hashPath(pathname));
-  if (h % 4 === 0) return null; // 留四分之一的页面干干净净
+  if (!isHome && h % 4 === 0) return null; // 留四分之一的页面干干净净
 
   // 三项各用一份带盐的混合值，避免留白 / 枝号 / 左右互相相关。
   // 枝号走「高位分桶」而不是 % 5：对这批同前缀 URL，取模仍会让 4 号扎堆
   // （实测 9 次 vs 5 号 2 次）。_sprig_hash.cjs 离线枚举过真实路由集合，
   // 这组参数得到 5 枝 [4,6,4,5,5]、留白 7/31、左右 11/13。
-  const variant =
-    Math.floor(
-      (mix32(hashPath(`${pathname}|variant`) ^ 0x9e3779b9) / 4294967296) * SPRIG_COUNT
-    ) + 1;
-  const side = mix32(hashPath(`${pathname}|side`)) % 2 ? "right" : "left";
+  // 首页固定用 2 号（最饱满的密丛，可见像素 21%）。哈希轮到的 5 号是细长
+  // 垂枝（仅 9.7%），放进首屏右下那个框里只剩一根线，等于没画。
+  const variant = isHome
+    ? 2
+    : Math.floor(
+        (mix32(hashPath(`${pathname}|variant`) ^ 0x9e3779b9) / 4294967296) * SPRIG_COUNT
+      ) + 1;
+  const side = isHome ? "right" : mix32(hashPath(`${pathname}|side`)) % 2 ? "right" : "left";
   const lift = mix32(hashPath(`${pathname}|lift`)) % 3;
 
   return (
@@ -75,6 +82,7 @@ export function HerbariumSprig() {
       data-variant={variant}
       data-side={side}
       data-lift={lift}
+      data-home={isHome ? "1" : undefined}
       aria-hidden="true"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
