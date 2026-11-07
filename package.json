@@ -11,6 +11,7 @@
     "merge:vacuum": "node scripts/merge-vacuum.js",
     "sync:sites": "node scripts/sync-sites.js",
     "import:wechat": "node scripts/import-wechat.js",
+    "fetch:wechat": "node scripts/fetch-wechat-history.js",
     "preview": "npm run build && npx serve out",
     "start": "next start",
     "lint": "next lint"

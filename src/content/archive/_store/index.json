@@ -24,5 +24,32 @@
     "region": "Southwest",
     "project": "research-notes",
     "thumbnail": "/images/archive/DIAGONAL-2026-WX1107/img-1.jpg"
+  },
+  {
+    "id": "DIAGONAL-2024-WX0808",
+    "title": "《城市行走与社会设计》赵攀【“空间先锋--工厂，城市与青年“展览分享会】",
+    "titleEn": "《城市行走与社会设计》赵攀【“空间先锋--工厂，城市与青年“展览分享会】",
+    "artist": "空间先锋",
+    "artistEn": "Diagonal",
+    "year": "2024.08.08 23:56",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "城市行走与社会设计",
+      "赵攀【“空间先锋",
+      "工厂"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2024-WX0808/img-1.jpg"
   }
 ]
