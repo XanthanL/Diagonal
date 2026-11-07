@@ -369,8 +369,13 @@ async function main() {
   const sources = fs.existsSync(sourcesPath) ? JSON.parse(fs.readFileSync(sourcesPath, "utf8")) : [];
   const known = new Set(sources.flatMap((s) => [s.source, s.url]).filter(Boolean));
   const store = JSON.parse(fs.readFileSync(STORE, "utf8"));
-  const used = new Set([...store, ...JSON.parse(fs.readFileSync(path.join(CONTENT_DIR, "_store/legacy.json"), "utf8"))].map((x) => x.id));
+  const legacy = JSON.parse(fs.readFileSync(path.join(CONTENT_DIR, "_store/legacy.json"), "utf8"));
+  const used = new Set([...store, ...legacy].map((x) => x.id));
+  // 用户给全量清单时，legacy 里那 19 篇也会混进来；按标题认出「已搬过」，避免重复建档
+  const normTitle = (s) => s.replace(/[\s|｜丨:：·\-—《》"'"',，。、]/g, "").toLowerCase();
+  const knownTitles = new Map([...store, ...legacy].map((x) => [normTitle(x.title), x.id]));
   const added = [];
+  const skipped = [];
 
   for (const url of urls) {
     if (known.has(url)) { console.log("\n==>", url, "\n   – 台账里已有，跳过"); continue; }
@@ -383,6 +388,13 @@ async function main() {
 
     if (PROMO_RE.test(article.title.replace(/^\s+/, "")) && /转发|推广|广告/.test(article.title)) {
       console.log("   – 跳过（转发/推广类）:", article.title);
+      skipped.push({ url, title: article.title, reason: "promo" });
+      continue;
+    }
+    const dup = knownTitles.get(normTitle(article.title));
+    if (dup) {
+      console.log(`   – 站点已有同标题文章（${dup}），跳过`);
+      skipped.push({ url, title: article.title, duplicateOf: dup });
       continue;
     }
     console.log("   标题:", article.title);
@@ -409,10 +421,12 @@ async function main() {
     await new Promise((r) => setTimeout(r, 800));
   }
 
-  if (!dryRun && added.length) {
-    fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
-    fs.writeFileSync(sourcesPath, JSON.stringify([...sources, ...added], null, 2) + "\n", "utf8");
-    console.log(`\n完成：新增 ${added.length} 篇，_store/index.json 共 ${store.length} 条，源链接台账共 ${sources.length + added.length} 条`);
+  // 台账也要记「跳过」的链接：同一份清单可反复跑，不会反复抓取、也不会重复问要不要搬
+  const records = [...added, ...skipped];
+  if (!dryRun && records.length) {
+    if (added.length) fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
+    fs.writeFileSync(sourcesPath, JSON.stringify([...sources, ...records], null, 2) + "\n", "utf8");
+    console.log(`\n完成：新增 ${added.length} 篇 / 跳过 ${skipped.length} 篇，_store/index.json 共 ${store.length} 条，源链接台账共 ${sources.length + records.length} 条`);
   }
 }
 
