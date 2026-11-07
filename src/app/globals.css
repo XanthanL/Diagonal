@@ -207,7 +207,8 @@ body {
 /* h2 去掉 uppercase，改用衬线，降低底线密度（仅在一级章节加线） */
 .archive-html-content h2 { @apply font-serif text-3xl font-bold mt-24 mb-8 border-b border-black/30 pb-4; }
 /* 正文 opacity 提升至 95，去掉 text-justify（中文左对齐更舒服） */
-.archive-html-content p { @apply opacity-95 mb-8; }
+/* 公众号搬运的学术文献常带整条裸 URL，390px 下会撑出横向滚动 */
+.archive-html-content p { @apply opacity-95 mb-8; overflow-wrap: anywhere; }
 .archive-html-content img { @apply w-full h-auto my-16 shadow-2xl border border-black/5; max-height: 75vh; object-fit: contain; object-position: center; }
 /* blockquote 改用衬线，更有出版物质感 */
 .archive-html-content blockquote { @apply font-serif border-l-8 border-diagonal-red pl-8 py-4 my-16 italic opacity-80 bg-neutral-50 text-2xl font-light; }
