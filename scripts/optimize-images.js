@@ -3,7 +3,8 @@
  *
  * 扫描 public/images/archive/ 与 public/images/artists/ 下所有 jpg/jpeg/png，
  * 为每张图生成多档宽度的 WebP 变体（只缩不放）：
- *   foo.jpg → foo.w480.webp / foo.w960.webp / foo.w1600.webp
+ *   foo.jpg → foo.w480.webp / foo.w960.webp
+ *   更宽的档位由 src/lib/path.ts 的 getLocalSrcSet 直接指向原图，不再多存一份副本。
  *
  * - 幂等增量：变体已存在且比原图新则跳过
  * - CI 中通过 npm prebuild 自动执行，变体随 public/ 一起进入 out/
@@ -19,7 +20,10 @@ const sharp = require("sharp");
 const ROOTS = ["archive", "artists"].map((d) =>
   path.join(__dirname, "..", "public", "images", d)
 );
-const WIDTHS = [480, 960, 1600];
+// 2026-11-08：全量公众号归档让 archive/ 涨到 3407 张原图。第三档 w1600 对
+// 绝大多数 1080px 宽的微信图只是近似原尺寸的副本，独占 227MB，把 out/ 顶到
+// 0.92GB（GitHub Pages artifact 上限 1GB）。撤掉第三档，srcSet 的 1600w 改指原图。
+const WIDTHS = [480, 960];
 const WEBP_QUALITY = 78;
 const EXT_RE = /\.(jpe?g|png)$/i;
 const VARIANT_RE = /\.w\d+\.webp$/i;

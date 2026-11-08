@@ -47,18 +47,23 @@ export const getCloudinarySrcSet = (url: string, widths: number[] = DEFAULT_SRCS
 
 // —— 本地图片响应式变体 ——
 // 构建期 scripts/optimize-images.js 为 public/images/archive/ 下的图片
-// 生成 {name}.w480.webp / .w960.webp / .w1600.webp 变体。
-// 这里按同样命名规则拼 srcSet；变体缺失时由 <img onError> 回退原图。
-const LOCAL_VARIANT_WIDTHS = [480, 960, 1600];
+// 生成 {name}.w480.webp / .w960.webp 变体；更宽的档位直接用原图（见下方说明）。
+// 变体缺失时由 <img onError> 回退原图。
+const LOCAL_VARIANT_WIDTHS = [480, 960];
 const LOCAL_IMG_RE = /^\/images\/.+\.(jpe?g|png)$/i;
 
 export const getLocalSrcSet = (src: string): string => {
   if (!LOCAL_IMG_RE.test(src)) return '';
   const base = src.replace(/\.(jpe?g|png)$/i, '');
-  return LOCAL_VARIANT_WIDTHS
+  const enc = (p: string) => encodeURI(getAssetPath(p)).replace(/,/g, '%2C');
+  return [
     // srcset 以逗号/空格分隔条目，URL 中的中文、逗号、空格必须百分号编码
-    .map((w) => `${encodeURI(getAssetPath(`${base}.w${w}.webp`)).replace(/,/g, '%2C')} ${w}w`)
-    .join(', ');
+    ...LOCAL_VARIANT_WIDTHS.map((w) => `${enc(`${base}.w${w}.webp`)} ${w}w`),
+    // 1600w 直接指向原图：微信正文图绝大多数只有 1080px 宽，再生一档 w1600.webp
+    // 等于存一份近似原尺寸的副本 —— 全量归档时这一档独占 227MB，把 Pages artifact
+    // 顶到 0.92GB（逼近 1GB 上限）。原图本身已是 quality86 / 限宽 1600 的压缩版。
+    `${enc(src)} 1600w`,
+  ].join(', ');
 };
 
 // 变体加载失败时回退原图（清空 srcset 后浏览器重新用 src 加载）
