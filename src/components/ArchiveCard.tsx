@@ -2,6 +2,7 @@ import { ArchiveItem, getLocalizedArchiveItem } from "@/lib/data";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
 import { getAssetPath, getLocalSrcSet, srcSetFallback } from "@/lib/path";
+import { ArchiveNoCoverPlate } from "@/components/ArchiveNoCoverPlate";
 import { useState } from "react";
 
 export function ArchiveCard({ item }: { item: ArchiveItem }) {
@@ -47,13 +48,12 @@ export function ArchiveCard({ item }: { item: ArchiveItem }) {
               />
             </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center space-y-3">
-                <div className="w-12 h-12 mx-auto border border-black/10 relative">
-                  <div className="absolute inset-0 diagonal-line opacity-30" />
-                </div>
-                <div className="archive-text text-[9px] opacity-45">{item.id}</div>
-              </div>
+            /* 没有可用封面时用「无图版档案封套」占位：
+               用文章自身的栏目 / 标题 / 日期 / 编号排成一张印版题签，
+               而不是留一块空白灰底。z-15 压住外层那条 diagonal-line（z-10），
+               保留 hover 红线（z-20）在最上层。 */
+            <div className="absolute inset-0 z-[15]">
+              <ArchiveNoCoverPlate item={item} title={localized.title} lang={lang} />
             </div>
           )}
 

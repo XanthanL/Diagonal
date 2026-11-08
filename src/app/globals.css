@@ -1883,4 +1883,249 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .atlas-row .arc
   }
 }
 
+/* ==========================================================================
+   无图版档案封套（ArchiveNoCoverPlate）
+   --------------------------------------------------------------------------
+   没有封面的推文不再留一块灰底 + 一枚 12px 小方块。封面本身就是一张印版
+   题签：顶部编号行 / 中部几何印版 / 下部栏目 + 题签 / 底部记号线，全部取自
+   文章自身的元数据。颜色只走 --foreground / --diagonal-red / --background，
+   档案风与草木风各取各的墨与红，组件里不写第二套配色。
+   ========================================================================== */
+.archive-no-cover {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* 版式档位按「卡片自身宽度」而不是视口判断：草木风手机端是两列，
+     同样 390px 视口下卡片只有约 150px，栅格以后怎么改都会自动适配 */
+  container-type: inline-size;
+  color: var(--foreground);
+  background: var(--background);
+}
+/* 纸面：极淡横线格 + 一条贯穿的对角基准线（品牌母题，不是装饰划痕） */
+.anc-paper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(
+      135deg,
+      transparent 49.75%,
+      color-mix(in srgb, var(--foreground) 13%, transparent) 49.75%,
+      color-mix(in srgb, var(--foreground) 13%, transparent) 50.05%,
+      transparent 50.05%
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 13px,
+      color-mix(in srgb, var(--foreground) 4%, transparent) 13px 14px
+    );
+}
+.anc-inner {
+  position: relative;
+  height: 100%;
+  padding: 8% 8.5% 7%;
+  display: flex;
+  flex-direction: column;
+}
+.anc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6em;
+  padding-bottom: 6%;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  font-size: clamp(7px, 0.6vw, 9px);
+  letter-spacing: 0.14em;
+  opacity: 0.62;
+  white-space: nowrap;
+}
+.anc-top span:last-child {
+  letter-spacing: 0.08em;
+}
+
+/* 印版：四角裁切标记 + 四种由档案号派生的测绘几何 */
+.anc-plate {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 小卡片里别再吃 padding，否则印版被 max-height 压成一枚小图标 */
+  padding: 3% 0 4%;
+  transition: transform 240ms var(--ease-out);
+}
+.anc-mark {
+  width: min(84%, 200px);
+  max-height: 100%;
+  aspect-ratio: 1;
+  overflow: visible;
+}
+.anc-mark :is(path, circle, rect, line) {
+  stroke: currentColor;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.3;
+}
+.anc-mark .anc-crop {
+  opacity: 0.55;
+}
+.anc-mark .anc-accent-fill {
+  fill: var(--diagonal-red);
+  stroke: none;
+  opacity: 1;
+}
+.anc-mark .anc-accent-stroke {
+  stroke: var(--diagonal-red);
+  stroke-width: 2px;
+  opacity: 0.9;
+}
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .anc-plate {
+    transform: translateY(-3px) scale(1.03);
+  }
+}
+
+.anc-copy {
+  flex: 0 0 auto;
+  padding-bottom: 7%;
+}
+.anc-eyebrow {
+  font-size: clamp(8px, 0.66vw, 10px);
+  letter-spacing: 0.2em;
+  color: var(--diagonal-red);
+  opacity: 0.9;
+  margin-bottom: 0.55em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.anc-head {
+  font-family: var(--font-serif-cjk), var(--font-serif), Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(1rem, 1.5vw, 1.45rem);
+  line-height: 1.36;
+  letter-spacing: 0.01em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.anc-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  padding-top: 5.5%;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  font-size: clamp(7px, 0.6vw, 9px);
+  letter-spacing: 0.16em;
+  opacity: 0.6;
+}
+.anc-bottom span:last-child {
+  margin-left: auto;
+}
+.anc-redbar {
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  flex: 0 0 auto;
+  background: var(--diagonal-red);
+  opacity: 1;
+}
+
+/* 草木风：同一张封套换成标本册题签 —— 拱窗会切掉上方两角，页眉整体下移；
+   对角硬线换掉（那一辑全站都不出现档案风斜线），几何线相应压淡。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-no-cover {
+  background: var(--flora-bg);
+  color: var(--flora-ink);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-inner {
+  padding-top: 13%;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-paper {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 15px,
+    color-mix(in srgb, var(--flora-ink) 3.5%, transparent) 15px 16px
+  );
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(.anc-top, .anc-bottom) {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  border-color: var(--flora-line);
+  opacity: 0.8;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-mark :is(path, circle, rect, line) {
+  opacity: 0.24;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-mark .anc-crop {
+  opacity: 0.4;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-eyebrow {
+  font-family: var(--font-flora), var(--font-serif), Georgia, serif;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.12em;
+  color: var(--flora-accent);
+  opacity: 1;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-head {
+  font-family: var(--font-flora), var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(1.1rem, 1.7vw, 1.6rem);
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-bottom {
+  letter-spacing: 0.1em;
+}
+
+/* —— 窄卡片档（< 220px，主要是草木风手机端两列）——
+   完整题签会把顶部编号行撑破、把印版压成一枚看不见的小点。这里把几何印版
+   放大成半透明水印铺满，题签靠下排，信息一个不少但不再互相挤。 */
+@container (max-width: 220px) {
+  .anc-top,
+  .anc-copy,
+  .anc-bottom {
+    position: relative;
+    z-index: 1;
+  }
+  .anc-top span:first-child {
+    display: none;
+  }
+  .anc-top {
+    justify-content: flex-end;
+    font-size: 7px;
+    letter-spacing: 0.08em;
+  }
+  .anc-plate {
+    /* 水印只占上半幅：下缘收在题签上方，几何线不会压到标题笔画上 */
+    position: absolute;
+    inset: -4% 0 24% 0;
+    z-index: 0;
+    padding: 0;
+    opacity: 0.5;
+  }
+  .anc-mark {
+    width: 88%;
+    max-height: none;
+  }
+  .anc-copy {
+    margin-top: auto;
+  }
+  .anc-eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+  }
+  .anc-head {
+    font-size: 0.92rem;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+  .anc-bottom {
+    font-size: 7px;
+    letter-spacing: 0.06em;
+  }
+}
+
 
