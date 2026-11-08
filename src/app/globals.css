@@ -1733,12 +1733,9 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid > *:nth-child(3n + 2) {
-    margin-top: 4rem;
-  }
-  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid > *:nth-child(3n + 3) {
-    margin-top: 8rem;
-  }
+  /* 目录默认严格按发布时间排，不再做 3n+2 / 3n+3 的错落下推：
+     错位会让同一行里较晚的文章在视觉上落到更早的文章后面；
+     插入年份分隔行之后 nth-child 序号也不再对应卡片本身。 */
 }
 /* 筛选控件：方角描边 → 圆润题签 */
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index input,

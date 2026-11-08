@@ -139,7 +139,10 @@ function main() {
     if (JSON.stringify(next) !== JSON.stringify(item.tags)) { item.tags = next; tagsChanged++; }
   }
   console.log(`[normalize] tags 修正 ${tagsChanged} 条`);
-  if (!CHECK) fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
+  if (!CHECK) {
+    const { sortStore } = require("./archive-order.js");
+    fs.writeFileSync(STORE, JSON.stringify(sortStore(store), null, 2) + "\n", "utf8");
+  }
 }
 
 module.exports = { tagsFromTitle, normalizeHtml, splitFigureParagraphs };

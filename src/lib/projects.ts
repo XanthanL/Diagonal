@@ -1,4 +1,5 @@
 import { ArchiveItem } from "@/lib/data";
+import { compareByPublishDesc } from "@/lib/archiveOrder";
 
 export type ProjectSlug = "the-salt-of-life" | "diagonal-talks" | "research-notes" | "other";
 
@@ -59,8 +60,10 @@ export interface SeriesGroup {
 }
 
 export function groupBySeries(items: ArchiveItem[]): SeriesGroup[] {
+  // 分组不能打乱时间顺序：组内也严格按发布时间倒序
+  const chronological = [...items].sort(compareByPublishDesc);
   const groups: Record<string, ArchiveItem[]> = {};
-  for (const item of items) {
+  for (const item of chronological) {
     const key = item.series || "other";
     if (!groups[key]) groups[key] = [];
     groups[key].push(item);

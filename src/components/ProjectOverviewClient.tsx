@@ -82,7 +82,6 @@ export function ProjectOverviewClient({ project, groups }: ProjectOverviewClient
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: Math.min(index * 0.05, 0.3) }}
-                      className={index % 2 !== 0 ? "lg:mt-24" : ""}
                     >
                       <ArchiveCard item={item} />
                     </motion.div>

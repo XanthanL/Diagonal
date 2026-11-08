@@ -16,6 +16,7 @@ import type {
   ArticleListItem,
   PublishPayload,
 } from "@/lib/admin/types";
+import { archiveTimestamp } from "@/lib/archiveOrder";
 
 const owner = GH_OWNER;
 const repo = GH_REPO;
@@ -235,11 +236,11 @@ export async function listArticles(token: string): Promise<ArticleListItem[]> {
     });
   }
 
+  // 与全站一致：按发布时间数值倒序，不再依赖 localeCompare 比较格式化字符串
   list.sort((a, b) => {
-    if (a.year && b.year) return b.year.localeCompare(a.year);
-    if (a.year) return -1;
-    if (b.year) return 1;
-    return b.id.localeCompare(a.id);
+    const diff = archiveTimestamp(b.year) - archiveTimestamp(a.year);
+    if (diff !== 0) return diff;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   });
   return list;
 }

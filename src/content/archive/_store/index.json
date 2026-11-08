@@ -27,33 +27,6 @@
     "thumbnail": "/images/archive/DIAGONAL-2026-WX1107/img-1.jpg"
   },
   {
-    "id": "DIAGONAL-2024-WX0808",
-    "title": "《城市行走与社会设计》赵攀【“空间先锋--工厂，城市与青年“展览分享会】",
-    "titleEn": "《城市行走与社会设计》赵攀【“空间先锋--工厂，城市与青年“展览分享会】",
-    "artist": "空间先锋",
-    "artistEn": "Diagonal",
-    "year": "2024.08.08 23:56",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "城市行走与社会设计",
-      "空间先锋",
-      "城市与青年"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2024-WX0808/img-1.jpg"
-  },
-  {
     "id": "DIAGONAL-2026-WX1023",
     "title": "「黄河路」张大羽个展                               ｜辽宁师范大学美术馆",
     "titleEn": "「黄河路」张大羽个展                               ｜辽宁师范大学美术馆",
@@ -263,6 +236,33 @@
     "region": "Southwest",
     "project": "research-notes",
     "thumbnail": "/images/archive/DIAGONAL-2026-WX0926/img-1.jpg"
+  },
+  {
+    "id": "DIAGONAL-2026-WX0926-2",
+    "title": "极少新展 | “庆祝：郝建涛 2025-2026”将于9月26日开幕！",
+    "titleEn": "极少新展 | “庆祝：郝建涛 2025-2026”将于9月26日开幕！",
+    "artist": "极少艺术中心",
+    "artistEn": "Diagonal",
+    "year": "2026.09.26 08:25",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "极少新展",
+      "郝建涛",
+      "将于9月26日开幕"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2026-WX0926-2/img-1.jpg"
   },
   {
     "id": "DIAGONAL-2026-WX0925",
@@ -1138,6 +1138,33 @@
     "region": "Southwest",
     "project": "research-notes",
     "thumbnail": "/images/archive/DIAGONAL-2026-WX0503/img-1.jpg"
+  },
+  {
+    "id": "DIAGONAL-2026-WX0428",
+    "title": "新展预告&公共活动｜而我也终于走出了那座房子 胡介鸣 & 胡为一（上海）",
+    "titleEn": "新展预告&公共活动｜而我也终于走出了那座房子 胡介鸣 & 胡为一（上海）",
+    "artist": "对角线计划Diagonal",
+    "artistEn": "Diagonal",
+    "year": "2026.04.28 23:43",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "新展预告",
+      "公共活动",
+      "而我也终于走出了那座房子"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2026-WX0428/img-1.jpg"
   },
   {
     "id": "DIAGONAL-2026-WX0426",
@@ -2736,6 +2763,32 @@
     "thumbnail": "/images/archive/DIAGONAL-2025-WX1107/img-1.jpg"
   },
   {
+    "id": "DIAGONAL-2025-WX1107-2",
+    "title": "鹤岗｜猫冬茶话会｜11月8日｜周六",
+    "titleEn": "鹤岗｜猫冬茶话会｜11月8日｜周六",
+    "artist": "莎莎",
+    "artistEn": "Diagonal",
+    "year": "2025.11.07 19:05",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "猫冬茶话会",
+      "月8日"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2025-WX1107-2/img-1.jpg"
+  },
+  {
     "id": "DIAGONAL-2025-WX1106",
     "title": "艺术书的几种可能——不熟艺术书展上海站参展方介绍（艺术家部分）",
     "titleEn": "艺术书的几种可能——不熟艺术书展上海站参展方介绍（艺术家部分）",
@@ -3291,6 +3344,33 @@
     "region": "Southwest",
     "project": "research-notes",
     "thumbnail": "/images/archive/DIAGONAL-2025-WX0801/img-1.jpg"
+  },
+  {
+    "id": "DIAGONAL-2025-WX0801-2",
+    "title": "游牧艺术项目：贵州草海“拾物”艺术驻地计划名单与行程",
+    "titleEn": "游牧艺术项目：贵州草海“拾物”艺术驻地计划名单与行程",
+    "artist": "草海“拾物”",
+    "artistEn": "Diagonal",
+    "year": "2025.08.01 19:54",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "游牧艺术项目",
+      "贵州草海",
+      "艺术驻地计划名单与行程"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2025-WX0801-2/img-1.jpg"
   },
   {
     "id": "DIAGONAL-2025-WX0725",
@@ -3897,113 +3977,6 @@
     "region": "Southwest",
     "project": "research-notes",
     "thumbnail": "/images/archive/DIAGONAL-2025-WX0423/img-1.jpg"
-  },
-  {
-    "id": "DIAGONAL-2026-WX0926-2",
-    "title": "极少新展 | “庆祝：郝建涛 2025-2026”将于9月26日开幕！",
-    "titleEn": "极少新展 | “庆祝：郝建涛 2025-2026”将于9月26日开幕！",
-    "artist": "极少艺术中心",
-    "artistEn": "Diagonal",
-    "year": "2026.09.26 08:25",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "极少新展",
-      "郝建涛",
-      "将于9月26日开幕"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2026-WX0926-2/img-1.jpg"
-  },
-  {
-    "id": "DIAGONAL-2026-WX0428",
-    "title": "新展预告&公共活动｜而我也终于走出了那座房子 胡介鸣 & 胡为一（上海）",
-    "titleEn": "新展预告&公共活动｜而我也终于走出了那座房子 胡介鸣 & 胡为一（上海）",
-    "artist": "对角线计划Diagonal",
-    "artistEn": "Diagonal",
-    "year": "2026.04.28 23:43",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "新展预告",
-      "公共活动",
-      "而我也终于走出了那座房子"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2026-WX0428/img-1.jpg"
-  },
-  {
-    "id": "DIAGONAL-2025-WX1107-2",
-    "title": "鹤岗｜猫冬茶话会｜11月8日｜周六",
-    "titleEn": "鹤岗｜猫冬茶话会｜11月8日｜周六",
-    "artist": "莎莎",
-    "artistEn": "Diagonal",
-    "year": "2025.11.07 19:05",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "猫冬茶话会",
-      "月8日"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2025-WX1107-2/img-1.jpg"
-  },
-  {
-    "id": "DIAGONAL-2025-WX0801-2",
-    "title": "游牧艺术项目：贵州草海“拾物”艺术驻地计划名单与行程",
-    "titleEn": "游牧艺术项目：贵州草海“拾物”艺术驻地计划名单与行程",
-    "artist": "草海“拾物”",
-    "artistEn": "Diagonal",
-    "year": "2025.08.01 19:54",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "游牧艺术项目",
-      "贵州草海",
-      "艺术驻地计划名单与行程"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2025-WX0801-2/img-1.jpg"
   },
   {
     "id": "DIAGONAL-2025-WX0421",
@@ -5026,6 +4999,33 @@
     "thumbnail": "/images/archive/DIAGONAL-2025-WX0209/img-1.jpg"
   },
   {
+    "id": "DIAGONAL-2025-WX0207",
+    "title": "分享会：内耗在更好中的自己（哈尔滨线下）",
+    "titleEn": "分享会：内耗在更好中的自己（哈尔滨线下）",
+    "artist": "对角线计划",
+    "artistEn": "Diagonal",
+    "year": "2025.02.07 12:59",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "分享会",
+      "内耗在更好中的自己",
+      "哈尔滨线下"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2025-WX0207/img-1.jpg"
+  },
+  {
     "id": "DIAGONAL-2025-WX0206",
     "title": "分享会：无所适从的女儿-- 从电影《好东西》谈东亚家庭的代际纠缠（佳木斯）",
     "titleEn": "分享会：无所适从的女儿-- 从电影《好东西》谈东亚家庭的代际纠缠（佳木斯）",
@@ -5610,6 +5610,31 @@
     "thumbnail": "/images/archive/DIAGONAL-2025-WX0102/img-1.jpg"
   },
   {
+    "id": "DIAGONAL-2025-WX0102-2",
+    "title": "对话：一个东北文化自组织的生长",
+    "titleEn": "对话：一个东北文化自组织的生长",
+    "artist": "老k",
+    "artistEn": "Diagonal",
+    "year": "2025.01.02 22:54",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "一个东北文化自组织的生长"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2025-WX0102-2/img-1.jpg"
+  },
+  {
     "id": "DIAGONAL-2025-WX0101",
     "title": "2024“对角线计划”主要文章汇总。",
     "titleEn": "2024“对角线计划”主要文章汇总。",
@@ -5843,6 +5868,32 @@
     "region": "Southwest",
     "project": "research-notes",
     "thumbnail": "/images/archive/DIAGONAL-2024-WX1209/img-1.jpg"
+  },
+  {
+    "id": "DIAGONAL-2024-WX1207",
+    "title": "海是什么颜色——姚明峰个人项目。",
+    "titleEn": "海是什么颜色——姚明峰个人项目。",
+    "artist": "对角线计划Diagonal",
+    "artistEn": "Diagonal",
+    "year": "2024.12.07 13:56",
+    "type": "Document",
+    "typeEn": "Document",
+    "tags": [
+      "海是什么颜色",
+      "姚明峰个人项目"
+    ],
+    "tagsEn": [
+      "Article"
+    ],
+    "location": {
+      "city": "线上",
+      "cityEn": "Online",
+      "code": "ON",
+      "coordinates": "—"
+    },
+    "region": "Southwest",
+    "project": "research-notes",
+    "thumbnail": "/images/archive/DIAGONAL-2024-WX1207/img-1.jpg"
   },
   {
     "id": "DIAGONAL-2024-WX1206",
@@ -6449,18 +6500,18 @@
     "thumbnail": "/images/archive/DIAGONAL-2024-WX1009/img-1.jpg"
   },
   {
-    "id": "DIAGONAL-2025-WX0207",
-    "title": "分享会：内耗在更好中的自己（哈尔滨线下）",
-    "titleEn": "分享会：内耗在更好中的自己（哈尔滨线下）",
-    "artist": "对角线计划",
+    "id": "DIAGONAL-2024-WX0808",
+    "title": "《城市行走与社会设计》赵攀【“空间先锋--工厂，城市与青年“展览分享会】",
+    "titleEn": "《城市行走与社会设计》赵攀【“空间先锋--工厂，城市与青年“展览分享会】",
+    "artist": "空间先锋",
     "artistEn": "Diagonal",
-    "year": "2025.02.07 12:59",
+    "year": "2024.08.08 23:56",
     "type": "Document",
     "typeEn": "Document",
     "tags": [
-      "分享会",
-      "内耗在更好中的自己",
-      "哈尔滨线下"
+      "城市行走与社会设计",
+      "空间先锋",
+      "城市与青年"
     ],
     "tagsEn": [
       "Article"
@@ -6473,57 +6524,6 @@
     },
     "region": "Southwest",
     "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2025-WX0207/img-1.jpg"
-  },
-  {
-    "id": "DIAGONAL-2025-WX0102-2",
-    "title": "对话：一个东北文化自组织的生长",
-    "titleEn": "对话：一个东北文化自组织的生长",
-    "artist": "老k",
-    "artistEn": "Diagonal",
-    "year": "2025.01.02 22:54",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "一个东北文化自组织的生长"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2025-WX0102-2/img-1.jpg"
-  },
-  {
-    "id": "DIAGONAL-2024-WX1207",
-    "title": "海是什么颜色——姚明峰个人项目。",
-    "titleEn": "海是什么颜色——姚明峰个人项目。",
-    "artist": "对角线计划Diagonal",
-    "artistEn": "Diagonal",
-    "year": "2024.12.07 13:56",
-    "type": "Document",
-    "typeEn": "Document",
-    "tags": [
-      "海是什么颜色",
-      "姚明峰个人项目"
-    ],
-    "tagsEn": [
-      "Article"
-    ],
-    "location": {
-      "city": "线上",
-      "cityEn": "Online",
-      "code": "ON",
-      "coordinates": "—"
-    },
-    "region": "Southwest",
-    "project": "research-notes",
-    "thumbnail": "/images/archive/DIAGONAL-2024-WX1207/img-1.jpg"
+    "thumbnail": "/images/archive/DIAGONAL-2024-WX0808/img-1.jpg"
   }
 ]

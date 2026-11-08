@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node scripts/sync-sites.js && next dev",
     "images": "node scripts/optimize-images.js",
-    "prebuild": "node scripts/optimize-images.js && node scripts/sync-sites.js",
+    "prebuild": "node scripts/archive-order.js && node scripts/optimize-images.js && node scripts/sync-sites.js",
     "build": "next build",
     "build:with-vacuum": "npm run build && node scripts/merge-vacuum.js",
     "merge:vacuum": "node scripts/merge-vacuum.js",
@@ -13,6 +13,7 @@
     "import:wechat": "node scripts/import-wechat.js",
     "fetch:wechat": "node scripts/fetch-wechat-history.js",
     "normalize:archive": "node scripts/normalize-archive-html.js",
+    "check:order": "node scripts/archive-order.js",
     "preview": "npm run build && npx serve out",
     "start": "next start",
     "lint": "next lint"

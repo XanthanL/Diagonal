@@ -1,6 +1,7 @@
 // overlay store：由自助后台写入的新增/覆盖条目（构建期静态导入）
 import overlayArchiveRaw from "@/content/archive/_store/index.json";
 import legacyArchiveRaw from "@/content/archive/_store/legacy.json";
+import { compareByPublishDesc } from "@/lib/archiveOrder";
 
 export interface Location {
   city: string;
@@ -209,12 +210,12 @@ const overlayIds = new Set(overlayArchiveData.map((item) => item.id));
  * 合并规则：
  * - overlay 中与 legacy 相同的 id → 覆盖该条元数据（编辑已有文章）
  * - overlay 中的新 id → 追加
- * - 统一按 year 时间倒序
+ * - 统一按发布时间严格倒序（最近发布在前）
  */
 export const archiveData: ArchiveItem[] = [
   ...overlayArchiveData,
   ...legacyArchiveData.filter((item) => !overlayIds.has(item.id)),
-].sort((a, b) => b.year.localeCompare(a.year));
+].sort(compareByPublishDesc);
 
 export const atlasData: AtlasItem[] = [
   {

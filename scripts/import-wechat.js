@@ -408,7 +408,9 @@ async function main() {
   const persist = (record) => {
     if (dryRun) return;
     if (record) sources.push(record);
-    fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
+    // 台账始终按发布时间倒序落盘；否则新导入的旧文会插在最新文章中间
+    const { sortStore } = require("./archive-order.js");
+    fs.writeFileSync(STORE, JSON.stringify(sortStore(store), null, 2) + "\n", "utf8");
     fs.writeFileSync(sourcesPath, JSON.stringify(sources, null, 2) + "\n", "utf8");
   };
 
