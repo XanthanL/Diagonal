@@ -177,8 +177,11 @@ function cleanBody(source) {
   const skipDepth = [];
   const flush = () => {
     const text = buf.replace(/[\u00a0\s]*<br\s*\/?>[\u00a0\s]*/gi, " ").replace(/\s+/g, " ").trim();
+    // 微信用 <p><strong> </strong></p> / <p><em> </em></p> 撑行距：只有空壳没有字，
+    // 落进站内段落流会变成一块空白。判空时先剥标签，避免把这些壳写成空 <p>。
+    const plain = text.replace(/<[^>]*>/g, "").replace(/&nbsp;|&#160;/gi, " ").trim();
     // 标题内部只许纯文本，不能夹 <p>；目录组件要抓干净的 h2/h3
-    if (text) out.push(headingDepth > 0 ? text : "<p>" + text.replace(/<br\s*\/?>/gi, "<br />") + "</p>");
+    if (plain) out.push(headingDepth > 0 ? text : "<p>" + text.replace(/<br\s*\/?>/gi, "<br />") + "</p>");
     buf = "";
   };
   const block = (html) => { flush(); out.push(html); };
@@ -250,7 +253,7 @@ function cleanBody(source) {
   }
   flush();
 
-  return out
+  const cleaned = out
     .join("\n")
     .replace(/<p>\s*<\/p>/g, "")
     .replace(/<(h[1-6]|blockquote|pre)>\s*<\/\1>/g, "")
@@ -258,6 +261,8 @@ function cleanBody(source) {
     .replace(/(<\/h[1-6]>)<\/p>/g, "$1")
     .replace(/<(h[2-6])>\s*([^<]*?)\s*<\/\1>/g, "<$1>$2</$1>")
     .replace(/\n{3,}/g, "\n\n");
+  // 微信 <p><img></p> 会让 figure 被包进 p；与批量规范化共用同一个拆分器
+  return require("./normalize-archive-html.js").splitFigureParagraphs(cleaned);
 }
 
 // ------------------------------------------------------------ 图片落盘
@@ -319,14 +324,8 @@ function buildId(createTime, used) {
   return id;
 }
 
-function tagsFromTitle(title) {
-  const parts = title
-    .split(/[｜|丨:：·\-—《》、,，\s]+/)
-    .map((s) => s.trim())
-    .filter((s) => s.length >= 2 && s.length <= 12 && !/^(转发|推广)$/.test(s));
-  const uniq = [...new Set(parts)].slice(0, 3);
-  return uniq.length ? uniq : ["对角线计划"];
-}
+// 标签规则与 scripts/normalize-archive-html.js 共用一份，避免增量导入和批量规范化漂移
+const { tagsFromTitle } = require("./normalize-archive-html.js");
 
 function metaFor(article, id, thumbnail) {
   const date = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/.exec(article.createTime);
@@ -353,18 +352,23 @@ function wrap(article, id, bodyHtml) {
   const date = /(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/.exec(article.createTime);
   const ym = date ? `${date[1]}.${date[2]}` : "";
   const pub = date ? `${date[1]}.${date[2]}.${date[3]} ${date[4]}` : article.createTime;
-  const byline = article.author ? `<p class="archive-text text-sm opacity-60">${escapeAttr(article.author)}</p>` : "";
+  const title = article.title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const byline = article.author ? `<span><i>Byline</i>${escapeAttr(article.author)}</span>` : "";
+  // 页眉是「档案著录」而非正文：字段 / 间距 / 配色全部交给 .archive-doc-* 语义类，
+  // 双主题与响应式只在 CSS 里改一处，片段里不留 Tailwind 字面量。
   return `<section class="archive-html-content">
-  <header class="mb-24">
-    <div class="archive-text text-xs text-diagonal-red mb-4 tracking-[0.3em]">DIAGONAL_WECHAT / ${ym}</div>
-    <h1>${article.title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h1>
-    <div class="flex gap-12 archive-text text-[10px] opacity-40 uppercase mt-8">
-      <span>Location: ON / Online</span>
-      <span>Publish: ${pub}</span>
+  <header class="archive-doc-header">
+    <div class="archive-doc-kicker">DIAGONAL_WECHAT / ${ym}</div>
+    <h1>${title}</h1>
+    <div class="archive-doc-meta">
+      <span><i>Publish</i>${pub}</span>
+      <span><i>Source</i>WeChat / 对角线计划Diagonal</span>
+      <span><i>Location</i>ON / Online</span>
+      ${byline}
     </div>
   </header>
 
-${byline}${byline ? "\n" : ""}${bodyHtml}
+${bodyHtml}
 </section>
 `;
 }

@@ -12,6 +12,7 @@
     "sync:sites": "node scripts/sync-sites.js",
     "import:wechat": "node scripts/import-wechat.js",
     "fetch:wechat": "node scripts/fetch-wechat-history.js",
+    "normalize:archive": "node scripts/normalize-archive-html.js",
     "preview": "npm run build && npx serve out",
     "start": "next start",
     "lint": "next lint"

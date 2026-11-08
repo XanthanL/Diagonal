@@ -198,28 +198,263 @@ body {
   .hero-axis { animation: none; opacity: 1; }
 }
 
-/* 档案详情页 HTML 内容样式重塑 */
+/* ==========================================================================
+   档案详情页正文：DIAGONAL 的文献排版
+   --------------------------------------------------------------------------
+   公众号原文只提供语义（p / h2 / figure / blockquote / strong / a）与文字，
+   尺度、字体、编号、色彩全部由这一层给；片段里不写 Tailwind 字面量。
+   ⚠ 旧版 space-y-12 + p mb-8 + figure my-20 会三重叠加：段落间 5rem、
+     图之间 8rem，中文长文被拉散，照片像一张张贴上去的卡片。现在只留
+     --doc-flow 一条节奏，章节 / 图片按倍数放大，不再逐元素写 margin。
+   ⚠ 颜色一律走语义变量：两套主题只换 :root，不写第二套 if/else。
+   ========================================================================== */
 .archive-html-content {
-  @apply space-y-12 text-lg leading-relaxed font-serif;
+  --doc-ink: var(--foreground);
+  --doc-line: color-mix(in srgb, var(--foreground) 18%, transparent);
+  --doc-faint: color-mix(in srgb, var(--foreground) 56%, transparent);
+  --doc-paper: var(--background);
+  --doc-accent: var(--diagonal-red);
+  --doc-flow: 1.75em;
+  --doc-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  counter-reset: doc-section doc-figure;
+  color: var(--doc-ink);
+  font-family: var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  font-size: 17px;
+  line-height: 1.9;
+  letter-spacing: 0.012em;
+  text-align: left;
+  /* 学术文献常带整条裸 URL，390px 下会撑出横向滚动 */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
-/* h1 改用衬线展示字，去掉 uppercase italic（中文不适用），改用左对齐与左侧细红线 */
-.archive-html-content h1 { @apply font-serif text-5xl md:text-6xl font-black tracking-tighter mb-16 leading-[1.05] border-l-4 border-diagonal-red pl-6; }
-/* h2 去掉 uppercase，改用衬线，降低底线密度（仅在一级章节加线） */
-.archive-html-content h2 { @apply font-serif text-3xl font-bold mt-24 mb-8 border-b border-black/30 pb-4; }
-/* 正文 opacity 提升至 95，去掉 text-justify（中文左对齐更舒服） */
-/* 公众号搬运的学术文献常带整条裸 URL，390px 下会撑出横向滚动 */
-.archive-html-content p { @apply opacity-95 mb-8; overflow-wrap: anywhere; }
-.archive-html-content img { @apply w-full h-auto my-16 shadow-2xl border border-black/5; max-height: 75vh; object-fit: contain; object-position: center; }
-/* blockquote 改用衬线，更有出版物质感 */
-.archive-html-content blockquote { @apply font-serif border-l-8 border-diagonal-red pl-8 py-4 my-16 italic opacity-80 bg-neutral-50 text-2xl font-light; }
-.archive-html-content figure { @apply my-20 space-y-4; }
-.archive-html-content figcaption { @apply archive-text text-[10px] opacity-65 text-center uppercase tracking-widest; }
-.archive-html-content strong { @apply font-black underline decoration-2 underline-offset-4; }
-/* h3 子标题、有序/无序列表：后台富文本会用到，正文渲染同样需要 */
-.archive-html-content h3 { @apply text-xl font-bold mb-4; }
-.archive-html-content ul { @apply list-disc pl-8 space-y-2; }
-.archive-html-content ol { @apply list-decimal pl-8 space-y-2; }
-.archive-html-content a { @apply underline decoration-diagonal-red underline-offset-4; }
+
+/* —— 著录页眉（新版 .archive-doc-* / 旧版 legacy 的 header 都吃到同一套尺度）—— */
+.archive-html-content > header {
+  margin: 0 0 clamp(2.5rem, 5vw, 4rem);
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid var(--doc-line);
+}
+.archive-doc-kicker,
+.archive-html-content > header > div:first-child {
+  font-family: var(--doc-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--doc-accent);
+  margin-bottom: 1.5rem;
+}
+.archive-html-content h1 {
+  font-family: var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(1.9rem, 3.1vw, 3rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin: 0 0 1.75rem;
+  padding-left: 1.25rem;
+  border-left: 2px solid var(--doc-accent);
+}
+.archive-doc-meta,
+.archive-html-content > header > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0;
+  font-family: var(--doc-mono);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--doc-faint);
+}
+.archive-doc-meta span { white-space: nowrap; }
+.archive-doc-meta i {
+  display: inline-block;
+  min-width: 4.5em;
+  margin-right: 0.75em;
+  font-style: normal;
+  color: var(--doc-accent);
+}
+
+/* —— 统一节奏：只有一条 margin 来源 —— */
+.archive-html-content > * + * { margin-top: var(--doc-flow); }
+.archive-html-content > header + * { margin-top: 0; }
+.archive-html-content p { margin: 0; opacity: 1; }
+.archive-html-content > p:first-of-type { font-size: 1.06em; }
+
+/* —— 章节：等宽编号 + 上细线，不用大号黑体压正文 —— */
+.archive-html-content h2 {
+  counter-increment: doc-section;
+  font-family: var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  font-weight: 600;
+  font-size: 1.6rem;
+  line-height: 1.5;
+  margin: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--doc-line);
+  scroll-margin-top: 6rem;
+}
+.archive-html-content h2::before {
+  content: "§ " counter(doc-section, decimal-leading-zero);
+  display: block;
+  margin-bottom: 0.75rem;
+  font-family: var(--doc-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--doc-accent);
+}
+.archive-html-content > h2 { margin-top: calc(var(--doc-flow) * 2.4); }
+.archive-html-content h3 {
+  font-family: var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  font-weight: 600;
+  font-size: 1.18rem;
+  line-height: 1.6;
+  margin: 0;
+  scroll-margin-top: 6rem;
+}
+.archive-html-content > h3 { margin-top: calc(var(--doc-flow) * 1.6); }
+
+/* —— 图版：细线框 + 等宽编号，去掉微信截图式的重阴影 —— */
+.archive-html-content figure { margin: 0; counter-increment: doc-figure; }
+.archive-html-content > figure { margin-top: calc(var(--doc-flow) * 1.9); }
+.archive-html-content img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  object-fit: contain;
+  object-position: center;
+  background: var(--doc-paper);
+  border: 1px solid var(--doc-line);
+  box-shadow: none;
+}
+.archive-html-content figure:not(:has(figcaption))::after,
+.archive-html-content figcaption {
+  display: block;
+  margin-top: 0.75rem;
+  font-family: var(--doc-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--doc-faint);
+  text-align: right;
+  opacity: 1;
+}
+.archive-html-content figure:not(:has(figcaption))::after {
+  content: "FIG. " counter(doc-figure, decimal-leading-zero);
+}
+
+/* —— 行内语义：加粗不再一律画下划线（微信原文加粗极多，会很吵）—— */
+.archive-html-content strong,
+.archive-html-content b { font-weight: 600; text-decoration: none; }
+.archive-html-content blockquote {
+  margin: 0;
+  padding: 0.25rem 0 0.25rem 1.5rem;
+  border-left: 2px solid var(--doc-accent);
+  background: none;
+  font-family: inherit;
+  font-size: 1.05em;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--doc-faint);
+}
+.archive-html-content > blockquote { margin-top: calc(var(--doc-flow) * 1.5); }
+.archive-html-content ul,
+.archive-html-content ol { margin: 0; padding-left: 1.6rem; }
+.archive-html-content li + li { margin-top: 0.4em; }
+.archive-html-content a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--doc-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+.archive-html-content hr { margin: 0; border: 0; border-top: 1px solid var(--doc-line); }
+.archive-html-content table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+.archive-html-content :is(td, th) { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--doc-line); text-align: left; }
+
+@media (max-width: 640px) {
+  .archive-html-content { font-size: 16px; line-height: 1.85; --doc-flow: 1.5em; }
+  .archive-html-content h1 { font-size: clamp(1.6rem, 7.4vw, 2rem); padding-left: 0.9rem; margin-bottom: 1.25rem; }
+  .archive-html-content h2 { font-size: 1.35rem; }
+  .archive-html-content > header { margin-bottom: 2.5rem; padding-bottom: 1.25rem; }
+  .archive-doc-kicker, .archive-html-content > header > div:first-child { margin-bottom: 1rem; }
+  .archive-doc-meta, .archive-html-content > header > div:last-child { gap: 0.35rem 1.25rem; font-size: 9px; }
+  .archive-doc-meta i { min-width: 3.9em; margin-right: 0.5em; }
+  .archive-html-content > figure { margin-top: calc(var(--doc-flow) * 1.5); }
+}
+
+/* 草木风：正文换那一辑的 Cormorant → Newsreader → 思源宋体栈；
+   花汁/藤蔓在纸底上会穿过大标题，给字一圈同色纸晕护住可读性，不遮背景。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-html-content {
+  font-family: var(--font-flora), var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-html-content :is(h1, h2, h3, p, li, figcaption) {
+  text-shadow: 0 0 8px var(--background), 0 0 18px var(--background);
+}
+
+/* 详情页顶栏：原来靠 mix-blend-difference 反相，白纸上是黑字、纸面本身却透明，
+   往下滚时正文会从返回按钮的字缝里透出来。改成主题纸面底 + 一道细线。 */
+.archive-doc-nav {
+  color: var(--foreground);
+  background-color: color-mix(in srgb, var(--background) 90%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+/* 章节目录：等宽编号 + 左侧细线，和正文的 § / FIG. 编号同一套档案语言 */
+.archive-toc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+.archive-toc-head span:first-child { color: var(--diagonal-red); }
+.archive-toc ul { list-style: none; margin: 0; padding: 0; }
+.archive-toc-item a {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.45rem 0 0.45rem 0.75rem;
+  border-left: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  color: color-mix(in srgb, var(--foreground) 68%, transparent);
+  font-family: var(--font-serif), var(--font-serif-cjk), Georgia, serif;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.archive-toc-item.is-sub a { padding-left: 1.75rem; font-size: 11px; }
+.archive-toc-item a:hover { color: var(--foreground); }
+.archive-toc-item.is-active a { color: var(--diagonal-red); border-left-color: var(--diagonal-red); }
+.archive-toc-num {
+  flex: none;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+.archive-toc-text { min-width: 0; }
+
+.archive-doc-footer {
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+/* 草木风首屏藤蔓会从左侧穿过著录页眉。试过给页眉垫一层渐隐纸衬，
+   但粉晕上会切出一条水平硬边；改成只把有形状的藤蔓压淡、花光原样保留，
+   文字再靠上面的同色纸晕护住笔画 —— 背景完整，也没有色块边界。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)):has(.archive-detail) .site-flora-field .herb-sprig {
+  opacity: 0.34;
+}
 
 /* —— 后台 Tiptap 编辑器最小样式 —— */
 .ProseMirror { @apply min-h-[300px] outline-none; }

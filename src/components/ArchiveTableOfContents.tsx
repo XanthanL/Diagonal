@@ -10,9 +10,7 @@ interface TocItem {
 }
 
 interface ArchiveTableOfContentsProps {
-  /**
-   * 用于在 DOM 中查找 h2/h3 的容器选择器
-   */
+  /** 用于在 DOM 中查找 h2/h3 的容器选择器 */
   contentSelector?: string;
 }
 
@@ -45,7 +43,6 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
         id = `toc-${index}`;
         heading.id = id;
       }
-      // 避免重复
       if (usedIds.has(id)) {
         id = `toc-${index}-${Math.random().toString(36).slice(2, 6)}`;
         heading.id = id;
@@ -59,16 +56,12 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
 
     if (tocItems.length === 0) return;
 
-    // 监听滚动位置以高亮当前章节
     const observer = new IntersectionObserver(
       (entries) => {
-        // 找到最靠近视口顶部的可见 heading
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible.length > 0) {
-          setActiveId(visible[0].target.id);
-        }
+        if (visible.length > 0) setActiveId(visible[0].target.id);
       },
       { rootMargin: "-80px 0px -70% 0px", threshold: 0 }
     );
@@ -80,15 +73,16 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
   if (items.length < 2) return null;
 
   return (
-    <nav className="hidden lg:block sticky top-32 max-h-[calc(100vh-10rem)] overflow-y-auto pr-4 pb-12">
-      <div className="archive-text text-[10px] opacity-65 uppercase tracking-widest mb-4 pb-2 border-b border-black/10">
-        Contents
+    <nav className="archive-toc hidden lg:block sticky top-28 max-h-[calc(100vh-9rem)] overflow-y-auto pr-4 pb-12">
+      <div className="archive-toc-head">
+        <span>Contents</span>
+        <span>{String(items.length).padStart(2, "0")}</span>
       </div>
-      <ul className="space-y-2">
-        {items.map((item) => (
+      <ul>
+        {items.map((item, i) => (
           <li
             key={item.id}
-            className={item.level === 3 ? "ml-4" : ""}
+            className={`archive-toc-item${item.level === 3 ? " is-sub" : ""}${activeId === item.id ? " is-active" : ""}`}
           >
             <a
               href={`#${item.id}`}
@@ -96,13 +90,9 @@ export function ArchiveTableOfContents({ contentSelector = ".archive-html-conten
                 e.preventDefault();
                 document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth", block: "start" });
               }}
-              className={`block text-xs leading-relaxed transition-[color,opacity] duration-150 ease-out-strong ${
-                activeId === item.id
-                  ? "text-diagonal-red font-bold"
-                  : "opacity-65 hover:opacity-90"
-              } ${item.level === 3 ? "py-1" : "py-1.5"}`}
             >
-              {item.text}
+              <span className="archive-toc-num">{String(i + 1).padStart(2, "0")}</span>
+              <span className="archive-toc-text">{item.text}</span>
             </a>
           </li>
         ))}

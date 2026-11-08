@@ -65,12 +65,11 @@ function processContent(content: string, isHtml: boolean): string {
   if (!isHtml) {
     return content;
   }
-  // 改写图片路径以适配 basePath
-  let processed = content.replace(/src="\/images\//g, `src="${getAssetPath('/images/')}`);
-  // 为 <img> 注入 loading="lazy" 与 decoding="async"（保留已有属性不变）
-  processed = processed.replace(/<img(?![^>]*\sloading=)([^>]*)>/g, '<img$1 loading="lazy">');
-  processed = processed.replace(/<img(?![^>]*\sdecoding=)([^>]*)>/g, '<img$1 decoding="async">');
-  return processed;
+  // 改写图片路径以适配 basePath。
+  // ⚠ 不要在这里给全部 <img> 加 loading="lazy"：ArchiveContent 会按序号给首图
+  //   fetchpriority="high" 且不加 lazy，服务端先写死 lazy 会让首图 LCP 策略失效。
+  //   懒加载 / srcset / 首图优先级统一由客户端 enhanceImages 一处决定。
+  return content.replace(/src="\/images\//g, `src="${getAssetPath('/images/')}`);
 }
 
 export default async function ArchiveDetailPage({ params }: { params: { id: string } }) {
