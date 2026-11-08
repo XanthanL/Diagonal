@@ -30,8 +30,11 @@ const WX_UA =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.40(0x1800282a) NetType/WIFI Language/zh_CN";
 
 // ---------------------------------------------------------------- 网络
-function fetchUrl(url, redirects = 0) {
+function fetchUrl(rawUrl, redirects = 0) {
   return new Promise((resolve, reject) => {
+    // 微信的文章长链、正文图片（mmbiz.qpic.cn）在旧推文里都可能是 http://，
+    // https.get 不认 http: 协议；微信全站 CDN 均已支持 https，统一升协议。
+    const url = String(rawUrl).replace(/^http:\/\//i, "https://");
     const req = https.get(
       url,
       {
@@ -97,15 +100,26 @@ function field(html, key) {
 
 function extractArticle(html, url) {
   const title = field(html, "title");
-  const body = field(html, "content_noencode");
-  if (!title || !body) throw new Error("取不到 title / content_noencode（可能是验证页或链接失效）");
+  let body = field(html, "content_noencode");
+  if (!title) throw new Error("取不到 title（可能是验证页或链接失效）");
+  // 少数老推文是纯海报：cgiDataNew.content_noencode 为空，但 cdn_url 里还留着封面图。
+  // 这类不编造正文，只把封面搬进来留档，避免「重要文章一篇不落」时整篇漏掉。
+  let coverOnly = false;
+  if (!body) {
+    const cover = field(html, "cdn_url") || field(html, "cover") || "";
+    if (!cover) throw new Error("正文与封面都取不到（可能是验证页或链接失效）");
+    body = `<figure><img src="${escapeAttr(cover)}" alt="" /></figure>`;
+    coverOnly = true;
+  }
   const createTime = field(html, "create_time") || "";
   return {
-    title,
+    // cgiDataNew 的 title / author 里常带 &amp; &quot; 这类实体，不解会在站内标题上直接显示出来
+    title: decodeEntities(title),
     body,
-    author: field(html, "author") || "",
-    desc: field(html, "desc") || "",
-    nick: field(html, "nick_name") || "对角线计划Diagonal",
+    coverOnly,
+    author: decodeEntities(field(html, "author") || ""),
+    desc: decodeEntities(field(html, "desc") || ""),
+    nick: decodeEntities(field(html, "nick_name") || "对角线计划Diagonal"),
     createTime,
     sourceUrl: (field(html, "msg_link") || url).trim(),
     cover: field(html, "cover") || "",
@@ -268,6 +282,13 @@ async function localizeImages(bodyHtml, id, dryRun) {
 
   for (const item of urls) {
     if (dryRun) { console.log("   [dry] 图片", item.name, item.url.slice(0, 90)); continue; }
+    // 断点续跑：几百篇批量导入若中途被打断，图片已落盘的不要重新请求（CDN 有频控，
+    // 重复抓既慢又容易触发验证页）。台账改为逐篇 flush 后，这里就是幂等的关键。
+    const target = path.join(dir, item.name);
+    if (fs.existsSync(target) && fs.statSync(target).size > 1024) {
+      console.log("   图片", item.name, "已存在，跳过");
+      continue;
+    }
     try {
       const res = await fetchWithRetry(item.url);
       let buf = res.body;
@@ -336,7 +357,7 @@ function wrap(article, id, bodyHtml) {
   return `<section class="archive-html-content">
   <header class="mb-24">
     <div class="archive-text text-xs text-diagonal-red mb-4 tracking-[0.3em]">DIAGONAL_WECHAT / ${ym}</div>
-    <h1>${article.title.replace(/</g, "&lt;")}</h1>
+    <h1>${article.title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</h1>
     <div class="flex gap-12 archive-text text-[10px] opacity-40 uppercase mt-8">
       <span>Location: ON / Online</span>
       <span>Publish: ${pub}</span>
@@ -349,8 +370,10 @@ ${byline}${byline ? "\n" : ""}${bodyHtml}
 }
 
 // ---------------------------------------------------------------- 主流程
-// 「帮忙转发 / 推广」类不作为项目文献搬入；只按标题判定，避免误杀正文里提到「转发」的长文
-const PROMO_RE = /^(?:【?帮[转推]|【?友情转发|【?转发|【?推广|【?广告|【?转载)(?:】?[:：\s]|$)|(?:帮忙转发|友情推广|活动推广)[:：]/;
+// 「帮忙转发 / 推广」类不作为项目文献搬入。只认标题开头的显式标记，不猜内容：
+// 本号自己的活动预告 / 招募 / 回顾里即使提到别的机构也照搬，避免误杀项目文献。
+// wechatDownload 的历史里这类文章以「友情推送」「互联合作」开头，旧规则会漏掉。
+const PROMO_RE = /^\s*[【\[（(]?\s*(?:友情推送|友情转发|帮忙转发|帮转|转发|推广|广告|转载|互联合作)/;
 
 async function main() {
   const argv = process.argv.slice(2);
@@ -376,6 +399,14 @@ async function main() {
   const knownTitles = new Map([...store, ...legacy].map((x) => [normTitle(x.title), x.id]));
   const added = [];
   const skipped = [];
+  // 逐篇落盘：全量清单两百多篇，单次可能跑十几分钟。旧版「循环结束才统一写台账」
+  // 一旦被打断，已抓好的正文/图片全变孤儿文件，重跑还得把几百张图重新下载一遍。
+  const persist = (record) => {
+    if (dryRun) return;
+    if (record) sources.push(record);
+    fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
+    fs.writeFileSync(sourcesPath, JSON.stringify(sources, null, 2) + "\n", "utf8");
+  };
 
   for (const url of urls) {
     if (known.has(url)) { console.log("\n==>", url, "\n   – 台账里已有，跳过"); continue; }
@@ -386,15 +417,19 @@ async function main() {
       article = extractArticle(body.toString("utf8"), url);
     } catch (e) { console.error("   ✗ 抓取失败:", e.message); continue; }
 
-    if (PROMO_RE.test(article.title.replace(/^\s+/, "")) && /转发|推广|广告/.test(article.title)) {
+    if (PROMO_RE.test(article.title.replace(/^\s+/, ""))) {
       console.log("   – 跳过（转发/推广类）:", article.title);
-      skipped.push({ url, title: article.title, reason: "promo" });
+      const promoRec = { url, title: article.title, reason: "promo" };
+      skipped.push(promoRec);
+      persist(promoRec);
       continue;
     }
     const dup = knownTitles.get(normTitle(article.title));
     if (dup) {
       console.log(`   – 站点已有同标题文章（${dup}），跳过`);
-      skipped.push({ url, title: article.title, duplicateOf: dup });
+      const dupRec = { url, title: article.title, duplicateOf: dup };
+      skipped.push(dupRec);
+      persist(dupRec);
       continue;
     }
     console.log("   标题:", article.title);
@@ -403,7 +438,8 @@ async function main() {
     const cleaned = cleanBody(article.body);
     const textLen = cleaned.replace(/<[^>]+>/g, "").replace(/\s+/g, "").length;
     console.log("   正文:", textLen, "字, 图片", (cleaned.match(/<figure>/g) || []).length, "张");
-    if (textLen < 120) console.warn("   ⚠ 正文偏短，建议人工确认是否为纯转发/海报");
+    if (article.coverOnly) console.log("   ⓘ 微信侧正文已为空（纯海报推文），只保存封面留档");
+    else if (textLen < 120) console.warn("   ⚠ 正文偏短，建议人工确认是否为纯转发/海报");
 
     const id = buildId(article.createTime, used);
     used.add(id);
@@ -414,19 +450,18 @@ async function main() {
     const meta = metaFor(article, id, first);
     const exist = store.findIndex((x) => x.id === id);
     if (exist >= 0) store[exist] = meta; else store.push(meta);
-    added.push({ id, title: article.title, year: meta.year, source: article.sourceUrl, url });
+    const rec = { id, title: article.title, year: meta.year, source: article.sourceUrl, url };
+    added.push(rec);
     known.add(url);
     known.add(article.sourceUrl);
+    persist(rec);
     console.log("   ✓ 写入", id, first ? "(含封面)" : "(无图)");
     await new Promise((r) => setTimeout(r, 800));
   }
 
-  // 台账也要记「跳过」的链接：同一份清单可反复跑，不会反复抓取、也不会重复问要不要搬
-  const records = [...added, ...skipped];
-  if (!dryRun && records.length) {
-    if (added.length) fs.writeFileSync(STORE, JSON.stringify(store, null, 2) + "\n", "utf8");
-    fs.writeFileSync(sourcesPath, JSON.stringify([...sources, ...records], null, 2) + "\n", "utf8");
-    console.log(`\n完成：新增 ${added.length} 篇 / 跳过 ${skipped.length} 篇，_store/index.json 共 ${store.length} 条，源链接台账共 ${sources.length + records.length} 条`);
+  // 台账已在循环内逐篇持久化（含「跳过」的链接，重跑不会反复抓取 / 反复问要不要搬）。
+  if (!dryRun) {
+    console.log(`\n完成：新增 ${added.length} 篇 / 跳过 ${skipped.length} 篇，_store/index.json 共 ${store.length} 条，源链接台账共 ${sources.length} 条`);
   }
 }
 

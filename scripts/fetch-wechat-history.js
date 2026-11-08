@@ -51,7 +51,7 @@ const HELP = `拉取公众号全部历史文章链接 → .workbuddy/wx/links.tx
 
   --from-url <URL>        wechatDownload / 抓包得到的完整 profile_ext 请求 URL，参数自动拆
   --creds <file.json>     JSON 凭据（__biz / uin / key / pass_ticket / appmsg_token / cookie）
-  --from-export <file>    已有导出（CSV / JSON / TXT），只提取链接、不联网
+  --from-export <file>    已有导出（CSV / JSON / TXT / wechatDownload 日志），只提取链接、不联网
   --cookie <string>       覆盖 Cookie（也可设 WX_COOKIE）
   --biz <string>          覆盖 __biz（也可从任意一篇文章 URL 里带 __biz 参数）
   --offset <n>            起始偏移，默认 0（断点续跑）
@@ -348,12 +348,20 @@ function parseExport(file) {
   const raw = fs.readFileSync(path.resolve(file), "utf8");
   const seen = new Map();
   const add = (url, title = "", date = 0) => {
-    const u = decodeUrl(url).replace(/["'\\]+$/, "");
+    let u = decodeUrl(url).replace(/["'\\]+$/, "");
+    // wechatDownload 日志里是 http:// 且带 &amp; / #wechat_redirect；统一成可直连的 https 长链
+    u = u.replace(/^http:\/\/(?=mp\.weixin\.qq\.com\/)/i, "https://").replace(/#wechat_redirect.*$/i, "");
     if (!/mp\.weixin\.qq\.com\/s/.test(u)) return;
+    // 日志里的 &amp; 带分号，TXT 兜底正则会在分号处把 URL 截断成没有 sn 的残链，直接丢弃
+    if (/\/s\?/.test(u) && !/[?&](?:amp;)?sn=/.test(u)) return;
     const k = urlKey(u);
     const dt = typeof date === "number" ? date : toUnix(date);
     if (!seen.has(k)) seen.set(k, { key: k, url: u, title: String(title || ""), datetime: dt, cover: "", digest: "" });
-    else if (dt && !seen.get(k).datetime) seen.get(k).datetime = dt;
+    else {
+      const row = seen.get(k);
+      if (!row.title && title) row.title = String(title);
+      if (dt && !row.datetime) row.datetime = dt;
+    }
   };
 
   // JSON：递归找所有像链接的字符串，顺带捞同级的标题与日期
@@ -391,6 +399,13 @@ function parseExport(file) {
       }
     }
   }
+
+  // wechatDownload 的 logYYYYMMDD.txt：每行「[时间] 开始下载：标题，链接：http://mp.weixin.qq.com/s?...」
+  // 它翻的就是 getmsg 全量结果，等于工具已经替我们拿好了完整清单，还自带标题，优先于正则兜底。
+  // 日志会边下载边追加，脚本按 sn 去重 + import 端台账去重，随时可重跑补齐新增篇目。
+  const logRe = /\[(\d{4}-\d{2}-\d{2}[^\]]*)\][^\n]*?开始下载[：:]\s*(.+?)\s*[，,]\s*链接[：:]\s*(https?:\/\/[^\s]+)/g;
+  let lm;
+  while ((lm = logRe.exec(raw))) add(lm[3], lm[2].trim(), lm[1].trim());
 
   // TXT / 兜底：正则抓链接（含 &amp; 转义过的）
   for (const m of raw.matchAll(/https?:\/\/mp\.weixin\.qq\.com\/s\/[^\s"'<>,;\\)]+/g)) add(m[0]);

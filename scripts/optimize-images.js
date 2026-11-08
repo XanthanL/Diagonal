@@ -63,7 +63,10 @@ async function processImageUnsafe(filePath) {
         sequentialRead: true,
       })
         .rotate()                       // 读 EXIF 方向后再动手，避免长图躺倒
-        .resize({ width: w, withoutEnlargement: true })
+        // WebP 单边上限 16383px。微信长图能到 1080×16675，宽档不放大时高度仍超限，
+        // sharp 会直接报 "Processed image is too large for the WebP format"，
+        // 导致该档变体缺失、srcSet 引用 404。给高度加一道 inside 上限兜住。
+        .resize({ width: w, height: 16000, fit: "inside", withoutEnlargement: true })
         .webp({ quality: WEBP_QUALITY })
         .toFile(outPath);
       generated++;
