@@ -1867,6 +1867,10 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .section-headin
   height: 2px;
   transform: rotate(-3deg);
   opacity: 0.75;
+  /* 分隔带的两端现在都淡出到纸里，这枚红色眉线还是两端硬断，并排看像
+     被切了一截。同一套语言收一下首尾，仍是对角线母题，不新增任何元素。 */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 22%, #000 78%, transparent 100%);
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page div:has(> .index-row):nth-of-type(2n) > .index-row {
   margin-left: clamp(0px, 6vw, 6rem);

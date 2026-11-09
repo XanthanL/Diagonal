@@ -156,27 +156,48 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-inner {
   }
 }
 
+/* —— 4.5 首页题图右下开窗 ——
+   右下角那枝压花挂在 .site-flora-field（z-index:-1）里，而手绘题图在右下是
+   一整片不透明纸底（实测 x=1245/1300 处 alpha=255），把整枝盖得只剩右缘
+   羽化带里透出的半片叶 —— 看起来就像叶子被切掉一半。给题图右下开一扇
+   长坡的窗，让整枝自然淡入；窗口只落在空白纸面，不碰 DIA / GONAL 字标
+   与斜上的主藤蔓。用 radial-gradient 而不是矩形 mask，不会切出色块边界。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page .hero-botanical-art {
+  -webkit-mask-image: radial-gradient(ellipse 40% 56% at 96% 92%, transparent 0%, rgba(0, 0, 0, 0.18) 40%, #000 100%);
+  mask-image: radial-gradient(ellipse 40% 56% at 96% 92%, transparent 0%, rgba(0, 0, 0, 0.18) 40%, #000 100%);
+}
+
 /* —— 5. 横贯压花分隔带 ——
    纯伪元素落位，不改任何 DOM：首页板块入口之前、归档页页头之后、
-   文章页页脚之上各一条。素材本身偏浓，压到 0.55 才是「分隔」而不是「花边」。 */
+   文章页页脚之上各一条。
+   ⚠ 旧版把 1600×400 的 press-rule.webp 按 min(100%,1000px) 宽铺进 96px 高的
+   容器，图算出来是 250px 高，顶部 154px 被 background-clip 硬裁，底边还留着
+   源画幅的切口。改用 prepare-herbarium.js 派生的 press-rule-band.webp
+   （1600×300，四边 alpha 平滑归零），容器用同一个 16/3 比例完整显示，
+   两端与底边自己淡出到纸里，不再有断口。 */
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page #archive::before,
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index header::after {
   content: "";
   display: block;
-  height: clamp(48px, 7vw, 96px);
-  background: url("/images/herbarium/press-rule.webp") center bottom / min(100%, 1000px) auto no-repeat;
-  opacity: 0.55;
+  width: min(100%, 1000px);
+  margin-inline: auto;
+  height: auto;
+  aspect-ratio: 16 / 3;
+  background: url("/images/herbarium/press-rule-band.webp") center / 100% 100% no-repeat;
+  opacity: 0.62;
   pointer-events: none;
 }
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-doc-footer::after {
   content: "";
   position: absolute;
-  left: 0;
-  right: 0;
-  top: -64px;
-  height: 64px;
-  background: url("/images/herbarium/press-rule.webp") center bottom / min(100%, 1000px) auto no-repeat;
-  opacity: 0.55;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  width: min(100%, 1000px);
+  height: auto;
+  aspect-ratio: 16 / 3;
+  background: url("/images/herbarium/press-rule-band.webp") center / 100% 100% no-repeat;
+  opacity: 0.62;
   pointer-events: none;
 }
 
