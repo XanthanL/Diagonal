@@ -50,9 +50,11 @@ export function ProjectOverviewClient({ project, groups }: ProjectOverviewClient
           </div>
 
           <h1 className="font-serif font-black tracking-tighter leading-none">
-            <span className="block text-6xl md:text-8xl">{titles.zh}</span>
+            <span className="block text-6xl md:text-8xl">
+              {lang === "zh" ? titles.zh : titles.en}
+            </span>
             <span className="block text-2xl md:text-4xl opacity-40 italic font-medium mt-4">
-              {titles.en}
+              {lang === "zh" ? titles.en : "PROJECT ARCHIVE"}
             </span>
           </h1>
 
@@ -110,7 +112,9 @@ export function ProjectOverviewClient({ project, groups }: ProjectOverviewClient
                 href={getLocalizedUrl(`/projects/${slug}`)}
                 className="press archive-text text-xs px-4 py-2 border border-black/20 hover:border-black hover:bg-black hover:text-white"
               >
-                {PROJECT_TITLES[slug].zh} / {PROJECT_TITLES[slug].en}
+                {lang === "zh"
+                  ? `${PROJECT_TITLES[slug].zh} / ${PROJECT_TITLES[slug].en}`
+                  : PROJECT_TITLES[slug].en}
               </Link>
             ))}
           </div>

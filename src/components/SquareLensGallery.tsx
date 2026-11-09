@@ -400,7 +400,7 @@ export function SquareLensGallery({
           <div key={gi}>
             {groups.length > 1 && (
               <div className="archive-text mb-8 flex items-center gap-4 text-[10px] tracking-[0.3em] opacity-55">
-                <span>{g.orientation === "landscape" ? "横幅 / HORIZONTAL" : "竖幅 / VERTICAL"}</span>
+                <span>{lang === "en" ? (g.orientation === "landscape" ? "HORIZONTAL" : "VERTICAL") : (g.orientation === "landscape" ? "横幅 / HORIZONTAL" : "竖幅 / VERTICAL")}</span>
                 {/* 用 current + 透明度而不是写死 white/15：草木主题那一页是纸底，
                     白线画在纸上等于没有。跟随字色才两种底下都成立。 */}
                 <span className="h-px flex-1 bg-current opacity-20" />

@@ -241,7 +241,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
         <div className="pt-carriage">
           <div className="pt-sheet">
             <span className="pt-mark">
-              {lang === "zh" ? "对角线计划 · DIAGONAL" : "DIAGONAL · 对角线计划"}
+              {lang === "zh" ? "对角线计划 · DIAGONAL" : "DIAGONAL"}
             </span>
             {/* 加载指示：纯 CSS 滑动，hydration 还没跑完时它已经在转 */}
             <span className="pt-loading">

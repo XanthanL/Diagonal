@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getLocalizedUrl } from "@/lib/path";
+import { useI18n } from "@/lib/i18n";
 
 // 站点页脚：后台 /admin 下不显示，保持后台界面纯净
 export function SiteFooter() {
   const pathname = usePathname();
+  const { lang } = useI18n();
   if (pathname.startsWith("/admin")) return null;
 
   return (
@@ -24,7 +26,9 @@ export function SiteFooter() {
             <span className="ml-1">GONAL</span>
           </div>
           <p className="archive-text text-[9px] opacity-50 max-w-xs leading-relaxed">
-            从东北到西南的长期艺术项目
+            {lang === "zh"
+              ? "从东北到西南的长期艺术项目"
+              : "A long-term art project from Northeast to Southwest China"}
           </p>
         </div>
 

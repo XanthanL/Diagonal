@@ -125,8 +125,18 @@ export interface LocalizedAtlasItem {
   }[];
 }
 
+/* 图集图注是「项目名_编号 摄影师：姓名」的固定结构。
+   EN 下只按已确知的专名映射替换，不臆造译名：摄影师沿用站内英文名或姓名拼音。 */
+const CAPTION_EN: [RegExp, string][] = [
+  [/防空洞与废弃盐厂/g, "Air-raid Shelter and Abandoned Salt Factory"],
+  [/彭玮雯（Vivienne Peng）/g, "Vivienne Peng"],
+  [/刘洛甫（虫子声）/g, "Liu Luofu"],
+  [/彭思崴/g, "Peng Siwei"],
+  [/摄影师[：:]/g, "Photo: "],
+  [/摄影师/g, "Photo: "],
+];
 function localizeCaption(caption: string): string {
-  return caption.replace(/摄影师[：:]/g, "Photo: ");
+  return CAPTION_EN.reduce((s, [re, to]) => s.replace(re, to), caption);
 }
 
 export function getLocalizedArchiveItem(item: ArchiveItem, lang: "zh" | "en"): LocalizedArchiveItem {
@@ -155,6 +165,13 @@ export function getLocalizedArchiveItem(item: ArchiveItem, lang: "zh" | "en"): L
     region: item.region,
   };
 }
+
+/** 图集 location 只有中文 city + code（不像 ArchiveItem 自带 cityEn）。
+ *  EN 模式按 code 给拉丁地名；未登记的城市宁可留原文，不臆造译名。 */
+const ATLAS_CITY_EN: Record<string, string> = {
+  ZG: "Zigong",
+  HZ: "Hangzhou",
+};
 
 export function getLocalizedAtlasItem(item: AtlasItem, lang: "zh" | "en"): LocalizedAtlasItem {
   if (lang === "zh") {
@@ -185,7 +202,8 @@ export function getLocalizedAtlasItem(item: AtlasItem, lang: "zh" | "en"): Local
     excerpt: item.excerptEn,
     category: item.categoryEn as AtlasItem["category"],
     cover: item.cover,
-    location: item.location,
+    // 此前直接回传中文 location，/atlas 与首页图集行因此仍写「自贡 / 杭州」
+    location: { ...item.location, city: ATLAS_CITY_EN[item.location.code] || item.location.city },
     region: item.region,
     subCollections: item.subCollections?.map((s) => ({
       id: s.id,

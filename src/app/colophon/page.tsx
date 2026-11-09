@@ -333,7 +333,7 @@ export default function ColophonPage() {
           <h1 className="font-serif font-black tracking-tighter leading-none">
             <span className="block text-6xl md:text-9xl">{zh ? "制作说明" : "Colophon"}</span>
             <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
-              {zh ? "Colophon" : "制作说明"}
+              {zh ? "Colophon" : "NOTES ON THE MAKING"}
             </span>
           </h1>
 

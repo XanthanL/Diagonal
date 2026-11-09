@@ -9,7 +9,7 @@ export function LanguageSwitcher() {
   return (
     <button
       onClick={toggleLang}
-      aria-label={lang === "zh" ? "Switch to English" : "切换到中文"}
+      aria-label={lang === "zh" ? "Switch to English" : "Switch to Chinese"}
       className="group relative flex items-center gap-2 archive-text text-[11px] font-bold uppercase tracking-widest text-current hover:opacity-70 transition-opacity"
     >
       <span className="relative flex h-4 w-8 items-center rounded-full border border-current/30 bg-current/5 px-0.5">
@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
           style={{ marginLeft: lang === "en" ? "auto" : "0" }}
         />
       </span>
-      <span className="min-w-[1.5rem] text-right">{lang === "zh" ? "EN" : "中"}</span>
+      <span className="min-w-[1.5rem] text-right">{lang === "zh" ? "EN" : "ZH"}</span>
     </button>
   );
 }

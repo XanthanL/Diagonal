@@ -65,10 +65,66 @@
   }
 }
 
+/* ==========================================================================
+   窄屏 / 手机：不照搬桌面分栏，另给一套「一页一版」的单列图版系统。
+   390px 下两列各只有 169px，海报里的小字完全读不清；长海报塞进
+   max-height + overflow-y 的窗口，在触屏上又会被误认成「图被裁了」。
+   所以窄屏一律满宽、按原比例完整铺开，用细顶线 + 统一编号串起读图节奏。
+   ========================================================================== */
 @media (max-width: 1023px) {
-  /* 手机 / 窄屏一律单栏：图版满宽，网格顺次下排 */
-  .archive-html-content .doc-plate-grid { display: block; }
-  .archive-html-content .doc-plate-grid > figure + figure {
-    margin-top: calc(var(--doc-flow) * 1.2);
+  /* 显式撤干净浮动与栏线（桌面那条本就限定 min-width:1024px，
+     写在这里是为了以后有人把浮动提到全局时不会污染窄屏）。 */
+  .archive-html-content > figure.doc-plate--spread,
+  .archive-html-content > figure.doc-plate--spread.doc-plate--right {
+    float: none;
+    clear: none;
+    width: auto;
+    padding: 0;
+    border: 0;
+  }
+  .archive-html-content > :is(h2, h3, h4, hr, table, blockquote) { clear: none; }
+
+  /* 单张图版：一条细顶线 + 左对齐编号，读成独立的一版 */
+  .archive-html-content > figure.doc-plate {
+    margin: calc(var(--doc-flow) * 1.7) 0 0;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--doc-line);
+  }
+
+  /* 连续图版不再排两列：整组只有首图带顶线，组内紧凑堆叠 */
+  .archive-html-content .doc-plate-grid { display: block; margin-top: 0; }
+  .archive-html-content .doc-plate-grid > figure.doc-plate {
+    margin: 0.9rem 0 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .archive-html-content .doc-plate-grid > figure.doc-plate:first-child {
+    margin-top: calc(var(--doc-flow) * 1.7);
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--doc-line);
+  }
+
+  /* 图片满宽、无框，编号统一样式 */
+  .archive-html-content figure.doc-plate img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 0;
+  }
+  .archive-html-content figure.doc-plate:not(:has(figcaption))::after,
+  .archive-html-content figure.doc-plate figcaption {
+    margin-top: 0.5rem;
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+  }
+
+  /* 超长海报完整铺开，不做嵌套滚动窗 */
+  .archive-html-content figure.doc-plate--long {
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+    border: 0;
+    background: transparent;
   }
 }

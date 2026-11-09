@@ -12,11 +12,14 @@ interface ArchiveDetailClientProps {
   id: string;
   zhContent: string;
   enContent?: string;
+  enTitle?: string;
   isHtml: boolean;
 }
 
-export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: ArchiveDetailClientProps) {
+export function ArchiveDetailClient({ id, zhContent, enContent, enTitle, isHtml }: ArchiveDetailClientProps) {
   const { lang } = useI18n();
+  // 公众号归档只搬运了中文原文；EN 下如实标注语言状态，别让界面假装已经翻译过。
+  const originalOnly = lang === "en" && !enContent;
 
   return (
     <article className="archive-detail min-h-screen site-surface-white pt-28 sm:pt-32 pb-32 sm:pb-40">
@@ -40,6 +43,15 @@ export function ArchiveDetailClient({ id, zhContent, enContent, isHtml }: Archiv
       {/* 12 列布局：8 列正文 + 4 列 sticky 章节目录 */}
       <div className="max-w-7xl mx-auto px-5 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
         <main className="lg:col-span-8 lg:col-start-1 xl:col-span-8 xl:col-start-1 max-w-3xl">
+          {originalOnly && (
+            <div className="archive-lang-note">
+              <div className="archive-lang-note__label">ENGLISH TITLE / {id}</div>
+              <p className="archive-lang-note__title">{enTitle || id}</p>
+              <div className="archive-lang-note__note">
+                ORIGINAL TEXT IN CHINESE · NO ENGLISH TRANSLATION AVAILABLE
+              </div>
+            </div>
+          )}
           {isHtml ? (
             <ArchiveContent zhContent={zhContent} enContent={enContent} />
           ) : (

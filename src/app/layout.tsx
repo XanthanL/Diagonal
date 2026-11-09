@@ -90,12 +90,12 @@ export default function RootLayout({
       className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}
     >
       <head>
-        {/* 风格必须在 CSS 生效前落到 <html> 上：切到草木后刷新，
-            若等 React effect 再补属性，用户会先吃一帧档案风的白。
+        {/* 风格与语言都必须在 CSS 生效前落到 <html> 上：切到草木 / 英文后刷新，
+            若等 React effect 再补属性，会先吃一帧档案风的中文界面。
             与 lib/themePrefs.ts 的 SITE_THEME_KEY 是同一个键。 */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem('${SITE_THEME_KEY}')==='herbarium'){document.documentElement.setAttribute('data-theme','herbarium')}}catch(e){}`,
+            __html: `try{if(localStorage.getItem('${SITE_THEME_KEY}')==='herbarium'){document.documentElement.setAttribute('data-theme','herbarium')}if(localStorage.getItem('diagonal-language')==='en'){document.documentElement.setAttribute('lang','en')}}catch(e){}`,
           }}
         />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -109,12 +109,14 @@ export default function RootLayout({
           草木主题覆盖变量时会盖不动它。 */}
       <body className="antialiased min-h-screen">
         <Providers>
-          {/* Skip-nav：键盘用户按 Tab 可跳过导航直达主内容 */}
+          {/* Skip-nav：键盘用户按 Tab 可跳过导航直达主内容。
+              两份文案由 <html lang> + CSS 显隐，首帧就与语言一致，无水合闪烁。 */}
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-black focus:text-white focus:px-4 focus:py-2 focus:text-sm"
           >
-            跳转到主内容
+            <span className="i18n-zh">跳转到主内容</span>
+            <span className="i18n-en">Skip to main content</span>
           </a>
           {/* 草木主题的虚焦花汁底光：由 CSS 按 data-theme 显隐，档案风下不下载图 */}
           <SiteThemeBackdrop />

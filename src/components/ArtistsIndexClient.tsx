@@ -44,7 +44,7 @@ export function ArtistsIndexClient() {
               {lang === "zh" ? "艺术家" : "Artists"}
             </span>
             <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
-              {lang === "en" ? "艺术家" : "Artists"}
+              {lang === "en" ? "A–Z INDEX" : "Artists"}
             </span>
           </h1>
 
@@ -89,9 +89,9 @@ export function ArtistsIndexClient() {
                       <h3 className="text-2xl font-bold tracking-tight group-hover:underline underline-offset-8 decoration-2">
                         {lang === "zh" ? artist.name : artist.nameEn}
                       </h3>
-                      <p className="text-sm opacity-65 italic font-serif mt-1">
-                        {lang === "zh" ? artist.nameEn : artist.name}
-                      </p>
+                      {lang === "zh" && (
+                        <p className="text-sm opacity-65 italic font-serif mt-1">{artist.nameEn}</p>
+                      )}
                     </Link>
                   </div>
                 ))}

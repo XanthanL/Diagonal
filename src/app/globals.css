@@ -208,6 +208,57 @@ body {
      --doc-flow 一条节奏，章节 / 图片按倍数放大，不再逐元素写 margin。
    ⚠ 颜色一律走语义变量：两套主题只换 :root，不写第二套 if/else。
    ========================================================================== */
+/* 语言首帧同步：<head> 脚本已把 <html lang> 设成 en，双份文案按属性显隐，
+   不依赖 React 水合，也不给 sr-only 元素带来中英闪切。 */
+html[lang="en"] .i18n-zh,
+html:not([lang="en"]) .i18n-en { display: none; }
+
+/* EN 下只有中文原文的档案：英文题名 + 语言状态，写成一条档案眉标。
+   这段在 .archive-html-content 之外，不能引用它作用域里的 --doc-* 变量
+   （变量没定义会让整条声明作废），所以颜色与字体全部自带或带 fallback。 */
+.archive-lang-note {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 2.5rem;
+  padding: 1rem 0 1.15rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 26%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 26%, transparent);
+}
+.archive-lang-note__label,
+.archive-lang-note__note {
+  font-family: var(--doc-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.archive-lang-note__title {
+  margin: 0.6rem 0 0.55rem;
+  font-family: var(--font-serif, Georgia), var(--font-serif-cjk, serif);
+  font-size: 1.16rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .archive-lang-note { margin-bottom: 1.9rem; }
+  .archive-lang-note__title { font-size: 1.02rem; }
+}
+/* EN 且无译文时才出现的英文题名眉标，正好落在首屏压花枝那一带。沿用著录
+   页眉的同一套手法：文字靠同色纸晕护住笔画，有眉标的页面把「有形状」的
+   藤蔓再压淡一档；花光与纸纹保持连续，不垫纸衬、不切出色块边界。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-lang-note :is(
+  .archive-lang-note__label,
+  .archive-lang-note__note,
+  .archive-lang-note__title
+) {
+  text-shadow: 0 0 8px var(--background), 0 0 18px var(--background);
+}
+/* 多挂一个 :has(.archive-detail) 提高权重：下面著录页眉那条 0.34 写在更后面，
+   同特异性会被它反压回去。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)):has(.archive-detail):has(.archive-lang-note) .site-flora-field .herb-sprig {
+  opacity: 0.22;
+}
+
 .archive-html-content {
   --doc-ink: var(--foreground);
   --doc-line: color-mix(in srgb, var(--foreground) 18%, transparent);

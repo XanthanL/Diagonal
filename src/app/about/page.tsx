@@ -167,7 +167,7 @@ export default function AboutPage() {
               {lang === "zh" ? "对角线计划" : "Diagonal"}
             </span>
             <span className="block text-2xl md:text-4xl opacity-40 italic font-medium mt-4">
-              {lang === "zh" ? "Diagonal" : "对角线计划"}
+              {lang === "zh" ? "Diagonal" : "THE DIAGONAL PROJECT"}
             </span>
           </h1>
         </header>

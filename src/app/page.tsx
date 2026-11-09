@@ -240,7 +240,9 @@ export default function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={getAssetPath("/images/hero-botanical.webp")}
-                alt="DIAGONAL — 草木主题题图：水彩藤蔓与粉色晕染"
+                alt={lang === "zh"
+                  ? "DIAGONAL — 草木主题题图：水彩藤蔓与粉色晕染"
+                  : "DIAGONAL — botanical theme artwork: watercolor vines and pink wash"}
                 width={1920}
                 height={974}
                 loading="lazy"

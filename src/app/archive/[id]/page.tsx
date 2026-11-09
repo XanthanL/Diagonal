@@ -84,12 +84,14 @@ export default async function ArchiveDetailPage({ params }: { params: { id: stri
 
   const zhContent = processContent(zhResult.content, zhResult.isHtml);
   const enContent = enResult ? processContent(enResult.content, enResult.isHtml) : undefined;
+  const enTitle = archiveData.find((p) => p.id === id)?.titleEn;
 
   return (
     <ArchiveDetailClient
       id={id}
       zhContent={zhContent}
       enContent={enContent}
+      enTitle={enTitle}
       isHtml={zhResult.isHtml}
     />
   );

@@ -110,9 +110,11 @@ function ArtistProfileView({
             <span className="block text-6xl md:text-8xl">
               {zh ? artist.name : artist.nameEn}
             </span>
-            <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
-              {zh ? artist.nameEn : artist.name}
-            </span>
+            {zh && (
+              <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
+                {artist.nameEn}
+              </span>
+            )}
           </h1>
         </header>
 
@@ -326,9 +328,11 @@ function ArchiveIndexView({ artist, lang }: { artist: Artist; lang: Lang }) {
             <span className="block text-6xl md:text-8xl">
               {lang === "zh" ? artist.name : artist.nameEn}
             </span>
-            <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
-              {lang === "zh" ? artist.nameEn : artist.name}
-            </span>
+            {lang === "zh" && (
+              <span className="block text-2xl md:text-4xl opacity-50 italic font-medium mt-4">
+                {artist.nameEn}
+              </span>
+            )}
           </h1>
 
           <div className="archive-text text-sm opacity-60">
