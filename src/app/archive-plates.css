@@ -1,0 +1,74 @@
+/* ==========================================================================
+   归档正文图版：按真实画幅分流（画幅类别由 scripts/classify-archive-plates.js
+   写进 <figure class="doc-plate doc-plate--*">，CSS 自己推不出宽高比）。
+
+   ⚠ 旧规则给所有正文图加 `max-height:78vh + object-fit:contain`：
+     1080×9792 的长海报在 768px 正文栏里会被压成 702px 高 × 77px 宽的一条，
+     两侧全是纸色空框 —— 看上去就是「这篇文章没有配图」。
+     现在统一撤掉高度夹断，让图片按自身比例占满容器宽度。
+
+   桌面端把竖图做成报纸杂志式双栏：图版浮在左 / 右，后面的文字在另一侧绕排；
+   连续多张图（中间没有字）收进两列网格；横图与超长海报仍走满栏。
+   两套主题共用这一层，颜色只取 --doc-* 语义变量。
+   ========================================================================== */
+
+.archive-html-content img {
+  max-height: none;
+  object-fit: fill;
+  object-position: center;
+  background: transparent;
+}
+
+.archive-html-content figure.doc-plate { margin: 0; }
+/* 网格里的图版不再是 section 的直接子元素，补回 globals.css 的 > figure 间距 */
+.archive-html-content .doc-plate-grid > figure { margin: 0; }
+
+@media (min-width: 1024px) {
+  /* —— 单张竖图 + 后面的文字：左右交替的杂志分栏 —— */
+  /* clear:both 不可省：若左右两枚浮动图版在同一高度带同时生效，
+     中间只剩一条 100px 不到的窄缝，正文会被挤成一列一个字（实测）。 */
+  .archive-html-content > figure.doc-plate--spread {
+    float: left;
+    clear: both;
+    width: min(44%, 340px);
+    margin: 0.35rem 2.2rem 1.6rem 0;
+  }
+  .archive-html-content > figure.doc-plate--spread.doc-plate--right {
+    float: right;
+    clear: both;
+    margin: 0.35rem 0 1.6rem 2.2rem;
+  }
+  /* 图版与正文之间留一道极细的栏线，强化分栏读感 */
+  .archive-html-content > figure.doc-plate--spread {
+    padding-right: 1.1rem;
+    border-right: 1px solid var(--doc-line);
+  }
+  .archive-html-content > figure.doc-plate--spread.doc-plate--right {
+    padding-right: 0;
+    padding-left: 1.1rem;
+    border-right: 0;
+    border-left: 1px solid var(--doc-line);
+  }
+
+  /* 章节 / 分隔线 / 表格另起一栏，不要挤在图版旁边 */
+  .archive-html-content > :is(h2, h3, h4, hr, table, blockquote) { clear: both; }
+  .archive-html-content::after { content: ""; display: block; clear: both; }
+
+  /* —— 连续图版：两列网格，不再一张张叠成高塔 —— */
+  .archive-html-content .doc-plate-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--doc-flow) * 1.2) 1.6rem;
+    align-items: start;
+    clear: both;
+    margin-top: calc(var(--doc-flow) * 1.9);
+  }
+}
+
+@media (max-width: 1023px) {
+  /* 手机 / 窄屏一律单栏：图版满宽，网格顺次下排 */
+  .archive-html-content .doc-plate-grid { display: block; }
+  .archive-html-content .doc-plate-grid > figure + figure {
+    margin-top: calc(var(--doc-flow) * 1.2);
+  }
+}
