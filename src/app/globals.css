@@ -1733,9 +1733,15 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .
   html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  /* 目录默认严格按发布时间排，不再做 3n+2 / 3n+3 的错落下推：
-     错位会让同一行里较晚的文章在视觉上落到更早的文章后面；
-     插入年份分隔行之后 nth-child 序号也不再对应卡片本身。 */
+  /* 三列阶梯错落：用户指定要保留的「高低错落」。
+     年份分隔行已撤掉，nth-child 重新一一对应卡片；数据顺序仍由
+     archiveOrder.ts 严格倒序，这里的 margin 只是版式，不改先后。 */
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid > *:nth-child(3n + 2) {
+    margin-top: 4rem;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index section > .grid > *:nth-child(3n + 3) {
+    margin-top: 8rem;
+  }
 }
 /* 筛选控件：方角描边 → 圆润题签 */
 html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index input,

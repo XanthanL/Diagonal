@@ -2,9 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useMemo, useState } from "react";
-import { archiveData, ArchiveItem } from "@/lib/data";
+import { archiveData } from "@/lib/data";
 import {
-  archiveYear,
   compareByPublishAsc,
   compareByPublishDesc,
 } from "@/lib/archiveOrder";
@@ -27,9 +26,6 @@ const projectLabels: Record<string, { zh: string; en: string }> = {
 };
 
 type SortOrder = "newest" | "oldest";
-type Row =
-  | { kind: "year"; year: string; count: number }
-  | { kind: "item"; item: ArchiveItem; index: number };
 
 // .press 提供按压回缩 + 颜色过渡（取代 transition-all）
 const filterChipClass = (active: boolean) =>
@@ -68,32 +64,12 @@ export default function ArchiveIndexPage() {
     });
   }, [activeType, activeRegion, activeProject, search]);
 
+  // 数据顺序的唯一真相：严格按发布时间。下面卡片的高低错落只是版式，
+  // 由 className / CSS 控制，不参与排序，也不改变先后。
   const ordered = useMemo(
     () => [...filtered].sort(order === "newest" ? compareByPublishDesc : compareByPublishAsc),
     [filtered, order]
   );
-
-  // 年份分隔行把「严格按发布时间排序」变成页面上可直接核对的事实；
-  // counts 只统计当前筛选结果，切换筛选后年份条数会跟着变。
-  const rows = useMemo<Row[]>(() => {
-    const counts = new Map<string, number>();
-    for (const item of ordered) {
-      const y = archiveYear(item);
-      counts.set(y, (counts.get(y) || 0) + 1);
-    }
-    const out: Row[] = [];
-    let last = "";
-    let index = 0;
-    for (const item of ordered) {
-      const y = archiveYear(item);
-      if (y !== last) {
-        out.push({ kind: "year", year: y, count: counts.get(y) || 0 });
-        last = y;
-      }
-      out.push({ kind: "item", item, index: index++ });
-    }
-    return out;
-  }, [ordered]);
 
   const countByType = (type: string) =>
     archiveData.filter((item) => item.type === type).length;
@@ -263,39 +239,25 @@ export default function ArchiveIndexPage() {
           </div>
         </div>
 
-        {/* 档案列表 */}
-        {rows.length > 0 ? (
+        {/* 档案列表：不再插年份分隔行，卡片自身的高低错落取代时间线。
+            数据顺序仍由 ordered 严格保证，错位只作用在版式上。 */}
+        {ordered.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
-            {rows.map((row) =>
-              row.kind === "year" ? (
-                <div
-                  key={`year-${row.year}`}
-                  className="col-span-full -my-8 flex items-center gap-6"
-                  aria-label={lang === "zh" ? `${row.year} 年` : `Year ${row.year}`}
-                >
-                  <span className="archive-text text-sm font-bold tracking-[0.3em] text-diagonal-red">
-                    {row.year}
-                  </span>
-                  <span className="h-px flex-1 bg-current opacity-10" />
-                  <span className="archive-text text-[10px] opacity-45 tracking-[0.2em]">
-                    {row.count} {lang === "zh" ? "条" : "ITEMS"}
-                  </span>
-                </div>
-              ) : (
-                <motion.div
-                  key={row.item.id}
-                  initial={{ opacity: 0, transform: "translateY(12px)" }}
-                  animate={{ opacity: 1, transform: "translateY(0px)" }}
-                  transition={{
-                    duration: 0.45,
-                    ease: EASE_OUT,
-                    delay: Math.min(row.index * 0.05, 0.3),
-                  }}
-                >
-                  <ArchiveCard item={row.item} />
-                </motion.div>
-              )
-            )}
+            {ordered.map((item, index) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, transform: "translateY(12px)" }}
+                animate={{ opacity: 1, transform: "translateY(0px)" }}
+                transition={{
+                  duration: 0.45,
+                  ease: EASE_OUT,
+                  delay: Math.min(index * 0.05, 0.3),
+                }}
+                className={index % 2 !== 0 ? "lg:mt-24" : ""}
+              >
+                <ArchiveCard item={item} />
+              </motion.div>
+            ))}
           </div>
         ) : (
           /* 空状态属于「少见」层级，是允许放一点动效预算的地方 */
