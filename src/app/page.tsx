@@ -247,6 +247,18 @@ export default function Home() {
                 decoding="async"
                 className="hero-botanical-art"
               />
+              {/* 手机端同画风的 3:4 竖幅：桌面横幅在 390px 下只剩 200px 高。
+                  竖幅没画字，CSS 会把下面两行 HTML 字标从 sr-only 放回来。 */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={getAssetPath("/images/herbarium/hero-portrait.webp")}
+                alt=""
+                width={720}
+                height={960}
+                loading="lazy"
+                decoding="async"
+                className="hero-botanical-portrait"
+              />
             </div>
             {/* 对角线母题：DIA 与 GONAL 沿对角错位咬合，而非水平堆叠。
                 宽屏下字号随视口放大，让字标撑满栏宽、右侧不再空荡。

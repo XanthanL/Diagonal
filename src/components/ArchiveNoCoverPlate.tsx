@@ -1,4 +1,5 @@
 import { ArchiveItem } from "@/lib/data";
+import { getAssetPath } from "@/lib/path";
 
 /**
  * 无图版档案封套
@@ -8,8 +9,11 @@ import { ArchiveItem } from "@/lib/data";
  * 栏目、标题、日期排成一张印刷题签，中间是一枚按档案号稳定派生的几何印版
  * （测绘 / 制版语汇，呼应全站对角线母题），底部一行记注说明「无图版」。
  *
+ * 草木主题下不再排几何与题签，改用一张拱窗植物标本卡（herbarium-assets.css
+ * 控制显隐）：图已经把话说完了，再压一层字就是重复。档案风逐像素不变。
+ *
  * 约束：
- * - 不新增任何图片资源，纯 CSS + 内联 SVG，颜色全部走主题变量；
+ * - 几何印版纯 CSS + 内联 SVG，颜色全部走主题变量；
  * - 变体由 id 哈希决定，SSR / CSR 结果一致，不会水合抖动；
  * - 这些文字都是卡片下方已有信息的重复，故对读屏整体隐藏；
  * - 只展示真实元数据，截断处显式加省略号，不改写原文。
@@ -103,6 +107,14 @@ export function ArchiveNoCoverPlate({ item, title, lang }: ArchiveNoCoverPlatePr
   return (
     <div className="archive-no-cover" data-variant={variant} aria-hidden="true">
       <div className="anc-paper" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="anc-specimen"
+        src={getAssetPath("/images/herbarium/plate-specimen.webp")}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
       <div className="anc-inner">
         <div className="anc-top archive-text">
           <span>DIAGONAL / ARCHIVE</span>

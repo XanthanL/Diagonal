@@ -1,0 +1,199 @@
+/* ==========================================================================
+   草木主题 · 生图素材落位（2026-11-09）
+   --------------------------------------------------------------------------
+   素材：public/images/herbarium/，由 scripts/prepare-herbarium.js 从用户用
+   元宝 hy3.5image 生成的 8 张图派生。全部只在 herbarium 且不在
+   .theme-locked（ATLAS-HZ）页面生效；档案风一条规则都不命中，图片也不下载。
+
+   ⚠ 本文件必须在 globals.css 之后引入：下面用 `.site-flora-field` / 更长前缀
+   提高权重，后置覆盖上一批按旧 sprig 尺寸逐枝调过的定位。别把它挪到前面。
+   ========================================================================== */
+
+/* —— 1. 纸纹：整页的「纸」而不是纯色块 ——
+   paper-grain.webp 是 2×2 镜像无缝块，脚本已把纤维起伏放大到 stdev 2.7/255，
+   四边接缝差约 1 级，平铺后看不出接缝。它直接铺在 body 上，所以往下滚到
+   照片墙时纸感仍在，而不是只罩首屏。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body {
+  background-image: url("/images/herbarium/paper-grain.webp");
+  background-repeat: repeat;
+  background-size: 384px 384px;
+}
+/* fade 原本在 96% 收到不透明纸色，会把 body 的纸纹整块盖掉。花光那层自己
+   有 mask（0.6@44% → transparent@96%），到这一带已经没有了，收尾改透明即可：
+   96% 往下仍是「干净纸色」，只是带纤维，照片墙不会被染脏。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-fade {
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--flora-bg-rgb), 0.1) 0%,
+    rgba(var(--flora-bg-rgb), 0.26) 34%,
+    rgba(var(--flora-bg-rgb), 0.5) 68%,
+    rgba(var(--flora-bg-rgb), 0) 96%
+  );
+}
+/* 有了真实纸纤维，就撤掉首屏那层程序 turbulence 噪点：两种颗粒叠着会显脏。
+   相册页自己的 .flora-grain 不带 .site-flora-grain，像素级不动。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-grain {
+  display: none;
+}
+
+/* —— 2. 首屏压花：3 枝墨线压花替换 5 枝淡绿水彩 ——
+   新素材已按 alpha 包围盒裁掉提示词要求的上方留白（背景水印永远在文字之下，
+   不需要给标题让位），三张都接近方形，可以统一一套框；旧规则按 1.87~0.37
+   五种长宽比逐枝调过，靠 .site-flora-field 这层前缀整体压过去。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field .herb-sprig {
+  /* 新墨线比旧水彩实得多，内页这一档要压成淡水印：归档页 / 文章页的
+     页头都是大标题，按旧参数挂 330px / 0.92 会有一整枝压在字上。 */
+  width: min(20vw, 250px);
+  height: min(20vw, 250px);
+  opacity: 0.55;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field .herb-sprig img {
+  object-fit: contain;
+  object-position: center;
+}
+/* 首页右下角是唯一不压文字的干净纸面，这里可以整枝实着放。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field .herb-sprig[data-home="1"] {
+  width: min(30vw, 390px);
+  height: min(28vw, 340px);
+  opacity: 0.9;
+}
+/* 旧图右缘那列被画幅切断的碎叶要靠 mask 收掉；新素材四边本就是真透明，
+   再叠一道渐隐只会把枝叶削淡。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field .herb-sprig[data-home="1"] img {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+/* 归档列表页的页头是「左大标题 + 右下说明」：哈希落在左侧时，压花正好
+   压在 THE 上（实测调淡到 0.55 仍读得出一片叶）。这一页固定挪到右上空白带，
+   不取消其它页面的左右错落。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) body:has(.archive-index) .site-flora-field .herb-sprig {
+  left: auto;
+  right: clamp(1rem, 3vw, 3.5rem);
+  top: 6%;
+  transform: none;
+}
+@media (max-width: 640px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field .herb-sprig {
+    width: 46vw;
+    height: 46vw;
+    opacity: 0.5;
+  }
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) body:has(.archive-index) .site-flora-field .herb-sprig {
+    top: 3%;
+    right: 0.5rem;
+  }
+  /* 手机首页已经有 3:4 竖幅扉页（自带满幅藤蔓），再挂一枝会正好落在
+     DIAGONAL 字标上。这里让位，桌面首页照常挂 —— 一进站仍看得见。 */
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .site-flora-field .herb-sprig[data-home="1"] {
+    display: none;
+  }
+}
+
+/* —— 3. 手机竖幅扉页 ——
+   桌面横幅 1920×974 在 390px 视口只剩 200px 高，草木风首屏一直是塌的。
+   手机换成 3:4 竖幅；它没有画字（提示词刻意留了字标区），所以这两行 HTML
+   字标必须从 sr-only 放回来，否则首屏没有站名。花粉晕不会叠第二轮红：
+   globals.css 里首页的 flora-bloom-1 早就被撤掉了。 */
+.hero-botanical-portrait {
+  display: none;
+}
+@media (max-width: 640px) {
+  html[data-theme="herbarium"] .home-page .hero-botanical-art {
+    display: none;
+  }
+  html[data-theme="herbarium"] .home-page .hero-botanical-portrait {
+    display: block;
+    width: 100%;
+    height: min(56vh, 460px);
+    object-fit: cover;
+    object-position: center 34%;
+  }
+  html[data-theme="herbarium"] .home-page h1 > span.block {
+    position: relative;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    opacity: 1;
+  }
+}
+
+/* —— 4. 无图版档案封套：几何印版 → 拱窗植物标本 ——
+   档案风仍保留按档案号派生的四种测绘印版；草木风直接换成一整张标本卡，
+   顶部日期 / 底部记注留着，中部题签撤掉 —— 图已经把话说完了，再排一层字
+   就是重复。标本图自带拱形细框和一层浅纸衬，与卡片 4:5 同比例，铺满即用，
+   不会露出素材里的矩形边界。 */
+.anc-specimen {
+  display: none;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-specimen {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.94;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-no-cover :is(.anc-mark, .anc-paper, .anc-eyebrow, .anc-head) {
+  display: none;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-inner {
+  position: relative;
+  z-index: 1;
+  justify-content: space-between;
+}
+/* 窄卡片（草木风手机两列，约 150px）：整幅标本会压到题签上，收成上半幅水印，
+   和原来几何印版那一档的处理一致。 */
+@container (max-width: 220px) {
+  html[data-theme="herbarium"]:not(:has(.theme-locked)) .anc-specimen {
+    inset: -4% 0 26% 0;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    opacity: 0.5;
+  }
+}
+
+/* —— 5. 横贯压花分隔带 ——
+   纯伪元素落位，不改任何 DOM：首页板块入口之前、归档页页头之后、
+   文章页页脚之上各一条。素材本身偏浓，压到 0.55 才是「分隔」而不是「花边」。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .home-page #archive::before,
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index header::after {
+  content: "";
+  display: block;
+  height: clamp(48px, 7vw, 96px);
+  background: url("/images/herbarium/press-rule.webp") center bottom / min(100%, 1000px) auto no-repeat;
+  opacity: 0.55;
+  pointer-events: none;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-doc-footer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -64px;
+  height: 64px;
+  background: url("/images/herbarium/press-rule.webp") center bottom / min(100%, 1000px) auto no-repeat;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* —— 6. 植物学小印章 ——
+   文章页脚正中一枚压印。原素材线太浅，脚本已把非透明像素往墨绿插值并抬 alpha。 */
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-doc-footer {
+  position: relative;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-doc-footer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58px;
+  height: 58px;
+  transform: translate(-50%, -50%);
+  background: url("/images/herbarium/seal.webp") center / contain no-repeat;
+  opacity: 0.84;
+  pointer-events: none;
+}

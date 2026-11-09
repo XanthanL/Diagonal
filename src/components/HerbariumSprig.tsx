@@ -4,24 +4,26 @@ import { usePathname } from "next/navigation";
 import { getAssetPath } from "@/lib/path";
 
 /**
- * 草木主题下的「压花」：翻到某些页面时，首屏背景一角偶尔压着一枝水彩藤蔓。
+ * 草木主题下的「压花」：翻到某些页面时，首屏背景一角偶尔压着一枝植物标本。
  * 挂在 SiteThemeBackdrop 的 .site-flora-field 内，与花光同层、永远在内容之下，
  * 且随首屏滚走一次（不是钉在视口上的常驻装饰）。
  *
  * 三条克制：
  * 1. 只在 herbarium 主题出现（CSS 读 <html data-theme>），档案风连图片都不下载。
- * 2. 不是每页都有 —— 由路由哈希决定约 3/4 的页面出现，5 枝轮换、左右角错落。
+ * 2. 不是每页都有 —— 由路由哈希决定约 3/4 的页面出现，3 枝轮换、左右角错落。
  *    用路径哈希而不是 Math.random()：SSR / hydration / 刷新必须得到同一枝，
  *    否则切页会闪一下不同的图。
- * 3. 首页已有用户手绘的题图、ATLAS-HZ 整页锁死、图集详情页的照片墙必须干净，
+ * 3. 首页已有手绘题图、ATLAS-HZ 整页锁死、图集详情页的照片墙必须干净，
  *    这几类一律不挂。
  *
- * 素材是 public/images/vines/sprig-N.webp：原图整幅自带粉→米白渐变底，
- * 直接铺会留矩形硬边并和花光再叠一轮粉（上一轮刚撤掉 bloom-1）。
- * 生成脚本只把绿色藤蔓抠成真透明，纸底从叶缝里透出来，所以没有边界。
+ * 素材是 public/images/herbarium/press-N.webp：2026-11-09 用元宝 hy3.5image
+ * 生成的三枝墨线压花，比上一批淡绿水彩藤蔓实得多（用户当时反馈「看不出来」）。
+ * 源图上方 2/3 的留白已在 prepare-herbarium.js 里按 alpha 包围盒裁掉 ——
+ * 那是给「压标题」留的，而这里永远是背景水印，不需要给文字让位。
+ * 三张都接近方形，定位统一走 herbarium-assets.css，不再逐枝调长宽比。
  */
 
-const SPRIG_COUNT = 5;
+const SPRIG_COUNT = 3;
 
 function hashPath(s: string): number {
   let h = 2166136261;
@@ -63,13 +65,10 @@ export function HerbariumSprig() {
   if (!isHome && h % 4 === 0) return null; // 留四分之一的页面干干净净
 
   // 三项各用一份带盐的混合值，避免留白 / 枝号 / 左右互相相关。
-  // 枝号走「高位分桶」而不是 % 5：对这批同前缀 URL，取模仍会让 4 号扎堆
-  // （实测 9 次 vs 5 号 2 次）。_sprig_hash.cjs 离线枚举过真实路由集合，
-  // 这组参数得到 5 枝 [4,6,4,5,5]、留白 7/31、左右 11/13。
-  // 首页固定用 2 号（最饱满的密丛，可见像素 21%）。哈希轮到的 5 号是细长
-  // 垂枝（仅 9.7%），放进首屏右下那个框里只剩一根线，等于没画。
+  // 枝号走「高位分桶」而不是取模：对这批同前缀 URL，取模会让某一枝扎堆。
+  // 首页固定 1 号：带花蕾的上扬枝，实体像素最密、在右下角最读得出来。
   const variant = isHome
-    ? 2
+    ? 1
     : Math.floor(
         (mix32(hashPath(`${pathname}|variant`) ^ 0x9e3779b9) / 4294967296) * SPRIG_COUNT
       ) + 1;
@@ -87,7 +86,7 @@ export function HerbariumSprig() {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getAssetPath(`/images/vines/sprig-${variant}.webp`)}
+        src={getAssetPath(`/images/herbarium/press-${variant}.webp`)}
         alt=""
         loading="lazy"
         decoding="async"

@@ -71,3 +71,6 @@ next-env.d.ts
 # 会话/工具的本地暂存目录（.tmp-t11/、.tmp-horn/ 等），不入库
 /.tmp-*/
 /.tmp-*
+
+# 生图源素材（体量大、可再生成；站点只用 public/images/herbarium/ 的派生 WebP）
+/DIAGONAL_草本素材_全套/

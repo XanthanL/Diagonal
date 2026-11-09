@@ -9,6 +9,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { DropletLens } from "@/components/DropletLens";
 import { SiteThemeBackdrop } from "@/components/SiteThemeBackdrop";
 import "./globals.css";
+// 草木主题生图素材的落位样式：必须在 globals.css 之后，后置覆盖旧 sprig 定位
+import "./herbarium-assets.css";
 
 // 精确加载所需字重，避免加载完整可变字体
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", weight: ["400", "700", "900"] });

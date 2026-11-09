@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/sync-sites.js && next dev",
     "images": "node scripts/optimize-images.js",
+  "herbarium:assets": "node scripts/prepare-herbarium.js",
     "prebuild": "node scripts/archive-order.js && node scripts/optimize-images.js && node scripts/sync-sites.js",
     "build": "next build",
     "build:with-vacuum": "npm run build && node scripts/merge-vacuum.js",
