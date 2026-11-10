@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter, JetBrains_Mono, Newsreader, Noto_Serif_SC } from "next/font/google";
 import { getAbsoluteUrl, siteUrl } from "@/lib/path";
-import { SITE_THEME_KEY } from "@/lib/themePrefs";
+import { INTRO_HEAD_SCRIPT } from "@/lib/introAssets";
 import { Providers } from "@/components/Providers";
 import { GlobalNav } from "@/components/GlobalNav";
 import { PageTransition } from "@/components/PageTransition";
@@ -86,22 +86,29 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
+      data-theme="herbarium"
       suppressHydrationWarning
       className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}
     >
       <head>
-        {/* 风格与语言都必须在 CSS 生效前落到 <html> 上：切到草木 / 英文后刷新，
-            若等 React effect 再补属性，会先吃一帧档案风的中文界面。
-            与 lib/themePrefs.ts 的 SITE_THEME_KEY 是同一个键。 */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{if(localStorage.getItem('${SITE_THEME_KEY}')==='herbarium'){document.documentElement.setAttribute('data-theme','herbarium')}if(localStorage.getItem('diagonal-language')==='en'){document.documentElement.setAttribute('lang','en')}}catch(e){}`,
-          }}
-        />
+        {/* 草木风是首次访问的默认主题，所以 SSR 直接带 data-theme="herbarium"：
+            不等脚本、不等 hydration，连 JS 被禁的那一帧也是草木。同步脚本只在用户
+            「显式选过 archive」时改写属性，并顺手补上语言；同时给首屏揭幕挂 hold，
+            让纸面盖住关键图加载（见 lib/introAssets.ts）。两者都必须在 CSS 生效前落地。 */}
+        <script dangerouslySetInnerHTML={{ __html: INTRO_HEAD_SCRIPT }} />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
-        {/* JS 禁用时撤下首次加载的过渡幕布，保证内容可读 */}
+        {/* JS 禁用时撤下首次加载的过渡幕布，保证内容可读。
+            草木风首页的站名原本由题图独占、HTML 字标被收进 sr-only；题图是 lazy，
+            无 JS 时首屏会空一块。这里把字标放回来、题图撤下，纯 CSS 即可读。
+            ⚠ <noscript> 的 text child 会被 React HTML 转义，而 <style> 是 raw-text
+              元素不解码实体：引号与 > 一转义，整条 CSS 选择器就废了。
+              所以里面一律用无引号属性值 + 后代选择器，不写任何需转义的字符。 */}
         <noscript>
-          <style>{`.page-transition-overlay{display:none!important}`}</style>
+          <style>{`.page-transition-overlay{display:none!important}
+html[data-theme=herbarium] .home-page .hero-botanical-frame{display:none!important}
+html[data-theme=herbarium] .home-page h1 span.block{position:relative!important;width:auto!important;height:auto!important;overflow:visible!important;clip-path:none!important;white-space:normal!important;opacity:1!important}
+html[data-theme=herbarium] .home-page [style*=opacity]{opacity:1!important;transform:none!important}
+html[data-theme=herbarium] .home-page .hero-meta{display:none!important}`}</style>
         </noscript>
       </head>
       {/* 底色与字色交给 globals.css 的 body{color:var(--foreground);background:var(--background)}：

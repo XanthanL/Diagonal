@@ -652,17 +652,25 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)):has(.archive-detail) .site
   transition: transform 600ms var(--ease-wipe);
 }
 /* 首次进入：SSR 首帧即「已被纸面盖满」，纸面随后自行右移揭幕。
-   ⚠️ 这条 CSS 动画是首屏揭幕的唯一真相，刻意不等 JS：
+   ⚠️ 揭幕这件事仍由 CSS 独占，JS 只负责事后摘 class —— 且必须直接落到 idle，
+   绝不能经手 pt-reveal，那会把 transform 拉回 0，等于再盖一次。
    之前由 hydration 后的 setTimeout 驱动，手机上 bundle 解析 + hydration 常要几秒，
-   那几秒里整屏只有一块暖纸（顶栏底栏 z-index 更高所以露在外面），读起来就是「白屏」；
-   而原先那条 2.6s 兜底又会在 hydration 迟到时把已抬开的纸重新盖回去一次。
-   现在整段生命周期在 ~880ms 内确定性走完，脚本被拦 / bundle 报错也一样会开。
-   JS 侧只负责到点把 class 摘掉，且必须直接落到 idle —— 绝不能经手 pt-reveal，
-   那会把 transform 拉回 0，等于再盖一次。 */
+   那几秒整屏只有一块暖纸（顶栏底栏 z-index 更高所以露在外面），读起来就是「白屏」。
+
+   现在「什么时候开始抬」交给 <head> 同步脚本（lib/introAssets.ts）：
+   它一进来就写 data-intro-hold，把动画 paused 在盖满帧，纸面于是整个盖住
+   首屏关键图（题图 / 纸纹 / 压花 / 花汁底光）的加载；图好了、且至少盖满
+   1150ms 才移除 hold，动画从冻结点继续，纸面右移 760ms 揭开。
+   ⚠️ hold 是加法而非前提：脚本被拦 / JS 禁用 / 抛错时属性不存在，动画就按
+   下面这条默认节奏确定性跑完，用户绝不会被永远关在纸后面。
+   时长与 INTRO_LIFT_MS / INTRO_LIFT_DELAY_MS / INTRO_MIN_MS 必须同步改。 */
 .pt-intro .pt-carriage {
   transform: translate3d(0, 0, 0);
   transition: none;
-  animation: ptIntroLift 600ms var(--ease-wipe) 280ms forwards;
+  animation: ptIntroLift 760ms var(--ease-wipe) 140ms forwards;
+}
+html[data-intro-hold="1"]:not([data-intro-ready="1"]) .pt-intro .pt-carriage {
+  animation-play-state: paused;
 }
 @keyframes ptIntroLift {
   to {
@@ -764,6 +772,39 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)):has(.archive-detail) .site
   text-transform: uppercase;
   color: rgba(26, 26, 26, 0.4);
   white-space: nowrap;
+}
+
+/* 首屏揭幕要在纸面下盖住整段图片加载（约 2s），10px / 45% 墨的字标与指示
+   在手机上几乎看不见，整屏会读成一张空白纸 —— 正是「看着白屏加载」的观感。
+   只把 intro 相位的尺度与对比度抬一档并水平居中；cover / reveal（站内翻页）
+   仍在原来的偏左位置随纸横穿，一行不动。
+   ⚠ .pt-sheet 有 skewX(-12deg)：字标放在纸面竖直中心，该处 skew 位移恒为 0，
+     但字形本身会跟着倾斜，所以子层要反向 skewX(12deg) 抵消。 */
+.pt-intro .pt-mark {
+  left: 50%;
+  transform: translate(-50%, -50%) skewX(12deg);
+  font-size: clamp(13px, 1.25vw, 18px);
+  letter-spacing: 0.26em;
+  color: color-mix(in srgb, var(--foreground) 66%, transparent);
+}
+.pt-intro .pt-loading {
+  left: 50%;
+  top: calc(50% + 34px);
+  transform: translateX(-50%) skewX(12deg);
+  gap: 14px;
+}
+.pt-intro .pt-loading-track {
+  width: clamp(180px, 20vw, 280px);
+  height: 2px;
+}
+.pt-intro .pt-loading-label {
+  font-size: 10px;
+  color: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+@media (max-width: 640px) {
+  .pt-intro .pt-mark { font-size: 12px; letter-spacing: 0.2em; }
+  .pt-intro .pt-loading { top: calc(50% + 28px); gap: 10px; }
+  .pt-intro .pt-loading-track { width: 168px; }
 }
 
 /* —— 图片加载过渡 —— */

@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useI18n } from "@/lib/i18n";
+import { INTRO_MAX_MS } from "@/lib/introAssets";
 
 type TransitionPhase = "idle" | "intro" | "cover" | "reveal";
 
@@ -141,6 +142,20 @@ export function PageTransition({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [phase]);
+
+  // 二次保险：<head> 同步脚本若被 CSP 拦下 / 中途抛错，data-intro-hold 可能
+  // 永远留在 <html> 上，CSS 动画就一直 paused，纸面盖住整站。hydration 后无条件
+  // 挂一个比脚本硬超时更晚的定时器解除 hold，让动画自己抬开。
+  // ⚠️ 只解除 hold，绝不直接 setPhase("idle")：那会把「盖满」的纸当场撤走。
+  useEffect(() => {
+    const guard = window.setTimeout(() => {
+      const d = document.documentElement;
+      if (!d.hasAttribute("data-intro-hold")) return;
+      d.removeAttribute("data-intro-hold");
+      d.setAttribute("data-intro-ready", "1");
+    }, INTRO_MAX_MS + 600);
+    return () => window.clearTimeout(guard);
+  }, []);
 
   // bfcache 修复：进入独立子项目是整页跳转，本组件冻结在 cover 相位；
   // 从子项目返回时浏览器可能从 bfcache 恢复本页（pageshow.persisted），
