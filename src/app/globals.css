@@ -678,6 +678,19 @@ html[data-intro-hold="1"]:not([data-intro-ready="1"]) .pt-intro .pt-carriage {
   }
 }
 
+/* 纸面抬开 ≠ React 已接管。<head> 脚本按首屏关键图就绪放行之后，慢网 / 低端机上
+   hydration 可能还要几秒才把 Hero 的 motion 元素从 SSR 的 opacity:0 点亮；那几秒
+   纸面已经移出视口、字标与题图却还是空的，读起来就是「揭幕完反而一片白」——
+   正是早先手机端「除了顶栏底栏全白、要等挺久才刷新出来」的老症状。
+   这里只在「已放行、但 React 仍停在 intro 相位」的窗口里，把 Hero section 的入场
+   初始态直接落到终态；hydration 一提交 data-nav 变 idle，规则立即失效，Framer Motion
+   照常接管。限定到 .home-page > section:first-of-type，下面各 section 的 whileInView
+   滚动入场一行不动；脚本被拦 / reduced-motion / 自动化下 ready 不存在，规则也不生效。 */
+html[data-intro-ready="1"] #main-content[data-nav="intro"] .home-page > section:first-of-type [style*="opacity:0"] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 /* 纸面：与页面同色（用户要求），所以翻页全靠边缘读——投影与先行线是唯一的线索 */
 .pt-sheet {
   position: absolute;
