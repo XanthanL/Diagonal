@@ -88,15 +88,15 @@ export default function RootLayout({
   return (
     <html
       lang="zh-CN"
-      data-theme="herbarium"
+      data-theme="archive"
       data-season="spring"
       suppressHydrationWarning
       className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}
     >
       <head>
-        {/* 草木风是首次访问的默认主题，所以 SSR 直接带 data-theme="herbarium"：
-            不等脚本、不等 hydration，连 JS 被禁的那一帧也是草木。同步脚本只在用户
-            「显式选过 archive」时改写属性，并顺手补上语言；同时给首屏揭幕挂 hold，
+        {/* 档案风是首次访问的默认主题，所以 SSR 直接带 data-theme="archive"：
+            不等脚本、不等 hydration，连 JS 被禁的那一帧也是档案。同步脚本只在用户
+            「显式选过 herbarium」时改写属性，并顺手补上语言；同时给首屏揭幕挂 hold，
             让纸面盖住关键图加载（见 lib/introAssets.ts）。两者都必须在 CSS 生效前落地。 */}
         <script dangerouslySetInnerHTML={{ __html: INTRO_HEAD_SCRIPT }} />
         <meta name="referrer" content="strict-origin-when-cross-origin" />

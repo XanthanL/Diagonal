@@ -85,7 +85,7 @@ const j = JSON.stringify;
 export const INTRO_HEAD_SCRIPT = `(function(){
 var d=document.documentElement;
 var THEME=null;try{THEME=localStorage.getItem(${j(SITE_THEME_KEY)})}catch(e){}
-if(THEME==='archive'){d.setAttribute('data-theme','archive')}
+if(THEME==='herbarium'){d.setAttribute('data-theme','herbarium')}
 var SEASON='spring';try{var SV=localStorage.getItem(${j(SITE_SEASON_KEY)});if(${j(["summer", "autumn", "winter"])}.indexOf(SV)>=0)SEASON=SV}catch(e){}
 try{var Q=new URLSearchParams(location.search).get('season');if(${j(["summer", "autumn", "winter", "spring"])}.indexOf(Q)>=0)SEASON=Q}catch(e){}
 d.setAttribute('data-season',SEASON);
@@ -97,7 +97,7 @@ function ready(){if(called)return;called=true;var w=Math.max(0,MIN-(Date.now()-s
 d.setAttribute('data-intro-hold','1');
 setTimeout(ready,MAX);
 if(document.readyState==='complete'){ready()}else{window.addEventListener('load',ready,{once:true})}
-var isHerb=THEME!=='archive';
+var isHerb=d.getAttribute('data-theme')==='herbarium';
 var isHome=location.pathname==='/'||location.pathname.slice(-11)==='/index.html';
 var mobile=window.matchMedia?matchMedia('(max-width:640px)').matches:false;
 var list=[];
