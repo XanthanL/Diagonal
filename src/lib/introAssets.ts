@@ -24,6 +24,7 @@
  */
 
 import { SITE_THEME_KEY } from "./themePrefs";
+import { SITE_SEASON_KEY } from "./seasonPrefs";
 import { FLORA_LAYERS } from "@/components/FloraBackdrop";
 
 /** 纸面至少盖这么久：素材命中缓存时也别一闪就没 */
@@ -61,6 +62,9 @@ export const INTRO_HEAD_SCRIPT = `(function(){
 var d=document.documentElement;
 var THEME=null;try{THEME=localStorage.getItem(${j(SITE_THEME_KEY)})}catch(e){}
 if(THEME==='archive'){d.setAttribute('data-theme','archive')}
+var SEASON='spring';try{var SV=localStorage.getItem(${j(SITE_SEASON_KEY)});if(${j(["summer", "autumn", "winter"])}.indexOf(SV)>=0)SEASON=SV}catch(e){}
+try{var Q=new URLSearchParams(location.search).get('season');if(${j(["summer", "autumn", "winter", "spring"])}.indexOf(Q)>=0)SEASON=Q}catch(e){}
+d.setAttribute('data-season',SEASON);
 try{if(localStorage.getItem('diagonal-language')==='en'){d.setAttribute('lang','en')}}catch(e){}
 if(navigator.webdriver||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){return}
 var MIN=${INTRO_MIN_MS},MAX=${INTRO_MAX_MS},start=Date.now(),called=false,fired=false;

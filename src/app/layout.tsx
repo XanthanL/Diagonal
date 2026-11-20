@@ -13,6 +13,8 @@ import "./globals.css";
 import "./herbarium-assets.css";
 // 归档正文图版：必须在 globals.css 之后，覆盖旧的 max-height/object-fit 压图规则
 import "./archive-plates.css";
+// 四季主题：必须在 globals.css / herbarium-assets.css 之后，后置覆盖 --flora-* 色板
+import "./seasons.css";
 
 // 精确加载所需字重，避免加载完整可变字体
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", weight: ["400", "700", "900"] });
@@ -87,6 +89,7 @@ export default function RootLayout({
     <html
       lang="zh-CN"
       data-theme="herbarium"
+      data-season="spring"
       suppressHydrationWarning
       className={`${inter.variable} ${mono.variable} ${serif.variable} ${serifCjk.variable} ${floraDisplay.variable}`}
     >

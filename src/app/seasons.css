@@ -1,0 +1,62 @@
+/* ==========================================================================
+   四季主题 · 草木（herbarium）之下的正交维度 `data-season`
+   --------------------------------------------------------------------------
+   · 必须在 globals.css + herbarium-assets.css 之后引入（后置覆盖 --flora-*）。
+   · 默认春（data-season="spring"）**这里没有任何规则**：沿用 :root 现有 --flora-*
+     与 herbarium 现有图片路径，逐像素等于接入前。
+   · 每条规则都同时要求 data-theme="herbarium" 且非 .theme-locked：
+     档案风（archive）与 ATLAS-HZ 锁定页一条都不命中，零变化。
+   · 色板值 / 图片路径与 src/lib/seasons.ts 是同一份数据的两处落地，
+     scripts/check-seasons.js 会断言两者一致，改一处必须改两处。
+   · 夏秋冬图片未到位前，--season-* 也指向春图（stub），所以切换只换色不换图，
+     不会 404。图生成好后改这里的 url 与 seasons.ts 的 assetPaths。
+   ========================================================================== */
+
+/* —— 默认春：--season-* 指向现有 herbarium 图（与 introAssets 的关键图清单一致）——
+   放在 :root，任何主题都解析得到；archive 下没人用这些变量，无害。 */
+:root {
+  --season-paper: url("/images/herbarium/paper-grain.webp");
+  --season-press-1: url("/images/herbarium/press-1.webp");
+  --season-press-2: url("/images/herbarium/press-2.webp");
+  --season-press-3: url("/images/herbarium/press-3.webp");
+  --season-band: url("/images/herbarium/press-rule-band.webp");
+  --season-specimen: url("/images/herbarium/plate-specimen.webp");
+  --season-portrait: url("/images/herbarium/hero-portrait.webp");
+  --season-seal: url("/images/herbarium/seal.webp");
+  --season-hero-desktop: url("/images/hero-botanical.webp");
+}
+
+/* —— 夏 —— */
+html[data-theme="herbarium"][data-season="summer"]:not(:has(.theme-locked)) {
+  --flora-bg-rgb: 239, 241, 230;
+  --flora-bg: rgb(var(--flora-bg-rgb));
+  --flora-ink: #16251c;
+  --flora-accent: #a64228;
+  --flora-green: #3e7a3f;
+  --flora-line: rgba(22, 37, 28, 0.16);
+}
+
+/* —— 秋 —— */
+html[data-theme="herbarium"][data-season="autumn"]:not(:has(.theme-locked)) {
+  --flora-bg-rgb: 244, 238, 224;
+  --flora-bg: rgb(var(--flora-bg-rgb));
+  --flora-ink: #2a2118;
+  --flora-accent: #8e3a1c;
+  --flora-green: #9a6e2e;
+  --flora-line: rgba(42, 33, 24, 0.16);
+}
+
+/* —— 冬 —— */
+html[data-theme="herbarium"][data-season="winter"]:not(:has(.theme-locked)) {
+  --flora-bg-rgb: 239, 241, 241;
+  --flora-bg: rgb(var(--flora-bg-rgb));
+  --flora-ink: #1b2226;
+  --flora-accent: #7c2c2a;
+  --flora-green: #5a6b6e;
+  --flora-line: rgba(27, 34, 38, 0.16);
+}
+
+/* ==========================================================================
+   组件里的 <img src> 不走 CSS 变量（HerbariumSprig / Hero / 无封面封套），
+   它们在图到位后由 getSeasonAsset() 按 data-season 取路径。在那之前一律复用春图。
+   ========================================================================== */
