@@ -7,6 +7,8 @@ import { archiveData, atlasData, getLocalizedArchiveItem, getLocalizedAtlasItem 
 import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { getAssetPath } from "@/lib/path";
+import { useSeason } from "@/lib/useSeason";
+import { getSeasonAsset } from "@/lib/seasons";
 import { HeroAxis } from "@/components/HeroAxis";
 
 // 与 CSS 的 --ease-out 同一条曲线，避免 JS 与 CSS 两套手感
@@ -180,6 +182,7 @@ function IndexRow({
 
 export default function Home() {
   const { lang } = useI18n();
+  const season = useSeason();
 
   const labEntries: {
     href: string;
@@ -239,7 +242,7 @@ export default function Home() {
             <div className="hero-botanical-frame">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getAssetPath("/images/hero-botanical.webp")}
+                src={getAssetPath(getSeasonAsset(season, "heroDesktop"))}
                 alt={lang === "zh"
                   ? "DIAGONAL — 草木主题题图：水彩藤蔓与粉色晕染"
                   : "DIAGONAL — botanical theme artwork: watercolor vines and pink wash"}
@@ -253,7 +256,7 @@ export default function Home() {
                   竖幅没画字，CSS 会把下面两行 HTML 字标从 sr-only 放回来。 */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={getAssetPath("/images/herbarium/hero-portrait.webp")}
+                src={getAssetPath(getSeasonAsset(season, "portrait"))}
                 alt=""
                 width={720}
                 height={960}

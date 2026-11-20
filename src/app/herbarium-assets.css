@@ -14,7 +14,7 @@
    四边接缝差约 1 级，平铺后看不出接缝。它直接铺在 body 上，所以往下滚到
    照片墙时纸感仍在，而不是只罩首屏。 */
 html[data-theme="herbarium"]:not(:has(.theme-locked)) body {
-  background-image: url("/images/herbarium/paper-grain.webp");
+  background-image: var(--season-paper);
   background-repeat: repeat;
   background-size: 384px 384px;
 }
@@ -183,7 +183,7 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-index header::aft
   margin-inline: auto;
   height: auto;
   aspect-ratio: 16 / 3;
-  background: url("/images/herbarium/press-rule-band.webp") center / 100% 100% no-repeat;
+  background: var(--season-band) center / 100% 100% no-repeat;
   opacity: 0.62;
   pointer-events: none;
 }
@@ -196,7 +196,7 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-doc-footer::after
   width: min(100%, 1000px);
   height: auto;
   aspect-ratio: 16 / 3;
-  background: url("/images/herbarium/press-rule-band.webp") center / 100% 100% no-repeat;
+  background: var(--season-band) center / 100% 100% no-repeat;
   opacity: 0.62;
   pointer-events: none;
 }
@@ -214,7 +214,7 @@ html[data-theme="herbarium"]:not(:has(.theme-locked)) .archive-doc-footer::befor
   width: 58px;
   height: 58px;
   transform: translate(-50%, -50%);
-  background: url("/images/herbarium/seal.webp") center / contain no-repeat;
+  background: var(--season-seal) center / contain no-repeat;
   opacity: 0.84;
   pointer-events: none;
 }

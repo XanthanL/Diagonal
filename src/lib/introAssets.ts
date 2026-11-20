@@ -36,13 +36,37 @@ export const INTRO_LIFT_MS = 760;
 /** 放行后再起手的定格（与 CSS 对齐） */
 export const INTRO_LIFT_DELAY_MS = 140;
 
-/** 本地首屏关键图。按主题 / 视口 / 路由分流，不给档案风用户下载草木素材。 */
+/**
+ * 本地首屏关键图。按主题 / 视口 / 路由 / 季节分流，不给档案风用户下载草木素材。
+ * 四季清单必须与 seasons.ts 的 assetPaths 一致，否则揭幕等的图和页面显示的图
+ * 不是同一张 —— check-seasons.js 会断言这一点。
+ */
 const LOCAL_ASSETS = {
-  paper: "/images/herbarium/paper-grain.webp",
-  sprig: "/images/herbarium/press-1.webp",
-  heroDesktop: "/images/hero-botanical.webp",
-  heroMobile: "/images/herbarium/hero-portrait.webp",
-};
+  spring: {
+    paper: "/images/herbarium/paper-grain.webp",
+    sprig: "/images/herbarium/press-1.webp",
+    heroDesktop: "/images/hero-botanical.webp",
+    heroMobile: "/images/herbarium/hero-portrait.webp",
+  },
+  summer: {
+    paper: "/images/seasons/summer/paper-grain.webp",
+    sprig: "/images/seasons/summer/press-1.webp",
+    heroDesktop: "/images/seasons/summer/hero-botanical.webp",
+    heroMobile: "/images/seasons/summer/hero-portrait.webp",
+  },
+  autumn: {
+    paper: "/images/seasons/autumn/paper-grain.webp",
+    sprig: "/images/seasons/autumn/press-1.webp",
+    heroDesktop: "/images/seasons/autumn/hero-botanical.webp",
+    heroMobile: "/images/seasons/autumn/hero-portrait.webp",
+  },
+  winter: {
+    paper: "/images/seasons/winter/paper-grain.webp",
+    sprig: "/images/seasons/winter/press-1.webp",
+    heroDesktop: "/images/seasons/winter/hero-botanical.webp",
+    heroMobile: "/images/seasons/winter/hero-portrait.webp",
+  },
+} as const;
 /**
  * 两张花汁底光是远程 Cloudinary 图。只提前发起请求，**不进阻塞清单**：
  * 它们是掩到纸里的虚焦渐变，晚到不破坏版面；若让它们决定揭幕，慢网或
@@ -78,8 +102,9 @@ var isHome=location.pathname==='/'||location.pathname.slice(-11)==='/index.html'
 var mobile=window.matchMedia?matchMedia('(max-width:640px)').matches:false;
 var list=[];
 if(isHerb){
-  list.push(${j(LOCAL_ASSETS.paper)},${j(LOCAL_ASSETS.sprig)});
-  if(isHome){list.push(mobile?${j(LOCAL_ASSETS.heroMobile)}:${j(LOCAL_ASSETS.heroDesktop)})}
+  var ASSETS=${j(LOCAL_ASSETS)}[SEASON];
+  list.push(ASSETS.paper,ASSETS.sprig);
+  if(isHome){list.push(mobile?ASSETS.heroMobile:ASSETS.heroDesktop)}
   ${j(FLORA_ASSETS)}.forEach(function(src){var a=new Image();a.src=src});
 }
 var pending=list.length;

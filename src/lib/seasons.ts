@@ -70,9 +70,25 @@ const SPRING_ASSETS: Record<SeasonAssetKey, string> = {
   heroDesktop: "/images/hero-botanical.webp",
 };
 
-/** 某季素材目录的约定路径（图到位后用这个替换 assetPaths）。 */
+/** 某季素材目录的约定路径。 */
 export function seasonAssetBase(id: SiteSeason): string {
   return `/images/seasons/${id}`;
+}
+
+/** 某季 9 张派生 WebP 的站点路径（由 prepare-season.js 从同名源图生成）。 */
+function seasonAssets(id: Exclude<SiteSeason, "spring">): Record<SeasonAssetKey, string> {
+  const b = seasonAssetBase(id);
+  return {
+    paper: `${b}/paper-grain.webp`,
+    press1: `${b}/press-1.webp`,
+    press2: `${b}/press-2.webp`,
+    press3: `${b}/press-3.webp`,
+    band: `${b}/press-rule-band.webp`,
+    specimen: `${b}/plate-specimen.webp`,
+    portrait: `${b}/hero-portrait.webp`,
+    seal: `${b}/seal.webp`,
+    heroDesktop: `${b}/hero-botanical.webp`,
+  };
 }
 
 export const SEASONS: Record<SiteSeason, SeasonDef> = {
@@ -105,9 +121,8 @@ export const SEASONS: Record<SiteSeason, SeasonDef> = {
       green: "#3E7A3F",
       line: "rgba(22, 37, 28, 0.16)",
     },
-    // 图未到位：全部复用春图。接入时整体替换为 seasonAssetBase("summer") + 文件名。
-    assetPaths: SPRING_ASSETS,
-    stub: true,
+    assetPaths: seasonAssets("summer"),
+    stub: false,
   },
   autumn: {
     id: "autumn",
@@ -122,8 +137,8 @@ export const SEASONS: Record<SiteSeason, SeasonDef> = {
       green: "#9A6E2E",
       line: "rgba(42, 33, 24, 0.16)",
     },
-    assetPaths: SPRING_ASSETS,
-    stub: true,
+    assetPaths: seasonAssets("autumn"),
+    stub: false,
   },
   winter: {
     id: "winter",
@@ -138,8 +153,8 @@ export const SEASONS: Record<SiteSeason, SeasonDef> = {
       green: "#5A6B6E",
       line: "rgba(27, 34, 38, 0.16)",
     },
-    assetPaths: SPRING_ASSETS,
-    stub: true,
+    assetPaths: seasonAssets("winter"),
+    stub: false,
   },
 };
 

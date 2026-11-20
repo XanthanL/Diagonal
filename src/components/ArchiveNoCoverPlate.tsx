@@ -1,5 +1,9 @@
+"use client";
+
 import { ArchiveItem } from "@/lib/data";
 import { getAssetPath } from "@/lib/path";
+import { useSeason } from "@/lib/useSeason";
+import { getSeasonAsset } from "@/lib/seasons";
 
 /**
  * 无图版档案封套
@@ -99,6 +103,7 @@ interface ArchiveNoCoverPlateProps {
 }
 
 export function ArchiveNoCoverPlate({ item, title, lang }: ArchiveNoCoverPlateProps) {
+  const season = useSeason();
   const variant = ((hashId(item.id) >>> 5) % 4) as Variant;
   const { eyebrow, head } = plateTitle(title);
   const date = (item.year || "").slice(0, 10) || "—";
@@ -110,7 +115,7 @@ export function ArchiveNoCoverPlate({ item, title, lang }: ArchiveNoCoverPlatePr
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="anc-specimen"
-        src={getAssetPath("/images/herbarium/plate-specimen.webp")}
+        src={getAssetPath(getSeasonAsset(season, "specimen"))}
         alt=""
         loading="lazy"
         decoding="async"

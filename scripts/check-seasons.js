@@ -89,6 +89,52 @@ for (const id of ["summer", "autumn", "winter"]) {
   ok(fs.existsSync(path.join(ROOT, "public", "images", "seasons", id)), `缺素材目录 public/images/seasons/${id}`);
 }
 
+// —— 素材已到位：三季 assetPaths 指向季节目录、stub 关闭、9 张 WebP 齐全 ——
+function useSeasonAssets(id) {
+  return new RegExp(`${id}:\\s*\\{[\\s\\S]*?assetPaths:\\s*seasonAssets\\("${id}"\\)`).test(TS);
+}
+function stubClosed(id) {
+  return new RegExp(`${id}:\\s*\\{[\\s\\S]*?stub:\\s*false`).test(TS);
+}
+const WEBP = [
+  "paper-grain.webp", "press-1.webp", "press-2.webp", "press-3.webp",
+  "press-rule-band.webp", "plate-specimen.webp", "hero-portrait.webp",
+  "seal.webp", "hero-botanical.webp",
+];
+for (const id of ["summer", "autumn", "winter"]) {
+  ok(useSeasonAssets(id), `${id} assetPaths 未指向 seasonAssets("${id}")`);
+  ok(stubClosed(id), `${id} stub 仍为 true（图已到位，不应再复用春图）`);
+  for (const n of WEBP) {
+    ok(fs.existsSync(path.join(ROOT, "public", "images", "seasons", id, n)), `缺素材 public/images/seasons/${id}/${n}`);
+  }
+}
+
+// —— seasons.css 的三条 --season-* 图片变量必须与 seasons.ts 的路径一致 ——
+for (const id of ["summer", "autumn", "winter"]) {
+  const block = CSS.match(new RegExp(`data-season="${id}"[\\s\\S]*?\\{([\\s\\S]*?)\\}`));
+  const body = block ? block[1] : "";
+  for (const [v, file] of [["paper", "paper-grain.webp"], ["band", "press-rule-band.webp"], ["seal", "seal.webp"]]) {
+    const m = body.match(new RegExp(`--season-${v}:\\s*url\\("([^"]+)"\\)`));
+    const want = `/images/seasons/${id}/${file}`;
+    ok(m && m[1] === want, `${id} --season-${v} 应为 ${want}，实际 ${m ? m[1] : "缺失"}`);
+  }
+}
+
+// —— intro 关键图清单必须与季节路径一致（揭幕等错图会出现空白/闪图）——
+const INTRO = fs.readFileSync(path.join(ROOT, "src", "lib", "introAssets.ts"), "utf8");
+for (const id of ["summer", "autumn", "winter"]) {
+  for (const file of ["paper-grain.webp", "press-1.webp", "hero-botanical.webp", "hero-portrait.webp"]) {
+    ok(INTRO.includes(`"/images/seasons/${id}/${file}"`), `introAssets 缺 ${id}/${file} 关键图`);
+  }
+}
+// 默认春的关键图仍指向 herbarium（零回归）
+ok(INTRO.includes('"/images/herbarium/paper-grain.webp"'), "introAssets 默认春关键图被改动");
+
+// —— CSS 背景落位必须全部走变量，不能写死春图路径 ——
+const HA = fs.readFileSync(path.join(ROOT, "src", "app", "herbarium-assets.css"), "utf8");
+ok(!/\/images\/herbarium\/(paper-grain|press-rule-band|seal)\.webp/.test(HA),
+  "herbarium-assets.css 仍有写死的春图路径（应改用 var(--season-*)）");
+
 if (fails.length) {
   console.error(`[check-seasons] FAIL ${fails.length} 项:`);
   fails.forEach((f) => console.error("  - " + f));

@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { getAssetPath } from "@/lib/path";
+import { useSeason } from "@/lib/useSeason";
+import { getSeasonAsset } from "@/lib/seasons";
 
 /**
  * 草木主题下的「压花」：翻到某些页面时，首屏背景一角偶尔压着一枝植物标本。
@@ -54,6 +56,8 @@ function excluded(pathname: string): boolean {
 }
 
 export function HerbariumSprig() {
+  // hooks 必须在 early return 之前调用（部分页面不挂压花，但订阅仍要保持稳定）
+  const season = useSeason();
   const pathname = usePathname() || "/";
   if (excluded(pathname)) return null;
 
@@ -86,7 +90,7 @@ export function HerbariumSprig() {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={getAssetPath(`/images/herbarium/press-${variant}.webp`)}
+        src={getAssetPath(getSeasonAsset(season, `press${variant}` as "press1" | "press2" | "press3"))}
         alt=""
         loading="lazy"
         decoding="async"

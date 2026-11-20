@@ -34,6 +34,9 @@ html[data-theme="herbarium"][data-season="summer"]:not(:has(.theme-locked)) {
   --flora-accent: #a64228;
   --flora-green: #3e7a3f;
   --flora-line: rgba(22, 37, 28, 0.16);
+  --season-paper: url("/images/seasons/summer/paper-grain.webp");
+  --season-band: url("/images/seasons/summer/press-rule-band.webp");
+  --season-seal: url("/images/seasons/summer/seal.webp");
 }
 
 /* —— 秋 —— */
@@ -44,6 +47,9 @@ html[data-theme="herbarium"][data-season="autumn"]:not(:has(.theme-locked)) {
   --flora-accent: #8e3a1c;
   --flora-green: #9a6e2e;
   --flora-line: rgba(42, 33, 24, 0.16);
+  --season-paper: url("/images/seasons/autumn/paper-grain.webp");
+  --season-band: url("/images/seasons/autumn/press-rule-band.webp");
+  --season-seal: url("/images/seasons/autumn/seal.webp");
 }
 
 /* —— 冬 —— */
@@ -54,9 +60,54 @@ html[data-theme="herbarium"][data-season="winter"]:not(:has(.theme-locked)) {
   --flora-accent: #7c2c2a;
   --flora-green: #5a6b6e;
   --flora-line: rgba(27, 34, 38, 0.16);
+  --season-paper: url("/images/seasons/winter/paper-grain.webp");
+  --season-band: url("/images/seasons/winter/press-rule-band.webp");
+  --season-seal: url("/images/seasons/winter/seal.webp");
+}
+
+/* —— 站名大标题：春的题图自带字，globals.css 把 HTML 字标收进 sr-only；
+   夏秋冬的题图按生图文档刻意不画字（左侧留白留给 HTML），所以三季要把
+   DIA / GONAL 两行从 sr-only 放回来。色值走 --flora-ink，随季节自动变。
+
+   手机端 herbarium-assets.css 已把字标放回竖幅下方，那里位置是对的，
+   所以下面这条基础规则只撤销 sr-only；绝对定位只发生在 >=641px 的桌面，
+   把两行字叠进横幅左侧留白（对齐春图里字标压在藤蔓上的位置）。 —— */
+html[data-theme="herbarium"][data-season="summer"]:not(:has(.theme-locked)) .home-page h1 > span.block,
+html[data-theme="herbarium"][data-season="autumn"]:not(:has(.theme-locked)) .home-page h1 > span.block,
+html[data-theme="herbarium"][data-season="winter"]:not(:has(.theme-locked)) .home-page h1 > span.block {
+  position: relative;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  opacity: 1;
+}
+
+@media (min-width: 641px) {
+  html[data-theme="herbarium"][data-season="summer"]:not(:has(.theme-locked)) .home-page h1 > span.block,
+  html[data-theme="herbarium"][data-season="autumn"]:not(:has(.theme-locked)) .home-page h1 > span.block,
+  html[data-theme="herbarium"][data-season="winter"]:not(:has(.theme-locked)) .home-page h1 > span.block {
+    position: absolute;
+    z-index: 2;
+    left: clamp(0.5rem, 3vw, 2.5rem);
+    top: 13%;
+    white-space: nowrap;
+    font-size: clamp(3.6rem, 7vw, 7rem);
+    line-height: 1.02;
+    letter-spacing: 0.01em;
+  }
+  html[data-theme="herbarium"][data-season="summer"]:not(:has(.theme-locked)) .home-page h1 > span.block + span.block,
+  html[data-theme="herbarium"][data-season="autumn"]:not(:has(.theme-locked)) .home-page h1 > span.block + span.block,
+  html[data-theme="herbarium"][data-season="winter"]:not(:has(.theme-locked)) .home-page h1 > span.block + span.block {
+    left: clamp(1rem, 5vw, 4rem);
+    top: 38%;
+    margin-top: 0;
+  }
 }
 
 /* ==========================================================================
-   组件里的 <img src> 不走 CSS 变量（HerbariumSprig / Hero / 无封面封套），
-   它们在图到位后由 getSeasonAsset() 按 data-season 取路径。在那之前一律复用春图。
+   组件里的 <img src> 走 useSeason() + getSeasonAsset()（HerbariumSprig /
+   Hero / 无封面封套）；SSR 首帧春，hydration 后由 <head> 已写好的 data-season
+   切换，整个过程在揭幕纸面之下完成。CSS background 则直接读 --season-*。
    ========================================================================== */
