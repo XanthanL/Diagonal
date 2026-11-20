@@ -9,6 +9,7 @@ import { getCloudinaryUrl, getCloudinarySrcSet } from "@/lib/path";
 import { SquareLensGallery } from "@/components/SquareLensGallery";
 import { ShaderToggles } from "@/components/ShaderToggles";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
 import { FloraBackdrop } from "@/components/FloraBackdrop";
 
 export function AtlasDetailClient({ item }: { item: AtlasItem }) {
@@ -66,6 +67,7 @@ export function AtlasDetailClient({ item }: { item: AtlasItem }) {
           <div className="flex items-center gap-3 sm:gap-8">
             <ShaderToggles />
             <ThemeSwitch />
+            <SeasonSwitch />
             <LanguageSwitcher />
           </div>
         </div>

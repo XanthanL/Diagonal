@@ -6,6 +6,7 @@ import { t } from "@/lib/translations";
 import Link from "next/link";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
 import { SquareLensGallery } from "@/components/SquareLensGallery";
 
 export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; subId: string }) {
@@ -26,6 +27,7 @@ export function AtlasSubCollectionClient({ item, subId }: { item: AtlasItem; sub
           </Link>
           <div className="flex items-center gap-6">
             <ThemeSwitch />
+            <SeasonSwitch />
             <LanguageSwitcher />
           </div>
         </div>

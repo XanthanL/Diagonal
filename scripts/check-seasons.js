@@ -7,7 +7,7 @@
  * 两处必须一致，否则首帧色与 hydration 后色会跳。这里从两边各自解析、逐项比对。
  *
  * 还校验：
- *   - spring 在 seasons.css 里没有覆盖规则（否则默认春不是零回归）
+ *   - spring 在 seasons.css 里不覆盖主题色板与素材变量（按钮高亮等非主题规则允许）
  *   - 四季色值不在彼此间重复（防止复制粘贴漏改）
  *   - 文档与素材目录骨架存在
  *   - 每季 pal 的合法性与 assetPaths 槽位齐全
@@ -67,8 +67,18 @@ for (const id of ["summer", "autumn", "winter"]) {
   ok(norm(t.line) === norm(c.line), `${id} line 不一致: ts=${t.line} css=${c.line}`);
 }
 
-// —— 默认春零回归：seasons.css 不得有 spring 覆盖规则 ——
-ok(!/data-season="spring"/.test(CSS), "seasons.css 不应含 data-season=spring 覆盖（默认春必须零回归）");
+// —— 默认春零回归：spring 规则不得覆盖主题变量 ——
+// 季节切换入口（SeasonSwitch）的当前季高亮也用 data-season="spring" 选择器，
+// 但只动 opacity / transform，不改配色和素材，不属于「覆盖规则」。
+// 所以这里按规则块体判断：只要没有 --flora-* / --season-* 声明就算安全。
+const springRuleBodies = Array.from(
+  CSS.matchAll(/[^{}]*data-season="spring"[^{}]*\{([^{}]*)\}/g),
+  (m) => m[1],
+);
+ok(
+  !springRuleBodies.some((body) => /--(?:flora|season)-/.test(body)),
+  "seasons.css 的 spring 规则不得覆盖 --flora-*/--season-*（默认春必须零回归）",
+);
 
 // —— 色值不得在四季间重复（复制粘贴漏改探测）——
 for (const key of ["bgRgb", "ink", "accent", "green"]) {

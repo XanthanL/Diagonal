@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ShaderToggles } from "@/components/ShaderToggles";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
 
 /**
  * 全局 sticky 导航：在所有页面顶部固定显示
@@ -128,6 +129,7 @@ export function GlobalNav() {
             {/* 两层着色器的开关：常驻在栏目之后、语言切换之前 */}
             <ShaderToggles className="ml-2" />
             <ThemeSwitch className="ml-2" />
+            <SeasonSwitch className="ml-2" />
             <div className="ml-4">
               <LanguageSwitcher />
             </div>
@@ -201,6 +203,7 @@ export function GlobalNav() {
         >
           <ShaderToggles />
           <ThemeSwitch />
+          <SeasonSwitch />
         </div>
 
         <div

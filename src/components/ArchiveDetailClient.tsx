@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { t } from "@/lib/translations";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { SeasonSwitch } from "@/components/SeasonSwitch";
 import { ArchiveContent } from "@/components/ArchiveContent";
 import { ArchiveTableOfContents } from "@/components/ArchiveTableOfContents";
 
@@ -35,6 +36,7 @@ export function ArchiveDetailClient({ id, zhContent, enContent, enTitle, isHtml 
               {id} // {t(lang, "htmlRecord")}
             </div>
             <ThemeSwitch />
+            <SeasonSwitch />
             <LanguageSwitcher />
           </div>
         </div>

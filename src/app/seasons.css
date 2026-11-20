@@ -107,6 +107,62 @@ html[data-theme="herbarium"][data-season="winter"]:not(:has(.theme-locked)) .hom
 }
 
 /* ==========================================================================
+   可见的季节切换入口（SeasonSwitch）
+   · 当前季的视觉高亮直接读 html[data-season]，不等 React：刷新时按钮与页面
+     配色/题图同一帧到位，没有 hydration 抖动。
+   · 下划线只动 transform，且不写 transition-all，符合全站动效约束。
+   · archive 主题与 .theme-locked 页整组隐身：季节在那两处不产生视觉变化，
+     留一个点了没反应的按钮只会误导。
+   ========================================================================== */
+.season-switch {
+  font-size: 10px;
+  white-space: nowrap;
+}
+html[data-theme="herbarium"]:not(:has(.theme-locked)) :is(nav, header) .season-switch {
+  opacity: 0.9;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+/* 顶栏走 mix-blend-difference + 整组 0.9，非当前季若给 0.4 会被连乘成 0.36，
+   在浅底上几乎读不出来（看着像三个灰字而不是可点开关）。抬到 0.66 —— 既与
+   当前季（1 + 下划线）分出层次，又能看清是个四选一。 */
+.season-switch-item {
+  position: relative;
+  opacity: 0.66;
+}
+.season-switch-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease-out;
+}
+.season-switch-item:hover {
+  opacity: 1;
+}
+html[data-season="spring"] .season-switch-item[data-season="spring"],
+html[data-season="summer"] .season-switch-item[data-season="summer"],
+html[data-season="autumn"] .season-switch-item[data-season="autumn"],
+html[data-season="winter"] .season-switch-item[data-season="winter"] {
+  opacity: 1;
+}
+html[data-season="spring"] .season-switch-item[data-season="spring"]::after,
+html[data-season="summer"] .season-switch-item[data-season="summer"]::after,
+html[data-season="autumn"] .season-switch-item[data-season="autumn"]::after,
+html[data-season="winter"] .season-switch-item[data-season="winter"]::after {
+  transform: scaleX(1);
+}
+html[data-theme="archive"] .season-switch,
+html:has(.theme-locked) .season-switch {
+  display: none;
+}
+
+/* ==========================================================================
    组件里的 <img src> 走 useSeason() + getSeasonAsset()（HerbariumSprig /
    Hero / 无封面封套）；SSR 首帧春，hydration 后由 <head> 已写好的 data-season
    切换，整个过程在揭幕纸面之下完成。CSS background 则直接读 --season-*。
